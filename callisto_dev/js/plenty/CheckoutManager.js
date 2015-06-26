@@ -6,36 +6,6 @@
 	CheckoutManager = {};
 
 	/**
-	 * Load additional libs asynchronous.
-	 * @params libs - array of libs. File type not needed.
-	 * */
-	function loadLibsAsynchronous(libs) {
-		// load asynchronous
-		var additionals = [
-			"checkout/NavigatorService",
-			"checkout/AuthenticationService",
-			"checkout/BasketService",
-			"checkout/CustomerService"
-		];
-		var js = {};
-
-		if (libs) {
-			additionals.concat(libs);
-		}
-
-		for (var i = 0; i < additionals.length; i++)
-		{
-			js = document.createElement("script");
-
-			js.type = "text/javascript";
-			js.src = "/layout/callisto_2/js/plenty/" + additionals[i] + ".js";
-
-			document.head.appendChild(js);
-		}
-	};
-	loadLibsAsynchronous();
-
-	/**
 	 * Initialization:
 	 * - get data from server
 	 * - initialize GUI Elements and checkout navigation

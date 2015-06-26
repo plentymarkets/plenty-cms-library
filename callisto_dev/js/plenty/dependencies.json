@@ -1,0 +1,34 @@
+{
+  "PageDesignGlobal": {
+    "head": [
+      "plenty/jquery.plentyfunctions.js"
+    ],
+    "body": [
+      "libs/modernizr.min.js",
+      "libs/bootstrap.min.js",
+      "libs/owl.carousel.min.js",
+      "libs/jquery.lazyload.js",
+      "libs/jquery.touchSwipe.min.js",
+      "libs/jquery.ui.touch-punch.min.js",
+      "plenty/plenty-2.js"
+
+    ]
+  },
+  "PageDesignContent": {
+    "head": [
+      "plenty/jquery.restmodal.js"
+    ],
+    "body": []
+  },
+  "PageDesignCheckout": {
+    "head": [
+      "plenty/jquery.restmodal.js"
+    ],
+    "body": []
+  },
+  "PageDesignMyAccount": {
+    "head": [],
+    "body": []
+  }
+
+}
