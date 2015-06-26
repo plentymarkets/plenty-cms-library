@@ -2,7 +2,9 @@ var dependencies = null;
 
 /**
  * Read dependencies for current layout from dependencies.json file
+ * All dependencies should add to dependency.json
  * Create <script> for each dependency
+ *
  * @param {string} layout   {"Content" | "Checkout" | "MyAccount"} plenty PageDesign to get the dependencies for
  * @param {string} position {"head" | "body"} position to inject the <script>
  * @param {string} [rootPath = /layout/callisto_dev/js/] Path to dependencies.json
@@ -10,10 +12,10 @@ var dependencies = null;
 function requireScripts(layout, position, rootPath) {
 
     rootPath = rootPath || "/layout/callisto_dev/js/";
-    rootPath =  window.location.origin + rootPath;
+    rootPath = window.location.origin + rootPath;
 
     // read dependencies.json if not done yet
-    if( !dependencies ) {
+    if (!dependencies) {
         var req = new XMLHttpRequest();
         req.overrideMimeType("application/json");
         req.open('GET', rootPath + 'plenty/dependencies.json', false);
@@ -26,7 +28,8 @@ function requireScripts(layout, position, rootPath) {
             }
         };
         req.send(null);
-    } else {
+    }
+    else {
         // use data from global variable -> dependencies.json already read before
         injectScripts();
     }

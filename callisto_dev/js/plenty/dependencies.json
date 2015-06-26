@@ -11,7 +11,6 @@
       "libs/jquery.touchSwipe.min.js",
       "libs/jquery.ui.touch-punch.min.js",
       "plenty/plenty-2.js"
-
     ]
   },
   "PageDesignContent": {
@@ -30,5 +29,4 @@
     "head": [],
     "body": []
   }
-
 }
