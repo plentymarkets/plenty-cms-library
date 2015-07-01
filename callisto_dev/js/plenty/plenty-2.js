@@ -4,7 +4,7 @@
  * Initialization
  */
 (function($) {
-	
+
 	/*
 	 *	GLOBAL FUNCTIONS
 	 *	- scroll to top
@@ -13,14 +13,14 @@
 	 *  - lazy loading images
 	 *	- tree navigation toggle
 	 */
-	
+
 	/**
 	 *	WEBSHOP FUNCTIONS
 	 *	- Linking SingleItem
 	 *	- Attribute Selection Toggle (item lists)
 	 *	- Item-Quantity-Buttons
 	 */
-	
+
 	// toggle attribute selection on item lists
 	// TODO: delete (?)
 	new PlentyFunction('.attributeSelectionTrigger', function(elem) {
@@ -30,7 +30,7 @@
 			$(this).parents('.onHover').addClass('hover');
 		});
 	});
-	
+
 	new PlentyFunction('.closeAttributeSelection', function(elem) {
 		$(elem).click(function() {
 			$(this).parents('.visible-hover').find('.attributeSelectionTrigger').text('Variante ändern').css('display', 'block');
@@ -38,11 +38,11 @@
 			$('.onHover.hover').removeClass('hover');
 		});
 	});
-	
-	
-	
+
+
+
 	$(document).ready(function() {
-		
+
 		// login
 		$('.dropdown input').focusin(function() {
 			if ( window.mediaSize != 'xs' && window.mediaSize != 'sm' ) $(this).closest('.dropdown').addClass('open');
@@ -63,19 +63,19 @@
 				});
 			}
 		});
-		
+
 		// mobile navigation / aside panel
 		$(window).on('orientationchange', function() {
 			$('body.aside-visible').removeClass('aside-visible');
 			$('body.navigation-visible').removeClass('navigation-visible');
-			
+
 		});
-		
+
 		// initialize touch functionality for mobile navigation / aside panel (requires jquery.touchSwipe.min.js)
-		$('.touch body > .wrapper').swipe({ 
-			swipeLeft: swipeLeft, 
-			swipeRight: swipeRight, 
-			allowPageScroll: 'auto', 
+		$('.touch body > .wrapper').swipe({
+			swipeLeft: swipeLeft,
+			swipeRight: swipeRight,
+			allowPageScroll: 'auto',
 			excludedElements: 'form, input, button, select, .owl-item, .ui-slider-handle'
 		});
 		function swipeLeft(event, direction, distance, duration, fingerCount) {
@@ -98,7 +98,7 @@
 				}
 			}
 		}
-		
+
 		// inizialize cross selling slider (requires owl.carousel.js)
 		$('.crossSellingSlider').owlCarousel({
 			items: 4,
@@ -112,7 +112,7 @@
 			mouseDrag: true,
 			afterMove: function(current) { $(current).find('img[data-plenty-lazyload]').trigger('appear'); }
 		});
-		
+
 		// inizialize preview image slider (requires owl.carousel.js)
 		$('.previewImageSlider').owlCarousel({
 			items: 1,
@@ -129,12 +129,12 @@
 			afterUpdate: function() { $('.owl-controls').removeAttr('style'); },
 			afterLazyLoad: function(owl) { owl.find('img:visible').css('display','inline-block'); }
 		});
-		
-		
+
+
 		$(window).on('orientationchange', function() {
 			$('li.open > [data-plenty="openCloseToggle"]').parent().removeClass('open');
 		});
-		
+
 	});
 })(jQuery);
 
@@ -143,20 +143,20 @@
  */
 (function($) {
 	$(window).load(function() {
-		
+
 		// display errors for old browsers
 		if( $('body').is('ielte7') ) {
 			$('[data-plenty="browserErrorModal"] .modal-title').append('Ihr Browser ist veraltet!');
 			$('[data-plenty="browserErrorModal"] .modal-body').append('<p>Um die Funktionen dieser Seite nutzen zu können, benötigen Sie eine aktuelle Version Ihres Browsers.<br>'
 				+'Bitte aktuallisieren Sie Ihren Browser, um Ihren Einkauf fortsetzen zu können.</p>');
-			
+
 			$('[data-plenty="browserErrorModal"]').modal({
 				show: true,
 				backdrop: 'static',
 				keyboard: false
 			});
 		}
-		
+
 	});
 })(jQuery);
 
@@ -164,9 +164,9 @@
  * Button "Go to top"
  * Shows and hides button depending on page scroll
  */
- 
+
 (function($) {
-	
+
 	// to top button
 	positionToTopButton = function() {
 		if( $(document).scrollTop() > 100 ) {
@@ -175,99 +175,18 @@
 			$('[data-plenty="toTop"]').removeClass('visible');
 		}
 	}
-	
+
 	$(window).scroll(function() {
 		positionToTopButton();
 	});
-	
+
 	$(window).resize(function() {
 		positionToTopButton();
 	});
-	
+
 })(jQuery);
 
 
-/*
- * Toggle Class
- * toggle style-classes on click
- * Usage / data-attribute:
- * <div data-plenty-toggle="{target: 'body', class: 'toggledClass', media: 'xs sm'}"></div>
- * target	:	jQuery selector to toggle the class at.
- * class		:  class(es) to toggle at target element
- * media		:  only toggle class on given media sizes (optional)
- *
- * (!) using data-plenty-toggle on <a>-elements will prevent redirecting to href=""
- */
-(function($) {
-	
-	new PlentyFunction('[data-plenty-toggle]', function(elem) {
-		$(elem).each(function() {
-			if( $(this).attr('data-plenty-toggle').search(';') < 0 ) {
-				eval('var data = ' + $(this).attr('data-plenty-toggle'));
-				if ( data.target && data.class ) {
-					$(this).click(function() {
-						var isMedia = false;
-						if ( data.media ) {
-							if ( data.media.indexOf(' ') != -1 ) {
-								var mediaArr = data.media.split(' ');
-								for ( i = 0; i < mediaArr.length; i++ ) {
-									if ( window.mediaSize == mediaArr[i] ) {
-										isMedia = true;
-									}
-								}
-							}
-							else {
-								if ( window.mediaSize == data.media ) isMedia = true;
-							}
-						}
-						if ( ! data.media || isMedia == true  ) {
-							$(data.target).toggleClass(data.class);
-							if ( $(this).is('a') ) return false;
-						}
-					});
-				}
-			}
-		});
-	});
-	
-}(jQuery));
-
-/*
- * Media Size Listener
- * triggers 'sizeChange' event if bootstrap breakpoints are passed while resizing
- * Usage:
- * $(window).on('sizeChange', function() {
- *		console.log(window.mediaSize);  
- * }); 
- */
-(function($) {
-	var mediaSize = '';
-	$.extend(window, mediaSize);
-	calculateMediaSize = function() {
-		var size;
-		if( !!window.matchMedia ) { // FIX IE support
-			if( window.matchMedia('(min-width:1200px)').matches ) size = 'lg';
-			else if( window.matchMedia('(min-width:992px)').matches ) size = 'md';
-			else if( window.matchMedia('(min-width:768px)').matches ) size = 'sm';
-			else size = 'xs';
-		} else {
-			if( $(window).width() >= 1200 ) size = 'lg';
-			else if( $(window).width() >= 992 ) size = 'md';
-			else if( $(window).width() >= 768 ) size = 'sm';
-			else size = 'xs';
-		}
-		if( size != window.mediaSize ) {
-			window.mediaSize = size;
-			$(window).trigger('sizeChange');
-		}
-	};
-	$(window).resize(function() {
-		calculateMediaSize();	
-	});
-	$(document).ready(function() {
-		calculateMediaSize();
-	});
-})(jQuery);
  
 /*
  * jQuery plugin: auto-hide
