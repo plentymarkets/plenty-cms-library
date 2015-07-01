@@ -14,67 +14,6 @@
 	 *	- tree navigation toggle
 	 */
 	
-	// append Bootstrap Tooltip
-	new PlentyFunction('[data-toggle="tooltip"]', function(elem) {
-		$(elem).tooltip({ container: 'body' });
-	});
-	
-	// Toggle target content on click.
-	// Can be bound on checked-/ unchecked-property of radio buttons
-	new PlentyFunction('[data-plenty-slidetoggle]', function(elem) {
-		
-		$(elem).each(function( i, trigger ) {
-			var target = $( $(this).attr('data-plenty-target') );
-			if ( $(trigger)[0].tagName.toLowerCase() == 'input' && $(trigger).attr('type').toLowerCase() == 'radio' ) {
-				// is radio button
-				var radioList = $('input[type="radio"][name="'+( $(trigger).attr('name') )+'"]');
-				var visibleOnChecked = ( ! $(trigger).is('[data-plenty-slidetoggle="unchecked"]') ) ? true : false;
-				$(radioList).change(function() {
-					$(target).parents('[data-plenty-equal-target]').css('height', 'auto');
-
-					if ( $(this).is(':checked') && $(this)[0] === $(trigger)[0] ) {
-						// checked
-						if ( visibleOnChecked == true ) {
-							$(target).slideDown(400, function() {
-								$('body').bindPlentyFunctions('[data-plenty-equal]');
-							});
-						} else {
-							$(target).slideUp(400, function() {
-								$('body').bindPlentyFunctions('[data-plenty-equal]');
-							});
-						}
-					}
-					else {
-						// unchecked (since other radio button has been checked)
-						if ( visibleOnChecked == true ) {
-							$(target).slideUp(400, function() {
-								$('body').bindPlentyFunctions('[data-plenty-equal]');
-							});
-						} else {
-							$(target).slideDown(400, function() {
-								$('body').bindPlentyFunctions('[data-plenty-equal]');
-							});
-						}
-					}
-				});
-			}
-			else {
-				// is not radio button
-				$(trigger).click(function() {
-					$(target).parents('[data-plenty-equal-target]').css('height', 'auto');
-
-                    $(trigger).addClass('animating');
-					$(target).slideToggle(400, function() {
-                        $(trigger).removeClass('animating');
-                        $(trigger).toggleClass('active');
-						$('body').bindPlentyFunctions('[data-plenty-equal]');
-					});
-				});
-			}
-		});
-	});
-	
-	
 	// lazyload images (requires lazyload.min.js)
 	new PlentyFunction('img[data-plenty-lazyload]', function(elem) {
 		$(elem).each(function() {
