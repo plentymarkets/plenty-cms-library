@@ -19,10 +19,12 @@
       "plenty/plentyFramework/directives/quantityInputButtons.js",
       "plenty/plentyFramework/directives/redirectHref.js",
       "plenty/plentyFramework/directives/slideToggle.js",
+      "plenty/plentyFramework/directives/socialShare.js",
       "plenty/plentyFramework/directives/toTop.js",
       "plenty/plentyFramework/services/Authenticator.js",
       "plenty/plentyFramework/services/MediaSize.js",
       "plenty/plentyFramework/services/Navigator.js",
+      "plenty/plentyFramework/services/SocialShareProvider.js",
       "plenty/plenty-2.js"
     ]
   },

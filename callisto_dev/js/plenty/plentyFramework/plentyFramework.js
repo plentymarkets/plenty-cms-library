@@ -117,11 +117,11 @@
 }(jQuery));
 
 // Create global instance of PlentyFramework for usage in Webshop-Layouts
-var pm = PlentyFramework.getInstance();
+var plenty = PlentyFramework.getInstance();
 
 // initially bind all registered directives
 jQuery(document).ready(function() {
-    pm.bindDirectives();
+    plenty.bindDirectives();
 });
 
 

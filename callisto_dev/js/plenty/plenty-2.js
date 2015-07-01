@@ -1,61 +1,23 @@
 ﻿/* plenty scripts */
-
-/*
- * Initialization
- */
 (function($) {
-
-	/*
-	 *	GLOBAL FUNCTIONS
-	 *	- scroll to top
-	 *  - bootstrap tooltip
-	 *  - slideToggle target content
-	 *  - lazy loading images
-	 *	- tree navigation toggle
-	 */
-
-	/**
-	 *	WEBSHOP FUNCTIONS
-	 *	- Linking SingleItem
-	 *	- Attribute Selection Toggle (item lists)
-	 *	- Item-Quantity-Buttons
-	 */
-
-	// toggle attribute selection on item lists
-	// TODO: delete (?)
-	new PlentyFunction('.attributeSelectionTrigger', function(elem) {
-		$(elem).click(function() {
-			$(this).css('display', 'none');
-			$(this).parents('.visible-hover').find('.attributeSelectionContainer').css('display', 'block');
-			$(this).parents('.onHover').addClass('hover');
-		});
-	});
-
-	new PlentyFunction('.closeAttributeSelection', function(elem) {
-		$(elem).click(function() {
-			$(this).parents('.visible-hover').find('.attributeSelectionTrigger').text('Variante ändern').css('display', 'block');
-			$(this).parents('.attributeSelectionContainer').css('display', 'none');
-			$('.onHover.hover').removeClass('hover');
-		});
-	});
-
-
-
+    /*
+     * Initialization
+     */
 	$(document).ready(function() {
 
 		// login
 		$('.dropdown input').focusin(function() {
-			if ( window.mediaSize != 'xs' && window.mediaSize != 'sm' ) $(this).closest('.dropdown').addClass('open');
+			if ( plenty.MediaSize.interval() != 'xs' && plenty.MediaSize.interval() != 'sm' ) $(this).closest('.dropdown').addClass('open');
 		}).focusout(function() {
-			if ( window.mediaSize != 'xs' && window.mediaSize != 'sm' ) $(this).closest('.dropdown').removeClass('open');
+			if ( plenty.MediaSize.interval() != 'xs' && plenty.MediaSize.interval() != 'sm' ) $(this).closest('.dropdown').removeClass('open');
 		});
 		$('.dropdown button[type="submit"]').click(function() {
-			if ( window.mediaSize != 'xs' && window.mediaSize != 'sm' ) $(this).closest('.dropdown').addClass('open');
+			if ( plenty.MediaSize.interval() != 'xs' && plenty.MediaSize.interval() != 'sm' ) $(this).closest('.dropdown').addClass('open');
 		});
 		// cancel login
 		$('[data-plenty="cancelLogin"]').click(function() {
 			$(this).closest('.dropdown').removeClass('open');
-			if ( window.mediaSize != 'xs' && window.mediaSize != 'sm' ) {
+			if ( plenty.MediaSize.interval() != 'xs' && plenty.MediaSize.interval() != 'sm' ) {
 				$(this).closest('[data-plenty="loginFormContainer"]').hide(10, function() {
 					$(this).animate({ height: 0 }, 300, function() {
 						$(this).removeAttr('style');
@@ -79,7 +41,7 @@
 			excludedElements: 'form, input, button, select, .owl-item, .ui-slider-handle'
 		});
 		function swipeLeft(event, direction, distance, duration, fingerCount) {
-			if ( window.mediaSize == 'xs' || window.mediaSize == 'sm' ) {
+			if ( plenty.MediaSize.interval() == 'xs' || plenty.MediaSize.interval() == 'sm' ) {
 				if ( $('body').is('.navigation-visible') ) {
 					$('body').removeClass('navigation-visible');
 				}
@@ -89,7 +51,7 @@
 			}
 		}
 		function swipeRight(event, direction, distance, duration, fingerCount) {
-			if ( window.mediaSize == 'xs' || window.mediaSize == 'sm' ) {
+			if ( plenty.MediaSize.interval() == 'xs' || plenty.MediaSize.interval() == 'sm' ) {
 				if ( ! $('body').is('.navigation-visible') && ! $('body').is('.aside-visible') ) {
 					$('body').addClass('navigation-visible');
 				}
@@ -136,12 +98,10 @@
 		});
 
 	});
-})(jQuery);
 
-/*
- * Display error modal for old browsers
- */
-(function($) {
+    /*
+     * Display error modal for old browsers
+     */
 	$(window).load(function() {
 
 		// display errors for old browsers
@@ -158,43 +118,13 @@
 		}
 
 	});
-})(jQuery);
-
-/*
- * Button "Go to top"
- * Shows and hides button depending on page scroll
- */
-
-(function($) {
-
-	// to top button
-	positionToTopButton = function() {
-		if( $(document).scrollTop() > 100 ) {
-			$('[data-plenty="toTop"]').addClass('visible');
-		} else {
-			$('[data-plenty="toTop"]').removeClass('visible');
-		}
-	}
-
-	$(window).scroll(function() {
-		positionToTopButton();
-	});
-
-	$(window).resize(function() {
-		positionToTopButton();
-	});
-
-})(jQuery);
-
-
  
-/*
- * jQuery plugin: auto-hide
- * automatically hide or remove elements
- * Usage:
- * $(selector).autoHide(options);
- */ 
-(function($) {	
+    /*
+     * jQuery plugin: auto-hide
+     * automatically hide or remove elements
+     * Usage:
+     * $(selector).autoHide(options);
+     */
 	$.fn.autoHide = function( options ) {
 		var defaults = {
 			hideAfter			: 4000,		// delay to hide or remove element, in milliseconds
@@ -251,4 +181,4 @@
 			if ( settings.hideOnOverlayClick && !!settings.overlaySelector ) $(settings.overlaySelector).click( doClose );
 		});
 	};
-})(jQuery);
+}(jQuery));
