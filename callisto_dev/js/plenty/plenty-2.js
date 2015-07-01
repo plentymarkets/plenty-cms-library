@@ -14,19 +14,6 @@
 	 *	- tree navigation toggle
 	 */
 	
-	// lazyload images (requires lazyload.min.js)
-	new PlentyFunction('img[data-plenty-lazyload]', function(elem) {
-		$(elem).each(function() {
-			$(this).lazyload({
-				effect: $(this).attr('data-plenty-lazyload')
-			});
-			$(this).on("loaded", function() {
-				$(this).css('display', 'inline-block');
-			});
-		});
-	});
-	
-	
 	new PlentyFunction('[data-plenty="openCloseToggle"]', function(elem) {
 		$(elem).each(function() {
 
