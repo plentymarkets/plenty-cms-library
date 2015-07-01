@@ -14,29 +14,6 @@
 	 *	- tree navigation toggle
 	 */
 	
-	new PlentyFunction('[data-plenty="openCloseToggle"]', function(elem) {
-		$(elem).each(function() {
-
-            // navigation (tree) open/close toggle
-            $(this).click(function () {
-                $(this).parent().addClass('animating');
-                $(this).siblings('ul').slideToggle(200, function () {
-                    if ($(this).parent().is('.open')) {
-                        $(this).parent().removeClass('open');
-                    }
-                    else {
-                        $(this).parent().addClass('open');
-                    }
-                    $(this).removeAttr('style');
-                    $(this).parent().removeClass('animating');
-                });
-            });
-
-        });
-	});	
-	
-	
-	
 	/**
 	 *	WEBSHOP FUNCTIONS
 	 *	- Linking SingleItem
