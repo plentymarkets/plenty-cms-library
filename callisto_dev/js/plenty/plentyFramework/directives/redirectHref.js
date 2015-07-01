@@ -1,7 +1,7 @@
 (function($, pm) {
 
     // link non-anchor elements
-    pm.directive('a[data-plenty-href]', function(elem) {
+    pm.directive('a[data-plenty-href]', function(i, elem) {
         $(elem).each(function() {
             var href = $(this).attr('href');
             var identifier = $(this).attr('data-plenty-href');
