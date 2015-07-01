@@ -13,14 +13,6 @@
 	 *  - lazy loading images
 	 *	- tree navigation toggle
 	 */
-	 
-	// scroll to top
-	new PlentyFunction('[data-plenty="toTop"]', function(elem) {
-		$(elem).click(function() {
-			$('html, body').animate({ scrollTop: 0 }, 400);
-			return false;
-		});
-	});
 	
 	// append Bootstrap Tooltip
 	new PlentyFunction('[data-toggle="tooltip"]', function(elem) {
