@@ -222,7 +222,7 @@
 				return setTimeout(function() {
 					doClose();
 				}, time);
-			}
+			};
 			
 			if( settings.hideAfter > 0 ) {
 				// START
@@ -252,80 +252,3 @@
 		});
 	};
 })(jQuery);
-
-
-
-
-/* 
- * content page slider 
- * 
- * usage (functionality requires only attribute data-plenty="contentpageSlider"):
- * <div class="contentpageSlider" data-plenty="contentpageSlider">
- *     <div class="slide">
- *         ...
- *     </div>
- *     <div class="slide">
- *         ...
- *     </div>
- *     ...
- * </div>
- */
-(function ($) {
-	new PlentyFunction('[data-plenty="contentpageSlider"]', function(elem) {
-		$(elem).owlCarousel({
-			navigation: true, 
-			navigationText: false,
-			slideSpeed: 1000,
-			paginationSpeed: 1000,
-			singleItem: true,
-			autoPlay: 6000,
-			stopOnHover: true,
-			afterMove: function(current) { $(current).find('img[data-plenty-lazyload]').trigger('appear'); }
-		});
-	});
-}(jQuery));
-
-/*
- * Equal Box heights
- */
- 
-(function ($) {
-	
-	new PlentyFunction('[data-plenty-equal]', function(elem) {
-		$(elem).each(function(i, obj) {
-			var mediaSizes = $(obj).data('plenty-equal').replace(/\s/g, '').split(',');
-			
-			var targets = ( $(obj).find('[data-plenty-equal-target]').length > 0 ) ? $(obj).find('[data-plenty-equal-target]') : $(obj).children();
-			
-			var maxHeight = 0;
-			$(targets).each(function(j, child) {
-				
-				$(child).css('height', '');
-				
-				if( $(child).outerHeight(true) > maxHeight ) {
-					maxHeight = $(child).outerHeight(true);
-				}
-			});
-			
-			if( !mediaSizes || $.inArray( window.mediaSize, mediaSizes ) >= 0 ) targets.height(maxHeight);
-			
-		});
-	}, true);
-	
-	$(window).on('sizeChange', function() {
-		$('body').bindPlentyFunctions( '[data-plenty-equal]' );	
-	});
-
-    new PlentyFunction('[data-plenty-onenter]', function(elem) {
-        $(elem).each(function(i, obj) {
-            var onEnter = $(obj).attr('data-plenty-onenter');
-            var callback = typeof window[onEnter] === 'function' ? window[onEnter] : (new Function('return ' + onEnter));
-            $(obj).on('keypress', function(e) {
-
-                if(e.which === 13 && !!callback && typeof callback === "function") {
-                    callback.call();
-                }
-            });
-        });
-    });
-}(jQuery));
