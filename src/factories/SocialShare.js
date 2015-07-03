@@ -1,6 +1,6 @@
 (function($, pm) {
 
-    pm.service('SocialShareProvider', function() {
+    pm.factory('SocialShare', function() {
 
         return {
             getSocialService: getService

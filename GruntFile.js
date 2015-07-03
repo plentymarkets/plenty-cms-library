@@ -11,7 +11,7 @@ module.exports = function(grunt) {
 
         concat: {
             debug: {
-                src: ['src/plentyFramework.js', 'src/services/*.js', 'src/directives/*.js'],
+                src: ['src/plentyFramework.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
                 dest: 'debug/<%= pkg.name %>-<%= pkg.version %>.js'
             }
         },
@@ -41,6 +41,6 @@ module.exports = function(grunt) {
     grunt.registerTask('debug', ['clean:debug', 'concat:debug']);
     grunt.registerTask('doc', ['clean:doc', 'jsdoc:doc']);
     grunt.registerTask('build', ['debug', 'doc', 'clean:build', 'uglify:build']);
-    grunt.registerTask('default', ['build']);
+    grunt.registerTask('default', ['debug']);
 
 };
