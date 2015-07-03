@@ -3,7 +3,7 @@
     /****************************************
      *        LOGIN & REGISTRATION          *
      ****************************************/
-    pm.service('Authenticator', function () {
+    pm.service('Authenticator', function (API, UI, CheckoutManager) {
 
         return {
             resetPassword: resetPassword,
@@ -24,7 +24,7 @@
 
             var form = $('[data-plenty-checkout="lostPasswordForm"]');
 
-            if (form.validateForm()) {
+            if( form.validateForm() ) {
 
                 var values = form.getFormValues();
 
@@ -32,23 +32,15 @@
                     Email: values.Email
                 };
 
-                CheckoutManager.showWaitScreen();
-                return $.ajax(
-                    "/rest/checkout/lostpassword/",
-                    {
-                        data: JSON.stringify(params),
-                        dataType: 'json',
-                        type: 'POST',
-                        success: function (response) {
-                            if (response.data.IsMailSend == true) {
-                                CheckoutManager.hideWaitScreen();
-                                $('[data-plenty-checkout="lostPasswordTextContainer"]').hide();
-                                $('[data-plenty-checkout="lostPasswordSuccessMessage"]').show();
-                            }
-                        },
-                        error: CheckoutManager.handleError
-                    }
-                );
+                UI.showWaitScreen();
+                return API.post("/rest/checkout/lostpassword/", params)
+                    .done(function( response ) {
+                        if ( response.data.IsMailSend == true ) {
+                            UI.hideWaitScreen();
+                            $('[data-plenty-checkout="lostPasswordTextContainer"]').hide();
+                            $('[data-plenty-checkout="lostPasswordSuccessMessage"]').show();
+                        }
+                    });
 
             }
         }
@@ -60,7 +52,7 @@
          */
         function customerLogin() {
             var form = $('[data-plenty-checkout-form="customerLogin"]');
-            if (form.validateForm()) {
+            if( form.validateForm() ) {
                 var values = form.getFormValues();
 
                 var params = {
@@ -68,31 +60,15 @@
                     Password: values.loginPassword
                 };
 
-                CheckoutManager.showWaitScreen();
+                UI.showWaitScreen();
 
-                return $.ajax(
-                    "/rest/checkout/login/",
-                    {
-                        data: JSON.stringify(params),
-                        dataType: 'json',
-                        type: 'POST',
-                        success: function () {
-                            // successful login -> go to form's target referenced by action-attribute
-                            window.location.href = form.attr('action');
-                        },
-                        error: CheckoutManager.handleError
-                    }
-                );
+                return API.post("/rest/checkout/login/", params)
+                    .done(function () {
+                        // successful login -> go to form's target referenced by action-attribute
+                        window.location.href = form.attr('action');
+                    });
             }
         }
-
-        // bind login functions to login forms
-        //new PlentyFunction('[data-plenty-checkout-form="customerLogin"]', function (elem) {
-        //    $(elem).on('submit', function () {
-        //        customerLogin();
-        //        return false;
-        //    });
-        //});
 
         /**
          * Evaluate invoice address form,
@@ -101,21 +77,14 @@
          * @param    invoiceAddress    object containing address-data sent to server via ReST-API
          * @return    Promise
          */
-        function setInvoiceAddress(invoiceAddress) {
+        function setInvoiceAddress( invoiceAddress ) {
 
-            CheckoutManager.showWaitScreen();
-            return $.ajax(
-                "/rest/checkout/customerinvoiceaddress/",
-                {
-                    data: JSON.stringify(invoiceAddress),
-                    dataType: 'json',
-                    type: 'POST',
-                    success: function (response) {
-                        CheckoutManager.checkout.CustomerInvoiceAddress = response.data;
-                    },
-                    error: CheckoutManager.handleError
-                }
-            );
+            UI.showWaitScreen();
+
+            return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
+                .done(function (response) {
+                    CheckoutManager.checkout().CustomerInvoiceAddress = response.data;
+                });
         }
 
         /**
@@ -126,7 +95,7 @@
          */
         function registerCustomer() {
             var form = $('[data-plenty-checkout-form="customerRegistration"]');
-            if (form.validateForm()) {
+            if( form.validateForm() ) {
                 var values = form.getFormValues();
 
                 // create new invoice address
@@ -156,10 +125,10 @@
                     Postnummer: values.Postnummer
                 };
 
-                return this.setInvoiceAddress(invoiceAddress).done(function () {
-
-                    window.location.href = form.attr('action');
-                });
+                return setInvoiceAddress(invoiceAddress)
+                    .done(function () {
+                        window.location.href = form.attr('action');
+                    });
             }
         }
 
@@ -197,7 +166,7 @@
                 Postnummer: values.Postnummer
             };
 
-            return this.setInvoiceAddress(invoiceAddress);
+            return setInvoiceAddress(invoiceAddress);
         }
 
         // TODO: is this still in use?
@@ -214,7 +183,7 @@
         //});
 
         /**
-         * Updatee address-data to register a guest
+         * Update address-data to register a guest
          *
          * @return Promise
          */
@@ -248,21 +217,18 @@
             };
 
             var hasChanges = false;
-
-            for (var key in invoiceAddress) {
-                console.log(key + ' - ' + CheckoutManager.checkout.CustomerInvoiceAddress[key] + ' - ' + invoiceAddress[key]);
-                if (CheckoutManager.checkout.CustomerInvoiceAddress[key] + '' !== invoiceAddress[key] + '' && key !== 'EmailRepeat') {
-                    console.log('		--> difference found ' + typeof CheckoutManager.checkout.CustomerInvoiceAddress[key] + ' - ' + typeof invoiceAddress[key]);
+            for ( var key in invoiceAddress ) {
+                if ( CheckoutManager.checkout().CustomerInvoiceAddress[key]+'' !== invoiceAddress[key]+'' && key !== 'EmailRepeat' ) {
                     hasChanges = true;
                     break;
                 }
             }
 
-            if (hasChanges) {
-                CheckoutManager.showWaitScreen();
-                return this.setInvoiceAddress(invoiceAddress).done(function () {
+            if ( hasChanges ) {
+                UI.showWaitScreen();
+                return setInvoiceAddress(invoiceAddress).done(function () {
                     CheckoutManager.reloadCatContent(checkoutConfirmCatId);
-                    CheckoutManager.hideWaitScreen();
+                    UI.hideWaitScreen();
                 });
             }
 
@@ -274,12 +240,8 @@
          * @return Promise
          */
         function updateGuestAddresses() {
-
             var form = $('[data-plenty-checkout-form="guestRegistration"]');
             var values = form.getFormValues();
-            var hasChangesShippingAddress = false;
-            var hasChangesInvoiceAddress = false;
-            var promise;
 
             // create new invoice address
             var invoiceAddress = {
@@ -306,10 +268,9 @@
                 Postnummer: values.Postnummer
             };
 
+            var hasChangesInvoiceAddress = false;
             for (var key in invoiceAddress) {
-                console.log(key + ' - ' + CheckoutManager.checkout.CustomerInvoiceAddress[key] + ' - ' + invoiceAddress[key]);
-                if (CheckoutManager.checkout.CustomerInvoiceAddress[key] + '' !== invoiceAddress[key] + '' && key !== 'EmailRepeat') {
-                    console.log('		--> difference found ' + typeof CheckoutManager.checkout.CustomerInvoiceAddress[key] + ' - ' + typeof invoiceAddress[key]);
+                if (CheckoutManager.checkout().CustomerInvoiceAddress[key] + '' !== invoiceAddress[key] + '' && key !== 'EmailRepeat') {
                     hasChangesInvoiceAddress = true;
                     break;
                 }
@@ -337,40 +298,41 @@
                 VATNumber: values.VATNumber
             };
 
-            if ($('[name="shippingAddressID"]:checked').val() < 0) {
+            var hasChangesShippingAddress = false;
+            if( $('[name="shippingAddressID"]:checked').val() < 0 ) {
                 for (var key in shippingAddress) {
-                    console.log(key + ' - ' + CheckoutManager.checkout.CustomerShippingAddress[key] + ' - ' + shippingAddress[key]);
-                    if (CheckoutManager.checkout.CustomerShippingAddress[key] + '' !== shippingAddress[key] + '' && key !== 'EmailRepeat') {
-                        console.log('		--> difference found ' + typeof CheckoutManager.checkout.CustomerShippingAddress[key] + ' - ' + typeof shippingAddress[key]);
+                    if (CheckoutManager.checkout().CustomerShippingAddress[key] + '' !== shippingAddress[key] + '' && key !== 'EmailRepeat') {
                         hasChangesShippingAddress = true;
                         break;
                     }
                 }
             }
 
-            if (hasChangesInvoiceAddress) {
-                promise = this.setInvoiceAddress(invoiceAddress);
+            var promise;
+
+            if ( hasChangesInvoiceAddress ) {
+                promise = setInvoiceAddress(invoiceAddress);
             }
 
-            if (hasChangesShippingAddress) {
+            if ( hasChangesShippingAddress ) {
 
-                if (!promise) {
-                    promise = CheckoutManager.saveShippingAddress(shippingAddress);
+                if ( ! promise ) {
+                    promise = saveShippingAddress(shippingAddress);
                 }
                 else {
-                    promise.done(function () {
-                        CheckoutManager.saveShippingAddress(shippingAddress);
+                    promise.done(function() {
+                        saveShippingAddress(shippingAddress);
                     });
                 }
             }
 
-            if (!!promise) {
-                return promise.done(function () {
+            if ( !! promise ) {
+                return promise.done(function() {
                     CheckoutManager.reloadCatContent(checkoutConfirmCatId);
-                    CheckoutManager.hideWaitScreen();
+                    UI.hideWaitScreen();
                 });
             }
         }
-    });
+    }, ['API', 'UI', 'CheckoutManager']);
 
 }(PlentyFramework));

@@ -1,6 +1,6 @@
 (function(pm) {
 	
-	pm.service('CheckoutManager', function(API, CMS, UI) {
+	pm.factory('CheckoutManager', function(API, CMS, UI) {
 		
 		return {
 			checkout: checkout,
@@ -23,13 +23,11 @@
          */
         function getCheckout() {
 
-            return API.get(
-                '/rest/checkout/',
-                function(response) {
+            return API.get('/rest/checkout/')
+                .done(function(response) {
                     if( !!response ) checkout = response.data;
                     else API.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
-                }
-            );
+                });
         }
 
         /**
@@ -39,14 +37,11 @@
          */
         function setCheckout() {
 
-            return API.put(
-                '/rest/checkout',
-                checkout,
-                function(response) {
+            return API.put('/rest/checkout', checkout)
+                .done(function(response) {
                     if( !!response ) checkout = response.data;
                     else API.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
-                }
-            );
+                });
 
         }
 
@@ -58,15 +53,15 @@
          */
         function reloadContainer( container ) {
             UI.showWaitScreen();
-            return CMS.getContainer( container ).from( 'checkout' ).done(
-                function (response) {
-                    $('[data-plenty-checkout-template="' + container + '"]').each(function (i, elem) {
-                        $(elem).html(response.data[0]);
-                        pm.getInstance().bindDirectives();
-                        UI.hideWaitScreen();
-                    });
-                }
-            );
+            return CMS.getContainer( container ).from( 'checkout' )
+                .done(function (response) {
+                    $('[data-plenty-checkout-template="' + container + '"]')
+                        .each(function (i, elem) {
+                            $(elem).html(response.data[0]);
+                            pm.getInstance().bindDirectives();
+                            UI.hideWaitScreen();
+                        });
+                });
         }
 
         /**
@@ -78,15 +73,15 @@
          */
         function reloadCatContent( catId ) {
             UI.showWaitScreen();
-            return CMS.getCategoryContent(catId).done(
-                function(response) {
-                    $('[data-plenty-checkout-catcontent="'+catId+'"]').each(function(i, elem) {
-                        $(elem).html(response.data[0]);
-                        pm.getInstance().bindDirectives();
-                        UI.hideWaitScreen(true);
-                    });
-                }
-            );
+            return CMS.getCategoryContent(catId)
+                .done(function(response) {
+                    $('[data-plenty-checkout-catcontent="'+catId+'"]')
+                        .each(function(i, elem) {
+                            $(elem).html(response.data[0]);
+                            pm.getInstance().bindDirectives();
+                            UI.hideWaitScreen(true);
+                        });
+                });
 
         }
 
@@ -99,15 +94,15 @@
          */
         function reloadItemContainer( container ) {
             UI.showWaitScreen();
-            return CMS.getContainer( 'itemview' + container ).from( 'itemview' ).done(
-                function(response) {
-                    $('[data-plenty-itemview-template="'+container+'"]').each(function(i, elem) {
-                        $(elem).html(response.data[0]);
-                        pm.getInstance().bindDirectives();
-                        UI.hideWaitScreen();
-                    });
-                }
-            );
+            return CMS.getContainer( 'itemview' + container ).from( 'itemview' )
+                .done(function(response) {
+                    $('[data-plenty-itemview-template="'+container+'"]')
+                        .each(function(i, elem) {
+                            $(elem).html(response.data[0]);
+                            pm.getInstance().bindDirectives();
+                            UI.hideWaitScreen();
+                        });
+                });
 
         }
 				
