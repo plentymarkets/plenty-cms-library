@@ -4,19 +4,20 @@ module.exports = function(grunt) {
         pkg: grunt.file.readJSON('package.json'),
 
         clean: {
+            debug: ['debug'],
             build: ['dist']
         },
 
         concat: {
-            build: {
-                src: ['src/plentyFramework.js', 'src/**/*.js'],
-                dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
+            debug: {
+                src: ['src/plentyFramework.js', 'src/services/*.js', 'src/directives/*.js'],
+                dest: 'debug/<%= pkg.name %>-<%= pkg.version %>.js'
             }
         },
 
         uglify: {
             build: {
-                src: 'dist/<%= pkg.name %>-<%= pkg.version %>.js',
+                src: 'debug/<%= pkg.name %>-<%= pkg.version %>.js',
                 dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.min.js'
             }
         }
@@ -26,7 +27,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
 
-    grunt.registerTask('build', ['clean', 'concat', 'uglify']);
+    grunt.registerTask('debug', ['clean:debug', 'concat:debug']);
+    grunt.registerTask('build', ['debug', 'clean:build', 'uglify:build']);
     grunt.registerTask('default', ['build']);
 
 };
