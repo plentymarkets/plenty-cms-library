@@ -70,8 +70,8 @@
                 $('.dropdown.open > a[data-plenty-enable="touch"]').parent().removeClass('open');
             }
         });
-        $(window).on('sizeChange', function() {
-            if ( MediaSize.interval() != 'xs' && MediaSize.interval() != 'sm' && ! Modernizr.touch ) {
+        $(window).on('sizeChange', function(newValue) {
+            if ( newValue != 'xs' && newValue != 'sm' && ! Modernizr.touch ) {
                 $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent().removeClass('open');
             }
         });

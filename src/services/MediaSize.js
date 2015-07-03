@@ -24,8 +24,9 @@
                 else size = 'xs';
             }
             if( size != bsInterval ) {
+                var oldValue = bsInterval;
                 bsInterval = size;
-                $(window).trigger('sizeChange');
+                $(window).trigger('sizeChange', [bsInterval, oldValue]);
             }
         }
 
