@@ -12,6 +12,18 @@
         return instance;
     };
 
+    PlentyFramework.prepareDependencies = function( dependencies ) {
+        var injections = [];
+        $.each( dependencies, function(j, dependency) {
+            var service = PlentyFramework.service(dependency);
+            if( !service ) {
+                console.error('Cannot inject service "' + dependency + "': Service not found.");
+            }
+            injections.push( service );
+        });
+        return injections;
+    };
+
     /**
      * @type {Array} Collection of registered directives
      */
@@ -59,17 +71,10 @@
 
                     // append dependencies if exists
                     if( !!directive.dependencies && directive.dependencies.length > 0 ) {
-                        $.each( directive.dependencies, function(j, dependency) {
-                            var service = PlentyFramework.service(dependency);
-                            if( !service ) {
-                                console.error('Cannot inject service "' + dependency + "': Service not found.");
-                            }
-                            params.push( service );
-                        });
+                        params = params.concat( PlentyFramework.prepareDependencies(directive.dependencies) );
                     }
 
-                    // apply loop variables and dependend services to callback
-
+                    // apply loop variables and depending services to callback
                     directive.callback.apply(null, params);
                 });
             }
@@ -83,7 +88,7 @@
         });
     };
 
-    PlentyFramework.service = function( serviceName, serviceFunctions ) {
+    PlentyFramework.service = function( serviceName, serviceFunctions, dependencies ) {
 
 
         // Catch type mismatching for 'serviceName'
@@ -109,8 +114,14 @@
             return;
         }
 
+        // prepare dependencies
+        var params = [];
+        if( !!dependencies ) {
+            params = PlentyFramework.prepareDependencies( dependencies );
+        }
+
         // inject service
-        PlentyFramework.prototype[serviceName] = serviceFunctions();
+        PlentyFramework.prototype[serviceName] = serviceFunctions.apply( null, params );
 
     };
 
