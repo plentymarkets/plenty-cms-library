@@ -13,27 +13,20 @@
             UI.printErrors( responseText.error.error_stack );
         }
 
-        function get( url, onSuccess, onError ) {
-
-            if( !!onSuccess ) onSuccess = function(response) {};
-            if( !!onError ) onError = handleError;
+        function get( url ) {
 
             return $.ajax(
                 url,
                 {
                     type:       'GET',
                     dataType:   'json',
-                    success:    onSuccess,
-                    error:      onError
+                    error:      handleError
                 }
             );
 
         }
 
-        function post( url, data, onSuccess, onError ) {
-
-            if( !!onSuccess ) onSuccess = function(response) {};
-            if( !!onError ) onError = handleError;
+        function post( url, data ) {
 
             return $.ajax(
                 url,
@@ -41,16 +34,12 @@
                     type:       'POST',
                     data:       JSON.stringify(data),
                     dataType:   'json',
-                    success:    onSuccess,
-                    error:      onError
+                    error:      handleError
                 }
             );
         }
 
-        function put( url, data, onSuccess, onError ) {
-
-            if( !!onSuccess ) onSuccess = function(response) {};
-            if( !!onError ) onError = handleError;
+        function put( url, data ) {
 
             return $.ajax(
                 url,
@@ -58,8 +47,7 @@
                     type:       'PUT',
                     data:       JSON.stringify(data),
                     dataType:   'json',
-                    success:    onSuccess,
-                    error:      onError
+                    error:      handleError
                 }
             );
 
