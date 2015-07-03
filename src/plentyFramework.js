@@ -12,6 +12,11 @@
         return instance;
     };
 
+    /**
+     * Prepare an array containing required services given by string identifier
+     * @param {Array} dependencies Names of required services
+     * @returns {Array} Objects to apply to callback function
+     */
     PlentyFramework.prepareDependencies = function( dependencies ) {
         var injections = [];
         $.each( dependencies, function(j, dependency) {
@@ -24,9 +29,6 @@
         return injections;
     };
 
-    /**
-     * @type {Array} Collection of registered directives
-     */
     PlentyFramework.directives = [];
 
     /**
@@ -88,6 +90,15 @@
         });
     };
 
+    /**
+     * Get an existing service or
+     * Register a new service
+     * @param {string}      serviceName         Unique identifier of the service to get/ create
+     * @param {function}    [serviceFunctions]  Callback containing all public functions of this service.
+     *                                          Try to return existing service if not set.
+     * @param {Array}       [dependencies]      Identifiers of required services to inject in serviceFunctions
+     * @returns {object}                        The object described in serviceFunctions(). Can be received via PlentyFramework.[serviceName]
+     */
     PlentyFramework.service = function( serviceName, serviceFunctions, dependencies ) {
 
 

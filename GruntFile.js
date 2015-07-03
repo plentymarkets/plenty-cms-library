@@ -5,6 +5,7 @@ module.exports = function(grunt) {
 
         clean: {
             debug: ['debug'],
+            doc: ['doc'],
             build: ['dist']
         },
 
@@ -20,15 +21,26 @@ module.exports = function(grunt) {
                 src: 'debug/<%= pkg.name %>-<%= pkg.version %>.js',
                 dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.min.js'
             }
+        },
+
+        jsdoc: {
+            doc: {
+                src: ['src/plentyFramework.js', 'src/**/*js'],
+                options: {
+                    destination: 'doc'
+                }
+            }
         }
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-jsdoc');
 
     grunt.registerTask('debug', ['clean:debug', 'concat:debug']);
-    grunt.registerTask('build', ['debug', 'clean:build', 'uglify:build']);
+    grunt.registerTask('doc', ['clean:doc', 'jsdoc:doc']);
+    grunt.registerTask('build', ['debug', 'doc', 'clean:build', 'uglify:build']);
     grunt.registerTask('default', ['build']);
 
 };
