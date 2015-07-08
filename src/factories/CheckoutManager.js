@@ -1,7 +1,14 @@
 (function(pm) {
 	
 	pm.factory('CheckoutManager', function(API, CMS, UI) {
-		
+        var checkoutData;
+
+        // init data
+        UI.showWaitScreen();
+        getCheckout().done(function() {
+            UI.hideWaitScreen(true);
+        });
+
 		return {
 			checkout: checkout,
             getCheckout: getCheckout,
@@ -11,9 +18,8 @@
             reloadItemContainer: reloadItemContainer
 		};
 
-        var checkout;
         function checkout() {
-            return checkout;
+            return checkoutData;
         }
 
         /**
@@ -25,7 +31,7 @@
 
             return API.get('/rest/checkout/')
                 .done(function(response) {
-                    if( !!response ) checkout = response.data;
+                    if( !!response ) checkoutData = response.data;
                     else API.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
                 });
         }
@@ -39,7 +45,7 @@
 
             return API.put('/rest/checkout', checkout)
                 .done(function(response) {
-                    if( !!response ) checkout = response.data;
+                    if( !!response ) checkoutData = response.data;
                     else API.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
                 });
 
@@ -53,7 +59,7 @@
          */
         function reloadContainer( container ) {
             UI.showWaitScreen();
-            return CMS.getContainer( container ).from( 'checkout' )
+            return CMS.getContainer( "checkout"+container ).from( 'checkout' )
                 .done(function (response) {
                     $('[data-plenty-checkout-template="' + container + '"]')
                         .each(function (i, elem) {
