@@ -23,4 +23,37 @@
         });
     });
 
+    // Quantity Buttons in BasketView
+    pm.directive('[data-basket-item-id] [data-plenty="quantityInputButtonPlus"], [data-basket-item-id] [data-plenty="quantityInputButtonMinus"]', function(i, button) {
+        $(button).click(function() {
+
+            if( !!$(button).data('timeout') ) {
+                window.clearTimeout( $(button).data('timeout') );
+            }
+
+            var timeout = window.setTimeout(function() {
+                $(button).parents('[data-plenty="quantityInputWrapper"]').find('[data-plenty="quantityInput"]').trigger('change');
+            }, 1000);
+
+            $(button).data('timeout', timeout);
+
+        });
+    });
+
+    pm.directive('[data-basket-item-id] [data-plenty="quantityInput"]', function(i, input, Basket) {
+        $(input).change( function() {
+
+            var newQuantity = parseInt( $(input).val() );
+            var basketItemID = $(input).parents('[data-basket-item-id]').attr('data-basket-item-id');
+
+            Basket.setItemQuantity(
+                basketItemID,
+                newQuantity
+            );
+        });
+    }, ['Basket']);
+
+
+
+
 }(jQuery, PlentyFramework));
