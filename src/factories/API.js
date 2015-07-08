@@ -13,6 +13,11 @@
             UI.printErrors( responseText.error.error_stack );
         }
 
+        /**
+         * Handle a GET request
+         * @param url   The URL to send the request to
+         * @returns {*} Deferred request object
+         */
         function get( url ) {
 
             return $.ajax(
@@ -26,6 +31,12 @@
 
         }
 
+        /**
+         * Handle a POST request
+         * @param url   The URL to send the request to
+         * @param data  The data to append to the request. Will be converted to JSON internally.
+         * @returns {*} Deferred request object
+         */
         function post( url, data ) {
 
             return $.ajax(
@@ -39,6 +50,12 @@
             );
         }
 
+        /**
+         * Handle a PUT request
+         * @param url   The URL to send the request to
+         * @param data  The data to append to the request. Will be converted to JSON internally.
+         * @returns {*} Deferred request object
+         */
         function put( url, data ) {
 
             return $.ajax(
