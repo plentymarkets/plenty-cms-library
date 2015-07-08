@@ -3,9 +3,10 @@
 	pm.factory('API', function(UI) {
 
 		return {
-            get: get,
-            post: post,
-            put: put
+            get: _get,
+            post: _post,
+            put: _put,
+            delete: _delete
 		};
 
         function handleError( jqXHR ) {
@@ -18,14 +19,14 @@
          * @param url   The URL to send the request to
          * @returns {*} Deferred request object
          */
-        function get( url ) {
+        function _get( url, ignoreErrors ) {
 
             return $.ajax(
                 url,
                 {
                     type:       'GET',
                     dataType:   'json',
-                    error:      handleError
+                    error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
             );
 
@@ -37,7 +38,7 @@
          * @param data  The data to append to the request. Will be converted to JSON internally.
          * @returns {*} Deferred request object
          */
-        function post( url, data ) {
+        function _post( url, data, ignoreErrors ) {
 
             return $.ajax(
                 url,
@@ -45,7 +46,7 @@
                     type:       'POST',
                     data:       JSON.stringify(data),
                     dataType:   'json',
-                    error:      handleError
+                    error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
             );
         }
@@ -56,7 +57,7 @@
          * @param data  The data to append to the request. Will be converted to JSON internally.
          * @returns {*} Deferred request object
          */
-        function put( url, data ) {
+        function _put( url, data, ignoreErrors ) {
 
             return $.ajax(
                 url,
@@ -64,7 +65,25 @@
                     type:       'PUT',
                     data:       JSON.stringify(data),
                     dataType:   'json',
-                    error:      handleError
+                    error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
+                }
+            );
+
+        }
+
+        /**
+         * Handle a DELETE request
+         * @param url   The URL to send the request to
+         * @returns {*} Deferred request object
+         */
+        function _delete( url, ignoreErrors ) {
+
+            return $.ajax(
+                url,
+                {
+                    type:       'DELETE',
+                    dataType:   'json',
+                    error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
             );
 
