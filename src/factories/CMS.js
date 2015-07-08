@@ -14,11 +14,12 @@
          * @returns {object}        The prepared request. Call .from( layoutGroup ) to specify the location in the CMS
          *                          (e.g. 'Checkout')
          */
-        function getContainer( containerName ) {
+        function getContainer( containerName, params ) {
 
             function from( layoutGroup ) {
 
-                return API.get( '/' + layoutGroup.toLowerCase() + '/container_' + containerName.toLowerCase() );
+                params = params || '';
+                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/container_' + containerName.toLowerCase() + '/' + params );
 
             }
 
@@ -34,11 +35,12 @@
          * @returns {object}        The prepared request. Call .from( layoutGroup ) to specify the location in the CMS
          *                          (e.g. 'Checkout')
          */
-        function getParams( containerName ) {
+        function getParams( containerName, params ) {
 
             function from( layoutGroup ) {
 
-                return API.get( '/' + layoutGroup.toLowerCase() + '/' + containerName.toLowerCase() );
+                params = params || '';
+                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/' + containerName.toLowerCase() + '/' + params );
 
             }
 
