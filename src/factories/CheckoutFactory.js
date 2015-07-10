@@ -83,10 +83,8 @@
             UI.showWaitScreen();
             return CMS.getCategoryContent(catId)
                 .done(function(response) {
-                    console.log("inject new html...");
                     $('[data-plenty-checkout-catcontent="'+catId+'"]')
                         .each(function(i, elem) {
-                            console.log("... in element: ", elem);
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                             UI.hideWaitScreen(true);

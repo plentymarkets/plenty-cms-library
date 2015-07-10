@@ -9,7 +9,8 @@
             saveShippingAddress: saveShippingAddress,
             preparePayment: preparePayment,
             setMethodOfPayment: setMethodOfPayment,
-            editBankDetails: editBankDetails
+            editBankDetails: editBankDetails,
+            placeOrder: placeOrder
 		};
 
         function init() {

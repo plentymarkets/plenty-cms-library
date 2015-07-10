@@ -95,7 +95,7 @@
                 fillNavigation();
                 $(window).on('sizeChange', fillNavigation);
                 $(window).resize(function() {
-                    if(pm.getInstance().MediaSize.interval() == 'xs') {
+                    if(pm.getInstance().MediaSizeService.interval() == 'xs') {
                         fillNavigation();
                     }
                 });
