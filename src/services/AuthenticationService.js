@@ -82,7 +82,7 @@
 
             return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                 .done(function (response) {
-                    Checkout.checkout().CustomerInvoiceAddress = response.data;
+                    Checkout.getCheckout().CustomerInvoiceAddress = response.data;
                 });
         }
 
@@ -165,21 +165,11 @@
                 Postnummer: values.Postnummer
             };
 
-            return setInvoiceAddress(invoiceAddress);
+            return setInvoiceAddress(invoiceAddress)
+                .done(function() {
+                    Checkout.reloadCatContent(checkoutConfirmCatId);
+                });
         }
-
-        // TODO: is this still in use?
-        //new PlentyFunction('[data-plenty-checkout-form="customerLogin"]', function (elem) {
-        //    $(elem).on('submit', function () {
-        //        CheckoutManager.registerGuest().done(function () {
-        //            CheckoutManager.saveShippingAddress().done(function () {
-        //                registrationDone = true;
-        //                CheckoutManager.Navigator.goTo(targetContainer.index);
-        //                document.location.reload(true);
-        //            });
-        //        });
-        //    });
-        //});
 
         /**
          * Update address-data to register a guest
@@ -217,7 +207,7 @@
 
             var hasChanges = false;
             for ( var key in invoiceAddress ) {
-                if ( Checkout.checkout().CustomerInvoiceAddress[key]+'' !== invoiceAddress[key]+'' && key !== 'EmailRepeat' ) {
+                if ( Checkout.getCheckout().CustomerInvoiceAddress[key]+'' !== invoiceAddress[key]+'' && key !== 'EmailRepeat' ) {
                     hasChanges = true;
                     break;
                 }
@@ -269,7 +259,7 @@
 
             var hasChangesInvoiceAddress = false;
             for (var key in invoiceAddress) {
-                if (Checkout.checkout().CustomerInvoiceAddress[key] + '' !== invoiceAddress[key] + '' && key !== 'EmailRepeat') {
+                if (Checkout.getCheckout().CustomerInvoiceAddress[key] + '' !== invoiceAddress[key] + '' && key !== 'EmailRepeat') {
                     hasChangesInvoiceAddress = true;
                     break;
                 }
@@ -300,7 +290,7 @@
             var hasChangesShippingAddress = false;
             if( $('[name="shippingAddressID"]:checked').val() < 0 ) {
                 for (var key in shippingAddress) {
-                    if (Checkout.checkout().CustomerShippingAddress[key] + '' !== shippingAddress[key] + '' && key !== 'EmailRepeat') {
+                    if (Checkout.getCheckout().CustomerShippingAddress[key] + '' !== shippingAddress[key] + '' && key !== 'EmailRepeat') {
                         hasChangesShippingAddress = true;
                         break;
                     }

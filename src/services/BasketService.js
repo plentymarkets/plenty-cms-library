@@ -21,7 +21,7 @@
 
                 API.post( '/rest/checkout/basketitemslist/', addBasketList, true)
                     .done(function() {
-                        Checkout.getCheckout()
+                        Checkout.loadCheckout()
                             .done(function() {
                                 refreshBasketPreview();
                                 CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', '?ArticleID=' + addBasketList[0].BasketItemItemID).from('ItemView')
@@ -113,7 +113,7 @@
 
             // get item name
             var itemName, originalItemQuantity;
-            var params = Checkout.checkout().BasketItemsList;
+            var params = Checkout.getCheckout().BasketItemsList;
             for ( var i = 0; i < params.length; i++ ) {
                 if ( params[i].BasketItemID == BasketItemID ) {
                     originalItemQuantity = params[i].BasketItemQuantity;
@@ -125,10 +125,10 @@
                 UI.showWaitScreen();
                 API.delete('/rest/checkout/basketitemslist/?basketItemIdsList[0]='+BasketItemID)
                     .done(function() {
-                        Checkout.getCheckout().done(function() {
+                        Checkout.loadCheckout().done(function() {
                             $('[data-basket-item-id="'+BasketItemID+'"]').remove();
 
-                            if( !Checkout.checkout().BasketItemsList || Checkout.checkout().BasketItemsList.length <= 0 ) {
+                            if( !Checkout.getCheckout().BasketItemsList || Checkout.getCheckout().BasketItemsList.length <= 0 ) {
                                 Checkout.reloadCatContent(basketCatId);
                             } else {
                                 Checkout.reloadContainer('Totals');
@@ -164,7 +164,7 @@
                 removeBasketItem( BasketItemID );
             }
 
-            var params = Checkout.checkout().BasketItemsList;
+            var params = Checkout.getCheckout().BasketItemsList;
             var basketItem;
             var basketItemIndex;
             for ( var i = 0; i < params.length; i++ ) {
@@ -186,7 +186,7 @@
                             Checkout.reloadContainer('Totals');
 
                             var basketItemsPriceTotal = 0;
-                            var params2 = Checkout.checkout().BasketItemsList;
+                            var params2 = Checkout.getCheckout().BasketItemsList;
                             for (var i = 0; i < params2.length; i++) {
                                 if (params2[i].BasketItemID == BasketItemID) {
                                     basketItemsPriceTotal = params2[i].BasketItemPriceTotal;
@@ -211,7 +211,7 @@
 
                     $('[data-plenty-basket-empty]').each(function(i, elem) {
                         var toggleClass = $(elem).attr('data-plenty-basket-empty');
-                        if( Checkout.checkout().BasketItemsList.length <= 0 ) {
+                        if( Checkout.getCheckout().BasketItemsList.length <= 0 ) {
                             $(elem).addClass( toggleClass );
                         } else {
                             $(elem).removeClass( toggleClass );
@@ -223,12 +223,12 @@
 
             //update quantity
             var itemQuantityTotal = 0;
-            $.each( Checkout.checkout().BasketItemsList, function(i, basketItem) {
+            $.each( Checkout.getCheckout().BasketItemsList, function(i, basketItem) {
                 itemQuantityTotal += basketItem.BasketItemQuantity;
             });
 
             $('[data-plenty-basket-preview="itemQuantityTotal"]').text( itemQuantityTotal );
-            $('[data-plenty-basket-preview="totalsItemSum"]').text( Checkout.checkout().Totals.TotalsItemSum );
+            $('[data-plenty-basket-preview="totalsItemSum"]').text( Checkout.getCheckout().Totals.TotalsItemSum );
         }
 
         function addCoupon() {
@@ -250,7 +250,7 @@
 
         function removeCoupon() {
             var params = {
-                CouponActiveCouponCode: Checkout.checkout().Coupon.CouponActiveCouponCode
+                CouponActiveCouponCode: Checkout.getCheckout().Coupon.CouponActiveCouponCode
             };
 
             UI.showWaitScreen();
@@ -259,7 +259,7 @@
                 .done(function() {
                     Checkout.setCheckout()
                         .done(function() {
-                            delete Checkout.checkout().Coupon;
+                            delete Checkout.getCheckout().Coupon;
 
                             Checkout.reloadContainer('Coupon');
                             Checkout.reloadCatContent(checkoutConfirmCatId);

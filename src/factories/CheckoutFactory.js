@@ -2,18 +2,26 @@
 	
 	pm.factory('CheckoutFactory', function(API, CMS, UI) {
         var checkoutData;
+        var checkout;
 
 		return {
-			checkout: checkout,
             getCheckout: getCheckout,
             setCheckout: setCheckout,
+            loadCheckout: loadCheckout,
             reloadContainer: reloadContainer,
             reloadCatContent: reloadCatContent,
-            reloadItemContainer: reloadItemContainer
+            reloadItemContainer: reloadItemContainer,
 		};
 
-        function checkout() {
+        function Checkout() {
             return checkoutData;
+        }
+        function getCheckout() {
+            if( !checkout ) {
+                checkout = new Checkout();
+            }
+
+            return checkout;
         }
 
         /**
@@ -21,7 +29,7 @@
          *
          * @return Promise interface
          */
-        function getCheckout() {
+        function loadCheckout() {
 
             return API.get('/rest/checkout/')
                 .done(function(response) {
@@ -75,8 +83,10 @@
             UI.showWaitScreen();
             return CMS.getCategoryContent(catId)
                 .done(function(response) {
+                    console.log("inject new html...");
                     $('[data-plenty-checkout-catcontent="'+catId+'"]')
                         .each(function(i, elem) {
+                            console.log("... in element: ", elem);
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                             UI.hideWaitScreen(true);

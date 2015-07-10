@@ -228,18 +228,19 @@
         }
 
         form.find('input, select, textarea').each(function(i, elem) {
-
-            if( $(elem).attr('type') == "checkbox" ) {
-                // get checkbox group
-                var groupValues = [];
-                $(form).find('[name="' + $(elem).attr('name') + '"]:checked').each(function(j, checkbox) {
-                    groupValues.push( $(checkbox).val() );
-                });
-                inject( $(elem).attr('name'), groupValues );
-            } else if( $(elem).attr('type') == 'radio' ) {
-                if( $(elem).is(':checked') ) inject( $(elem).attr('name'), $(elem).val() );
-            } else {
-                inject( $(elem).attr('name'), $(elem).val() );
+            if( !!$(elem).attr('name') ) {
+                if ($(elem).attr('type') == "checkbox") {
+                    // get checkbox group
+                    var groupValues = [];
+                    $(form).find('[name="' + $(elem).attr('name') + '"]:checked').each(function (j, checkbox) {
+                        groupValues.push($(checkbox).val());
+                    });
+                    inject($(elem).attr('name'), groupValues);
+                } else if ($(elem).attr('type') == 'radio') {
+                    if ($(elem).is(':checked')) inject($(elem).attr('name'), $(elem).val());
+                } else {
+                    inject($(elem).attr('name'), $(elem).val());
+                }
             }
 
         });

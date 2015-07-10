@@ -32,6 +32,7 @@
                 $('body').append(popup);
                 // bind popups 'close'-button
                 popup.find('.close').click(function() {
+                    popup.hide();
                 });
             }
 

@@ -14,7 +14,7 @@
 
         function init() {
             UI.showWaitScreen();
-            Checkout.getCheckout()
+            Checkout.loadCheckout()
                 .done(function() {
                     UI.hideWaitScreen();
                 });
@@ -26,14 +26,14 @@
             var values = form.getFormValues();
 
             // initialize CustomerSign & InfoText to avoid updating empty values
-            if (!Checkout.checkout().CheckoutCustomerSign) Checkout.checkout().CheckoutCustomerSign = "";
-            if (!Checkout.checkout().CheckoutOrderInfoText) Checkout.checkout().CheckoutOrderInfoText = "";
+            if (!Checkout.getCheckout().CheckoutCustomerSign) Checkout.getCheckout().CheckoutCustomerSign = "";
+            if (!Checkout.getCheckout().CheckoutOrderInfoText) Checkout.getCheckout().CheckoutOrderInfoText = "";
 
-            if ( ( Checkout.checkout().CheckoutCustomerSign !== values.CustomerSign && $(form).find('[name="CustomerSign"]').length > 0 )
-                || ( Checkout.checkout().CheckoutOrderInfoText !== values.OrderInfoText && $(form).find('[name="OrderInfoText"]').length > 0 ) ) {
+            if ( ( Checkout.getCheckout().CheckoutCustomerSign !== values.CustomerSign && $(form).find('[name="CustomerSign"]').length > 0 )
+                || ( Checkout.getCheckout().CheckoutOrderInfoText !== values.OrderInfoText && $(form).find('[name="OrderInfoText"]').length > 0 ) ) {
 
-                Checkout.checkout().CheckoutCustomerSign = values.CustomerSign;
-                Checkout.checkout().CheckoutOrderInfoText = values.OrderInfoText;
+                Checkout.getCheckout().CheckoutCustomerSign = values.CustomerSign;
+                Checkout.getCheckout().CheckoutOrderInfoText = values.OrderInfoText;
 
                 UI.showWaitScreen();
                 return Checkout.setCheckout()
@@ -77,9 +77,9 @@
                 return API.post("/rest/checkout/customershippingaddress/", shippingAddress)
                     .done(function (response) {
 
-                        Checkout.checkout().CheckoutCustomerShippingAddressID = response.data.ID;
-                        delete Checkout.checkout().CheckoutMethodOfPaymentID;
-                        delete Checkout.checkout().CheckoutShippingProfileID;
+                        Checkout.getCheckout().CheckoutCustomerShippingAddressID = response.data.ID;
+                        delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
+                        delete Checkout.getCheckout().CheckoutShippingProfileID;
 
                         Checkout.setCheckout().done(function () {
                             Checkout.reloadContainer('MethodsOfPaymentList');
@@ -97,9 +97,9 @@
                 // is not guest registration
 
                 // change shipping address id
-                Checkout.checkout().CheckoutCustomerShippingAddressID = values.shippingAddressID;
-                delete Checkout.checkout().CheckoutMethodOfPaymentID;
-                delete Checkout.checkout().CheckoutShippingProfileID;
+                Checkout.getCheckout().CheckoutCustomerShippingAddressID = values.shippingAddressID;
+                delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
+                delete Checkout.getCheckout().CheckoutShippingProfileID;
 
                 return Checkout.setCheckout()
                     .done(function () {
@@ -115,9 +115,9 @@
 
             var values = $('[data-plenty-checkout-form="shippingProfileSelect"]').getFormValues();
 
-            Checkout.checkout().CheckoutShippingProfileID = values.ShippingProfileID;
-            delete Checkout.checkout().CheckoutCustomerShippingAddressID;
-            delete Checkout.checkout().CheckoutMethodOfPaymentID;
+            Checkout.getCheckout().CheckoutShippingProfileID = values.ShippingProfileID;
+            delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
+            delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
 
             UI.showWaitScreen();
             return Checkout.setCheckout()
@@ -149,13 +149,13 @@
                 });
         }
 
-        function setMethodOfPayment() {
+        function setMethodOfPayment( paymentID ) {
 
-            var values = $('[data-plenty-checkout-form="methodOfPayment"]').getFormValues();
+            paymentID = paymentID || $('[data-plenty-checkout-form="methodOfPayment"]').getFormValues().MethodOfPaymentID;
 
-            Checkout.checkout().CheckoutMethodOfPaymentID = values.MethodOfPaymentID;
-            delete Checkout.checkout().CheckoutCustomerShippingAddressID;
-            delete Checkout.checkout().CheckoutShippingProfileID;
+            Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
+            delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
+            delete Checkout.getCheckout().CheckoutShippingProfileID;
 
             UI.showWaitScreen();
             return Checkout.setCheckout()
@@ -178,7 +178,7 @@
                         .onConfirm(saveBankDetails)
                         .onDismiss(function() {
                             $('input[name="MethodOfPaymentID"]').each(function(i, radio) {
-                                if( $(radio).val() == Checkout.checkout().CheckoutMethodOfPaymentID ) {
+                                if( $(radio).val() == Checkout.getCheckout().CheckoutMethodOfPaymentID ) {
                                     $(radio).attr('checked', 'checked');
                                 } else {
                                     $(radio).removeAttr('checked');
@@ -205,8 +205,8 @@
             UI.showWaitScreen();
             API.post("/rest/checkout/customerbankdetails/", bankDetails)
                 .done(function() {
-                    Checkout.getCheckout().done(function() {
-                        processMethodOfPaymentChange(3);
+                    Checkout.loadCheckout().done(function() {
+                        setMethodOfPayment(3);
                         Checkout.reloadContainer('MethodOfPaymentList');
                         UI.hideWaitScreen();
                     });
