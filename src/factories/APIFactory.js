@@ -76,12 +76,13 @@
          * @param url   The URL to send the request to
          * @returns {*} Deferred request object
          */
-        function _delete( url, ignoreErrors ) {
+        function _delete( url, data, ignoreErrors ) {
 
             return $.ajax(
                 url,
                 {
                     type:       'DELETE',
+                    data:       JSON.stringify(data),
                     dataType:   'json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }

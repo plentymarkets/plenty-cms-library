@@ -5,7 +5,9 @@
 		return {
 			addItem: addBasketItem,
             removeItem: removeBasketItem,
-            setItemQuantity: setItemQuantity
+            setItemQuantity: setItemQuantity,
+            addCoupon: addCoupon,
+            removeCoupon: removeCoupon
 		};
 
         /**
@@ -227,6 +229,43 @@
 
             $('[data-plenty-basket-preview="itemQuantityTotal"]').text( itemQuantityTotal );
             $('[data-plenty-basket-preview="totalsItemSum"]').text( Checkout.checkout().Totals.TotalsItemSum );
+        }
+
+        function addCoupon() {
+            var params = {
+                CouponActiveCouponCode: $('[data-plenty-checkout-form="couponCode"]').val()
+            };
+
+            UI.showWaitScreen();
+            return API.post("/rest/checkout/coupon/", params)
+                .done(function() {
+                    Checkout.setCheckout()
+                        .done(function() {
+                            Checkout.reloadContainer('Coupon');
+                            Checkout.reloadCatContent(checkoutConfirmCatId);
+                            UI.hideWaitScreen();
+                        });
+                });
+        }
+
+        function removeCoupon() {
+            var params = {
+                CouponActiveCouponCode: Checkout.checkout().Coupon.CouponActiveCouponCode
+            };
+
+            UI.showWaitScreen();
+
+            return API.delete("/rest/checkout/coupon/", params)
+                .done(function() {
+                    Checkout.setCheckout()
+                        .done(function() {
+                            delete Checkout.checkout().Coupon;
+
+                            Checkout.reloadContainer('Coupon');
+                            Checkout.reloadCatContent(checkoutConfirmCatId);
+                            UI.hideWaitScreen();
+                        });
+                });
         }
 
 
