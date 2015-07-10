@@ -50,8 +50,7 @@
          *
          * @return Promise
          */
-        function customerLogin() {
-            var form = $('[data-plenty-checkout-form="customerLogin"]');
+        function customerLogin( form ) {
             if( form.validateForm() ) {
                 var values = form.getFormValues();
 

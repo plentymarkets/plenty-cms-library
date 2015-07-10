@@ -29,7 +29,9 @@
             if (!Checkout.checkout().CheckoutCustomerSign) Checkout.checkout().CheckoutCustomerSign = "";
             if (!Checkout.checkout().CheckoutOrderInfoText) Checkout.checkout().CheckoutOrderInfoText = "";
 
-            if (Checkout.checkout().CheckoutCustomerSign !== values.CustomerSign || Checkout.checkout().CheckoutOrderInfoText !== values.OrderInfoText) {
+            if ( ( Checkout.checkout().CheckoutCustomerSign !== values.CustomerSign && $(form).find('[name="CustomerSign"]').length > 0 )
+                || ( Checkout.checkout().CheckoutOrderInfoText !== values.OrderInfoText && $(form).find('[name="OrderInfoText"]').length > 0 ) ) {
+
                 Checkout.checkout().CheckoutCustomerSign = values.CustomerSign;
                 Checkout.checkout().CheckoutOrderInfoText = values.OrderInfoText;
 
@@ -39,6 +41,7 @@
                         Checkout.reloadCatContent(checkoutConfirmCatId);
                         UI.hideWaitScreen();
                     });
+
             }
         }
 
@@ -222,7 +225,10 @@
                     WithdrawalCheck:            values.withdrawalCheck || 0,
                     PrivacyPolicyCheck:         values.privacyPolicyCheck || 0,
                     AgeRestrictionCheck:        values.ageRestrictionCheck || 0,
-                    NewsletterCheck:            values.newsletterCheck || 0
+                    NewsletterCheck:            values.newsletterCheck || 0,
+                    KlarnaTermsAndConditionsCheck: values.klarnaTermsAndConditionsCheck || 0,
+                    PayoneDirectDebitMandateCheck: values.payoneDirectDebitMandateCheck || 0,
+                    PayoneInvoiceCheck:            values.payoneInvoiceCheck || 0
                 };
 
                 UI.showWaitScreen();
