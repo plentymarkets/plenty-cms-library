@@ -3,7 +3,7 @@
     /****************************************
      *        LOGIN & REGISTRATION          *
      ****************************************/
-    pm.service('Authenticator', function (API, UI, CheckoutManager) {
+    pm.service('AuthenticationService', function (API, UI, Checkout) {
 
         return {
             resetPassword: resetPassword,
@@ -83,7 +83,7 @@
 
             return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                 .done(function (response) {
-                    CheckoutManager.checkout().CustomerInvoiceAddress = response.data;
+                    Checkout.checkout().CustomerInvoiceAddress = response.data;
                 });
         }
 
@@ -218,7 +218,7 @@
 
             var hasChanges = false;
             for ( var key in invoiceAddress ) {
-                if ( CheckoutManager.checkout().CustomerInvoiceAddress[key]+'' !== invoiceAddress[key]+'' && key !== 'EmailRepeat' ) {
+                if ( Checkout.checkout().CustomerInvoiceAddress[key]+'' !== invoiceAddress[key]+'' && key !== 'EmailRepeat' ) {
                     hasChanges = true;
                     break;
                 }
@@ -227,7 +227,7 @@
             if ( hasChanges ) {
                 UI.showWaitScreen();
                 return setInvoiceAddress(invoiceAddress).done(function () {
-                    CheckoutManager.reloadCatContent(checkoutConfirmCatId);
+                    Checkout.reloadCatContent(checkoutConfirmCatId);
                     UI.hideWaitScreen();
                 });
             }
@@ -270,7 +270,7 @@
 
             var hasChangesInvoiceAddress = false;
             for (var key in invoiceAddress) {
-                if (CheckoutManager.checkout().CustomerInvoiceAddress[key] + '' !== invoiceAddress[key] + '' && key !== 'EmailRepeat') {
+                if (Checkout.checkout().CustomerInvoiceAddress[key] + '' !== invoiceAddress[key] + '' && key !== 'EmailRepeat') {
                     hasChangesInvoiceAddress = true;
                     break;
                 }
@@ -301,7 +301,7 @@
             var hasChangesShippingAddress = false;
             if( $('[name="shippingAddressID"]:checked').val() < 0 ) {
                 for (var key in shippingAddress) {
-                    if (CheckoutManager.checkout().CustomerShippingAddress[key] + '' !== shippingAddress[key] + '' && key !== 'EmailRepeat') {
+                    if (Checkout.checkout().CustomerShippingAddress[key] + '' !== shippingAddress[key] + '' && key !== 'EmailRepeat') {
                         hasChangesShippingAddress = true;
                         break;
                     }
@@ -328,11 +328,11 @@
 
             if ( !! promise ) {
                 return promise.done(function() {
-                    CheckoutManager.reloadCatContent(checkoutConfirmCatId);
+                    Checkout.reloadCatContent(checkoutConfirmCatId);
                     UI.hideWaitScreen();
                 });
             }
         }
-    }, ['API', 'UI', 'CheckoutManager']);
+    }, ['APIFactory', 'UIFactory', 'CheckoutFactory']);
 
 }(PlentyFramework));

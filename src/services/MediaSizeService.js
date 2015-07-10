@@ -1,6 +1,6 @@
 (function(pm){
 
-    pm.service('MediaSize', function() {
+    pm.service('MediaSizeService', function() {
 
         var bsInterval;
 

@@ -3,7 +3,7 @@
     /****************************************
      *              GUI HANDLING            *
      ****************************************/
-    pm.service('Navigator', function() {
+    pm.service('NavigatorService', function() {
 
         var navigation  = [];		// contains navigation list elements
         var container   = [];		// content containers

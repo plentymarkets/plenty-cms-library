@@ -1,6 +1,6 @@
 (function($, pm) {
 
-	pm.factory('Modal', function() {
+	pm.factory('ModalFactory', function() {
 
 		return {
             prepare: prepare

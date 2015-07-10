@@ -1,6 +1,6 @@
 (function($, pm) {
 
-	pm.factory('API', function(UI) {
+	pm.factory('APIFactory', function(UI) {
 
 		return {
             get: _get,
@@ -89,5 +89,5 @@
 
         }
 
-    }, ['UI']);
+    }, ['UIFactory']);
 }(jQuery, PlentyFramework));

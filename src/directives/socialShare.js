@@ -20,7 +20,7 @@
      * Tooltip will be destroyed after activating a social service
      * (!) Requires bootstrap.js
      */
-    pm.directive('[data-plenty-social]', function(i, elem, SocialShare) {
+    pm.directive('[data-plenty-social]', function(i, elem, SocialShareService) {
 
         var toggle = $(elem).find('[data-plenty="switch"]');
 
@@ -40,7 +40,7 @@
                 // hide dummy button
                 $(elem).find('[data-plenty="placeholder"]').hide();
                 // load HTML defined in 'api'
-                $(elem).find('.social-container').append( SocialShare.getSocialService( $(elem).attr('data-plenty-social') ) );
+                $(elem).find('.social-container').append( SocialShareService.getSocialService( $(elem).attr('data-plenty-social') ) );
             }
             // do not disable social medias after activation
             /*
@@ -54,6 +54,6 @@
              }
              */
         });
-    }, ['SocialShare']);
+    }, ['SocialShareService']);
 
 }(jQuery, PlentyFramework));

@@ -40,18 +40,18 @@
         });
     });
 
-    pm.directive('[data-basket-item-id] [data-plenty="quantityInput"]', function(i, input, Basket) {
+    pm.directive('[data-basket-item-id] [data-plenty="quantityInput"]', function(i, input, BasketService) {
         $(input).change( function() {
 
             var newQuantity = parseInt( $(input).val() );
             var basketItemID = $(input).parents('[data-basket-item-id]').attr('data-basket-item-id');
 
-            Basket.setItemQuantity(
+            BasketService.setItemQuantity(
                 basketItemID,
                 newQuantity
             );
         });
-    }, ['Basket']);
+    }, ['BasketService']);
 
 
 

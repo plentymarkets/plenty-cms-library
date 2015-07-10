@@ -1,11 +1,11 @@
 (function($, pm) {
 
-    pm.directive('[data-plenty-checkout-form="customerLogin"]', function(i, elem, Authenticator) {
+    pm.directive('[data-plenty-checkout-form="customerLogin"]', function(i, elem, AuthenticationService) {
         $(elem).on('submit', function () {
             plenty = pm.getInstance();
-            Authenticator.customerLogin();
+            AuthenticationService.customerLogin();
             return false;
         });
     });
 
-}(jQuery, PlentyFramework, ["Authenticator"]));
+}(jQuery, PlentyFramework, ["AuthenticationService"]));

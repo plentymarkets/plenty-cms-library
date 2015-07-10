@@ -1,7 +1,7 @@
 (function($, pm) {
-	pm.directive('[data-plenty-checkout-href]', function(i, elem, Navigator) {
+	pm.directive('[data-plenty-checkout-href]', function(i, elem, NavigatorService) {
         $(elem).click(function () {
-            Navigator.goToID( $(this).attr('data-plenty-checkout-href') );
+            NavigatorService.goToID( $(this).attr('data-plenty-checkout-href') );
         });
-	}, ['Navigator']);
+	}, ['NavigatorService']);
 } (jQuery, PlentyFramework));

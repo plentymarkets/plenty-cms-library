@@ -1,5 +1,5 @@
 (function($, pm) {
-	pm.directive('[data-plenty="addBasketItemButton"]', function(i, button, Basket)
+	pm.directive('[data-plenty="addBasketItemButton"]', function(i, button, BasketService)
     {
 
         $(button).click( function(e)
@@ -37,8 +37,8 @@
             }
 
             //add basketItem and refresh previewLists
-            Basket.addItem([basketItemsList]);
+            BasketService.addItem([basketItemsList]);
 
         });
-    }, ['Basket']);
+    }, ['BasketService']);
 } (jQuery, PlentyFramework));

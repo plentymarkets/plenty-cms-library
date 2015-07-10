@@ -1,6 +1,6 @@
 (function(pm) {
 
-	pm.service('Basket', function( API, UI, CMS, CheckoutManager, Modal ) {
+	pm.service('BasketService', function( API, UI, CMS, Checkout, Modal ) {
 
 		return {
 			addItem: addBasketItem,
@@ -19,7 +19,7 @@
 
                 API.post( '/rest/checkout/basketitemslist/', addBasketList, true)
                     .done(function() {
-                        CheckoutManager.getCheckout()
+                        Checkout.getCheckout()
                             .done(function() {
                                 refreshBasketPreview();
                                 CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', '?ArticleID=' + addBasketList[0].BasketItemItemID).from('ItemView')
@@ -111,7 +111,7 @@
 
             // get item name
             var itemName, originalItemQuantity;
-            var params = CheckoutManager.checkout().BasketItemsList;
+            var params = Checkout.checkout().BasketItemsList;
             for ( var i = 0; i < params.length; i++ ) {
                 if ( params[i].BasketItemID == BasketItemID ) {
                     originalItemQuantity = params[i].BasketItemQuantity;
@@ -123,13 +123,13 @@
                 UI.showWaitScreen();
                 API.delete('/rest/checkout/basketitemslist/?basketItemIdsList[0]='+BasketItemID)
                     .done(function() {
-                        CheckoutManager.getCheckout().done(function() {
+                        Checkout.getCheckout().done(function() {
                             $('[data-basket-item-id="'+BasketItemID+'"]').remove();
 
-                            if( !CheckoutManager.checkout().BasketItemsList || CheckoutManager.checkout().BasketItemsList.length <= 0 ) {
-                                CheckoutManager.reloadCatContent(basketCatId);
+                            if( !Checkout.checkout().BasketItemsList || Checkout.checkout().BasketItemsList.length <= 0 ) {
+                                Checkout.reloadCatContent(basketCatId);
                             } else {
-                                CheckoutManager.reloadContainer('Totals');
+                                Checkout.reloadContainer('Totals');
                                 UI.hideWaitScreen();
                             }
 
@@ -162,7 +162,7 @@
                 removeBasketItem( BasketItemID );
             }
 
-            var params = CheckoutManager.checkout().BasketItemsList;
+            var params = Checkout.checkout().BasketItemsList;
             var basketItem;
             var basketItemIndex;
             for ( var i = 0; i < params.length; i++ ) {
@@ -180,11 +180,11 @@
                 UI.showWaitScreen();
                 API.post("/rest/checkout/basketitemslist/", params)
                     .done(function () {
-                        CheckoutManager.setCheckout().done(function () {
-                            CheckoutManager.reloadContainer('Totals');
+                        Checkout.setCheckout().done(function () {
+                            Checkout.reloadContainer('Totals');
 
                             var basketItemsPriceTotal = 0;
-                            var params2 = CheckoutManager.checkout().BasketItemsList;
+                            var params2 = Checkout.checkout().BasketItemsList;
                             for (var i = 0; i < params2.length; i++) {
                                 if (params2[i].BasketItemID == BasketItemID) {
                                     basketItemsPriceTotal = params2[i].BasketItemPriceTotal;
@@ -204,12 +204,12 @@
         function refreshBasketPreview() {
 
             UI.showWaitScreen();
-            CheckoutManager.reloadItemContainer('BasketPreviewList')
+            Checkout.reloadItemContainer('BasketPreviewList')
                 .done(function() {
 
                     $('[data-plenty-basket-empty]').each(function(i, elem) {
                         var toggleClass = $(elem).attr('data-plenty-basket-empty');
-                        if( CheckoutManager.checkout().BasketItemsList.length <= 0 ) {
+                        if( Checkout.checkout().BasketItemsList.length <= 0 ) {
                             $(elem).addClass( toggleClass );
                         } else {
                             $(elem).removeClass( toggleClass );
@@ -221,15 +221,15 @@
 
             //update quantity
             var itemQuantityTotal = 0;
-            $.each( CheckoutManager.checkout().BasketItemsList, function(i, basketItem) {
+            $.each( Checkout.checkout().BasketItemsList, function(i, basketItem) {
                 itemQuantityTotal += basketItem.BasketItemQuantity;
             });
 
             $('[data-plenty-basket-preview="itemQuantityTotal"]').text( itemQuantityTotal );
-            $('[data-plenty-basket-preview="totalsItemSum"]').text( CheckoutManager.checkout().Totals.TotalsItemSum );
+            $('[data-plenty-basket-preview="totalsItemSum"]').text( Checkout.checkout().Totals.TotalsItemSum );
         }
 
 
 
-	}, ['API', 'UI', 'CMS', 'CheckoutManager', 'Modal']);
+	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
 }(PlentyFramework));

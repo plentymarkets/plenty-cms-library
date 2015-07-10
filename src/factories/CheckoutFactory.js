@@ -1,6 +1,6 @@
 (function(pm) {
 	
-	pm.factory('CheckoutManager', function(API, CMS, UI) {
+	pm.factory('CheckoutFactory', function(API, CMS, UI) {
         var checkoutData;
 
         // init data
@@ -112,5 +112,5 @@
 
         }
 				
-	}, ['API', 'CMS', 'UI']);
+	}, ['APIFactory', 'CMSFactory', 'UIFactory']);
 }(PlentyFramework));

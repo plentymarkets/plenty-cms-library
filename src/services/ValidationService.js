@@ -1,6 +1,6 @@
 (function ($, pm) {
 
-    pm.service( 'FormValidator', function() {
+    pm.service( 'ValidationService', function() {
 
 
         function getFormControl( element ) {

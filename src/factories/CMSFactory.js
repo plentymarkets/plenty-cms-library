@@ -1,6 +1,6 @@
 (function(pm) {
 
-	pm.factory('CMS', function(API) {
+	pm.factory('CMSFactory', function(API) {
 
 		return {
             getContainer: getContainer,
@@ -59,5 +59,5 @@
             return API.get( '/rest/categoryview/categorycontentbody/?categoryID=' + categoryID );
         }
 
-	}, ['API']);
+	}, ['APIFactory']);
 }(PlentyFramework));

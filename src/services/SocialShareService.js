@@ -1,6 +1,6 @@
 (function($, pm) {
 
-    pm.service('SocialShare', function() {
+    pm.service('SocialShareService', function() {
 
         return {
             getSocialService: getService

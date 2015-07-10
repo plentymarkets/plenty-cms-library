@@ -104,6 +104,7 @@
         }
 
         dependencies = dependencies || [];
+
         PlentyFramework.components.services[serviceName] = {
             name: serviceName,
             dependencies: dependencies,

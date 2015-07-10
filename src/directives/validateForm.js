@@ -33,12 +33,12 @@
      *														});
      *													});
      */
-    pm.directive('form[data-plenty-checkform], form.PlentySubmitForm', function(i, elem, FormValidator) {
+    pm.directive('form[data-plenty-checkform], form.PlentySubmitForm', function(i, elem, ValidationService) {
 
         $(elem).submit(function() {
-            return FormValidator.validate( elem );
+            return ValidationService.validate( elem );
         });
 
-    }, ['FormValidator']);
+    }, ['ValidationService']);
 
 }(jQuery, PlentyFramework));

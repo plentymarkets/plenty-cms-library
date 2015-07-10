@@ -11,7 +11,7 @@
      *
      * (!) using data-plenty-toggle on <a>-elements will prevent redirecting to href=""
      */
-    pm.directive('[data-plenty-toggle]', function(i, elem, MediaSize) {
+    pm.directive('[data-plenty-toggle]', function(i, elem, MediaSizeService) {
         if( $(elem).attr('data-plenty-toggle').search(';') < 0 ) {
             eval('var data = ' + $(elem).attr('data-plenty-toggle'));
             if ( data.target && data.class ) {
@@ -21,13 +21,13 @@
                         if ( data.media.indexOf(' ') != -1 ) {
                             var mediaArr = data.media.split(' ');
                             for ( i = 0; i < mediaArr.length; i++ ) {
-                                if ( MediaSize.interval() == mediaArr[i] ) {
+                                if ( MediaSizeService.interval() == mediaArr[i] ) {
                                     isMedia = true;
                                 }
                             }
                         }
                         else {
-                            if ( MediaSize.interval() == data.media ) isMedia = true;
+                            if ( MediaSizeService.interval() == data.media ) isMedia = true;
                         }
                     }
                     if ( ! data.media || isMedia == true  ) {
@@ -37,6 +37,6 @@
                 });
             }
         }
-    }, ['MediaSize']);
+    }, ['MediaSizeService']);
 
 }(jQuery, PlentyFramework));

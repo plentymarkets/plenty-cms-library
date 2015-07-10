@@ -1,6 +1,6 @@
 (function($, pm) {
 
-    pm.factory('UI', function() {
+    pm.factory('UIFactory', function() {
 
         return {
             throwError: throwError,
