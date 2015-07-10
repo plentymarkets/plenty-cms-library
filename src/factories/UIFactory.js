@@ -66,6 +66,7 @@
          */
         var waitScreenCount = 0;
         function showWaitScreen() {
+            waitScreenCount = waitScreenCount || 0;
             var waitScreen = $('#PlentyWaitScreen');
             // create wait-overlay if not exist
             if( waitScreen.length <= 0 ) {
@@ -86,7 +87,6 @@
 
             // decrease overlay count
             waitScreenCount--;
-
             // hide if all instances of overlays has been closed
             // or if closing is forced by user
             if( waitScreenCount <= 0 || !!forceClose ) {
