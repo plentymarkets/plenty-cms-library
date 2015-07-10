@@ -3,12 +3,6 @@
 	pm.factory('CheckoutFactory', function(API, CMS, UI) {
         var checkoutData;
 
-        // init data
-        UI.showWaitScreen();
-        getCheckout().done(function() {
-            UI.hideWaitScreen(true);
-        });
-
 		return {
 			checkout: checkout,
             getCheckout: getCheckout,

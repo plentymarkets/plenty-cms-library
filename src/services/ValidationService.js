@@ -71,7 +71,7 @@
             var hasError = false;
 
             // check every required input inside form
-            form.find('[data-plenty-validate], input.Required').each(function(i, elem) {
+            $(form).find('[data-plenty-validate], input.Required').each(function(i, elem) {
 
                 // validate text inputs
                 var validationKeys = !!$(elem).attr('data-plenty-validate') ? $(elem).attr('data-plenty-validate') : 'text';
@@ -156,7 +156,7 @@
 
             if ( hasError ) {
                 // remove error class on focus
-                form.find('.has-error').each(function(i, elem) {
+                $(form).find('.has-error').each(function(i, elem) {
                     var formControl = getFormControl(elem);
                     $(formControl).on('focus click', function() {
                         $(formControl).removeClass( errorClass );
@@ -165,14 +165,14 @@
                     });
                 });
 
-                form.trigger('validationFailed', [missingFields]);
+                $(form).trigger('validationFailed', [missingFields]);
             }
 
-            var callback = form.attr('data-plenty-callback');
+            var callback = $(form).attr('data-plenty-callback');
             if( !hasError && !!callback && callback != "submit" && typeof window[callback] == "function") {
 
                 var fields = {};
-                form.find('input, textarea, select').each(function (){
+                $(form).find('input, textarea, select').each(function (){
                     if( $(this).attr('type') == 'checkbox' ) {
                         fields[$(this).attr('name')] = $(this).is(':checked');
                     } else {
@@ -193,7 +193,7 @@
     });
 
     $.fn.validateForm = function() {
-        return pm.getInstance().FormValidator.validate( this );
+        return pm.getInstance().ValidationService.validate( this );
     };
 
     /**
@@ -201,15 +201,47 @@
      * @return { input.name : input.value }
      */
     $.fn.getFormValues = function() {
+
+        var form = this;
         var values = {};
-        this.find('input, select, textarea').each(function(i, elem) {
-            if( $(elem).attr('type') == "checkbox" ) {
-                values[$(elem).attr('name')] = $(elem).is(':checked') ? $(elem).val() : null;
-            } else if( $(elem).attr('type') == 'radio' ) {
-                if( $(elem).is(':checked') ) values[$(elem).attr('name')] = $(elem).val();
+        function inject( position, value ) {
+            var match = position.match(/^([^\[]+)(.*)/);
+
+            if( !!match[2] ) {
+                var exp = /\[([^\]]+)]/g;
+                var child;
+                var children = [];
+                children[0] = match[1];
+                while( (child = exp.exec(match[2])) !== null ) {
+                    children.push( child[1] );
+                }
+
+                for( var i = children.length-1; i >= 0; i-- ) {
+                    var val = {};
+                    val[children[i]] = value;
+                    value = val;
+                }
+                values = $.extend(true, values, value);
             } else {
-                values[$(elem).attr('name')] = $(elem).val();
+                values[match[1]] = value;
             }
+        }
+
+        form.find('input, select, textarea').each(function(i, elem) {
+
+            if( $(elem).attr('type') == "checkbox" ) {
+                // get checkbox group
+                var groupValues = [];
+                $(form).find('[name="' + $(elem).attr('name') + '"]:checked').each(function(j, checkbox) {
+                    groupValues.push( $(checkbox).val() );
+                });
+                inject( $(elem).attr('name'), groupValues );
+            } else if( $(elem).attr('type') == 'radio' ) {
+                if( $(elem).is(':checked') ) inject( $(elem).attr('name'), $(elem).val() );
+            } else {
+                inject( $(elem).attr('name'), $(elem).val() );
+            }
+
         });
         return values;
     }
