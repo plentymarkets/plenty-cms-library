@@ -2,7 +2,6 @@
 
     /**
      * Framework providing client functions for plentymarkets Webshops.
-     * @constructor
      */
     PlentyFramework = function() {};
 

@@ -198,7 +198,6 @@
 
     /**
      * Get the values of inner form elements.
-     * @return { input.name : input.value }
      */
     $.fn.getFormValues = function() {
 

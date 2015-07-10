@@ -17,8 +17,6 @@
          * Wrap error messages in error popup, if popup doesn't already contain this error
          * If popup is already visible, append new errors to popup's inner HTML
          * otherwise create new popup
-         *
-         * @param errorMessages - Array of error messages objects. example: [{code: 400, message: "something didn't work as it should!"}]
          */
 
         function printErrors(errorMessages) {

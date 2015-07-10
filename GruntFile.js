@@ -41,11 +41,11 @@ module.exports = function(grunt) {
             }
         },
 
-        jsdoc: {
+        yuidoc: {
             doc: {
-                src: ['src/plentyFramework.js', 'src/**/*js'],
                 options: {
-                    destination: 'doc'
+                    paths: 'src/',
+                    outdir: 'doc/'
                 }
             }
         }
@@ -54,11 +54,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-jsdoc');
+    grunt.loadNpmTasks('grunt-contrib-yuidoc');
     grunt.loadNpmTasks('grunt-karma');
 
     grunt.registerTask('debug', ['clean:debug', 'concat:debug']);
-    grunt.registerTask('doc', ['clean:doc', 'jsdoc:doc']);
+    grunt.registerTask('doc', ['clean:doc', 'yuidoc:doc']);
     grunt.registerTask('build', ['debug', 'doc', 'karma', 'clean:build', 'uglify:build']);
     grunt.registerTask('default', ['debug']);
 
