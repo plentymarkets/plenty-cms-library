@@ -16,6 +16,23 @@
         return instance;
     };
 
+    PlentyFramework.globals = {};
+
+    PlentyFramework.setGlobal = function( identifier, value, fallback ) {
+        if( PlentyFramework.globals.hasOwnProperty( identifier ) ) {
+            console.error('Global variable "' + identifier + '" already exists and cannot be overridden.');
+            return null;
+        }
+
+        PlentyFramework.globals[identifier] = value || fallback;
+
+        return PlentyFramework.globals[identifier];
+    };
+
+    PlentyFramework.getGlobal = function( identifier ) {
+        return PlentyFramework.globals[identifier];
+    };
+
     /**
      * Collection of registered directives
      * @type {Array}

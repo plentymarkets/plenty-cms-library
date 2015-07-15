@@ -172,7 +172,7 @@
                             $('[data-basket-item-id="'+BasketItemID+'"]').remove();
 
                             if( !Checkout.getCheckout().BasketItemsList || Checkout.getCheckout().BasketItemsList.length <= 0 ) {
-                                Checkout.reloadCatContent(basketCatId);
+                                Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
                             } else {
                                 Checkout.reloadContainer('Totals');
                                 UI.hideWaitScreen();
@@ -189,7 +189,6 @@
                     .setTitle('Bitte bestätigen')
                     .setContent('<p>Möchten Sie den Artikel "' + itemName + '" wirklich aus dem Warenkorb entfernen?</p>')
                     .onDismiss(function () {
-                        console.log('onDismiss');
                         $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty="quantityInput"]').val(originalItemQuantity);
                     })
                     .onConfirm(function () {
@@ -301,7 +300,7 @@
                     Checkout.setCheckout()
                         .done(function() {
                             Checkout.reloadContainer('Coupon');
-                            Checkout.reloadCatContent(checkoutConfirmCatId);
+                            Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                             UI.hideWaitScreen();
                         });
                 });
@@ -326,7 +325,7 @@
                             delete Checkout.getCheckout().Coupon;
 
                             Checkout.reloadContainer('Coupon');
-                            Checkout.reloadCatContent(checkoutConfirmCatId);
+                            Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                             UI.hideWaitScreen();
                         });
                 });

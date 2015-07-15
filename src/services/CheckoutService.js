@@ -65,7 +65,7 @@
                 UI.showWaitScreen();
                 return Checkout.setCheckout()
                     .done(function () {
-                        Checkout.reloadCatContent(checkoutConfirmCatId);
+                        Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                         UI.hideWaitScreen();
                     });
 
@@ -120,7 +120,7 @@
                             if ( Checkout.checkout().CustomerInvoiceAddress.LoginType == 2 ) {
                                 Checkout.reloadContainer('CustomerShippingAddress');
                             }
-                            Checkout.reloadCatContent(checkoutConfirmCatId);
+                            Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                             UI.hideWaitScreen();
                         });
                     });
@@ -138,7 +138,7 @@
                     .done(function () {
                         Checkout.reloadContainer('MethodsOfPaymentList');
                         Checkout.reloadContainer('CustomerShippingAddress');
-                        Checkout.reloadCatContent(checkoutConfirmCatId);
+                        Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                         UI.hideWaitScreen();
                     });
             }
@@ -162,7 +162,7 @@
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('MethodsOfPaymentList');
-                    Checkout.reloadCatContent(checkoutConfirmCatId);
+                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                     UI.hideWaitScreen();
                 });
 
@@ -212,7 +212,7 @@
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('ShippingProfilesList');
-                    Checkout.reloadCatContent(checkoutConfirmCatId);
+                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                     UI.hideWaitScreen();
                 });
         }

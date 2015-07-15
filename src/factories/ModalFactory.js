@@ -147,7 +147,7 @@
              */
             function setTitle( title ) {
                 modal.title = title;
-                return modal;
+                return this;
             }
 
             /**
@@ -158,7 +158,7 @@
              */
             function setContent( content ) {
                 modal.content = content;
-                return modal;
+                return this;
             }
 
             /**
@@ -169,7 +169,7 @@
              */
             function setLabelConfirm( label ) {
                 modal.labelConfirm = label;
-                return modal;
+                return this;
             }
 
             /**
@@ -180,7 +180,7 @@
              */
             function setLabelDismiss( label ) {
                 modal.labelDismiss = label;
-                return modal;
+                return this;
             }
 
             /**
@@ -191,7 +191,7 @@
              */
             function onConfirm( callback ) {
                 modal.onConfirm = callback;
-                return modal;
+                return this;
             }
 
             /**
@@ -202,7 +202,7 @@
              */
             function onDismiss( callback ) {
                 modal.onDismiss = callback;
-                return modal;
+                return this;
             }
 
             /**
@@ -213,7 +213,7 @@
              */
             function setContainer( container ) {
                 modal.container = container;
-                return modal;
+                return this;
             }
 
             /**
@@ -224,7 +224,7 @@
              */
             function setTemplate( template ) {
                 modal.template = template;
-                return modal;
+                return this;
             }
 
             /**
@@ -235,7 +235,7 @@
              */
             function setTimeout( timeout ) {
                 modal.timeout = timeout;
-                return modal;
+                return this;
             }
 
             /**

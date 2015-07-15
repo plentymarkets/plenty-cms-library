@@ -186,7 +186,7 @@
 
             return setInvoiceAddress(invoiceAddress)
                 .done(function() {
-                    Checkout.reloadCatContent(checkoutConfirmCatId);
+                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                 });
         }
 
@@ -237,7 +237,7 @@
             if ( hasChanges ) {
                 UI.showWaitScreen();
                 return setInvoiceAddress(invoiceAddress).done(function () {
-                    Checkout.reloadCatContent(checkoutConfirmCatId);
+                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                     UI.hideWaitScreen();
                 });
             }
@@ -340,7 +340,7 @@
 
             if ( !! promise ) {
                 return promise.done(function() {
-                    Checkout.reloadCatContent(checkoutConfirmCatId);
+                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                     UI.hideWaitScreen();
                 });
             }
