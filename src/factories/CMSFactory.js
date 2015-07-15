@@ -1,5 +1,12 @@
 (function(pm) {
 
+    /**
+     * Provide methods for receiving layout containers, layout parameters
+     * or category content from API
+     * @module Factories
+     * @class CMSFactory
+     * @static
+     */
 	pm.factory('CMSFactory', function(API) {
 
 		return {
@@ -10,9 +17,17 @@
 
         /**
          * Prepare the request to receive HTML-Content from CMS
-         * @param containerName     The Layoutcontainer to receive.
-         * @returns {object}        The prepared request. Call .from( layoutGroup ) to specify the location in the CMS
-         *                          (e.g. 'Checkout')
+         * @function getContainer
+         * @param   {string} containerName The Layoutcontainer to receive.
+         * @param   {string} [params='']   Additional GET-parameters. Will be appended to request URL
+         * @returns {object}               The prepared request. Call <code>.from( layoutGroup )</code> to specify the location in the CMS
+         *                                 (e.g. 'Checkout')
+         * @example
+         *          CMSFactory.getContainer( 'CheckoutTotals' ).from( 'Checkout' )
+         *              .done(function( response ) {
+         *                  // container content
+         *                  var html = response.data[0]
+         *              });
          */
         function getContainer( containerName, params ) {
 
@@ -31,9 +46,17 @@
 
         /**
          * Prepare the request to receive Layout parameters for a template
-         * @param containerName     The Layoutcontainer to receive the params for
-         * @returns {object}        The prepared request. Call .from( layoutGroup ) to specify the location in the CMS
-         *                          (e.g. 'Checkout')
+         * @function getParams
+         * @param   {string} containerName The Layoutcontainer to receive the parameteres of.
+         * @param   {string} [params='']   Additional GET-parameters. Will be appended to request URL
+         * @returns {object}               The prepared request. Call <code>.from( layoutGroup )</code> to specify the location in the CMS
+         *                                 (e.g. 'ItemView')
+         * @example
+         *          CMSFactory.getParams( 'BasketItemsList' ).from( 'ItemView' )
+         *              .done(function( response ) {
+         *                  // BasketItems
+         *                  var items = response.data;
+         *              });
          */
         function getParams( containerName, params ) {
 
@@ -51,8 +74,9 @@
 
         /**
          * Get the content of a category specified by its ID
-         * @param categoryID    The ID of the category to get the content from
-         * @returns {*|{}}      deferred request object
+         * @function getCategoryContent
+         * @param   {number} categoryID    The ID of the category to get the content from
+         * @returns {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function getCategoryContent( categoryID ) {
 

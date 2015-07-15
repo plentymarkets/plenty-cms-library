@@ -1,6 +1,21 @@
 (function($, pm) {
 
+    /**
+     * Displaying error messages and handling wait screen
+     * @module Factories
+     * @class UIFactory
+     * @static
+     */
     pm.factory('UIFactory', function() {
+        /**
+         * Increased/ decreased when showing/ hiding wait screen to avoid stacking
+         * multiple instances of overlays.
+         * @attribute waitScreenCount
+         * @private
+         * @type {number}
+         * @default 0
+         */
+        var waitScreenCount = 0;
 
         return {
             throwError: throwError,
@@ -9,6 +24,12 @@
             hideWaitScreen: hideWaitScreen
         };
 
+        /**
+         * Display a single error message.
+         * @function throwError
+         * @param {number} code A code identifying this error
+         * @param {string} msg  The error message to display
+         */
         function throwError(code, msg) {
             printErrors([{code: code, message: msg}]);
         }
@@ -17,6 +38,8 @@
          * Wrap error messages in error popup, if popup doesn't already contain this error
          * If popup is already visible, append new errors to popup's inner HTML
          * otherwise create new popup
+         * @function printErrors
+         * @param {Array} errorMessages A list of errors to display
          */
 
         function printErrors(errorMessages) {
@@ -58,12 +81,11 @@
         }
 
 
-
         /**
-         * Wait-Screen
-         * Show or hide wait screen
+         * Show wait screen if not visible and increase
+         * {{#crossLink "UIFactory/waitScreenCount:attribute"}}waitScreenCount{{/crossLink}}
+         * @function showWaitScreen
          */
-        var waitScreenCount = 0;
         function showWaitScreen() {
             waitScreenCount = waitScreenCount || 0;
             var waitScreen = $('#PlentyWaitScreen');
@@ -82,6 +104,12 @@
             waitScreenCount++;
         }
 
+        /**
+         * Decrease {{#crossLink "UIFactory/waitScreenCount:attribute"}}waitScreenCount{{/crossLink}}
+         * and hide wait screen if waitScreenCount is 0
+         * @function hideWaitScreen
+         * @param {boolean} forceClose set true to hide wait screen independent from the value of waitScreenCount.
+         */
         function hideWaitScreen( forceClose ) {
 
             // decrease overlay count
