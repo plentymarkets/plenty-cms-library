@@ -16,19 +16,40 @@
         return instance;
     };
 
+    /**
+     * Collection of registered global variables
+     * @attribute
+     * @static
+     * @type {object}
+     */
     PlentyFramework.globals = {};
 
-    PlentyFramework.setGlobal = function( identifier, value, fallback ) {
+    /**
+     * Set a global variable.
+     * @function setGlobal
+     * @static
+     * @param {string}  identifier  A unique identifier to reference this variable
+     * @param {*}       value       The value to set
+     * @return {*}                  The value
+     */
+    PlentyFramework.setGlobal = function( identifier, value ) {
         if( PlentyFramework.globals.hasOwnProperty( identifier ) ) {
             console.error('Global variable "' + identifier + '" already exists and cannot be overridden.');
             return null;
         }
 
-        PlentyFramework.globals[identifier] = value || fallback;
+        PlentyFramework.globals[identifier] = value;
 
         return PlentyFramework.globals[identifier];
     };
 
+    /**
+     * Get the value of a global variable or undefined if not exists
+     * @function getGlobal
+     * @static
+     * @param  identifier  The identifier of the requested variable
+     * @return {*}         The value of the variable
+     */
     PlentyFramework.getGlobal = function( identifier ) {
         return PlentyFramework.globals[identifier];
     };
