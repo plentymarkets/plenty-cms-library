@@ -1,5 +1,21 @@
-(function(pm) {
+/**
+ * @module Services
+ */
+(function($, pm) {
 
+    /**
+     * Providing methods for adding, editing or removing basket items and coupon codes<br>
+     * <b>Requires:</b>
+     * <ul>
+     *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "CMSFactory"}}CMSFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "CheckoutFactory"}}CheckoutFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "ModalFactory"}}ModalFactory{{/crossLink}}</li>
+     * </ul>
+     * @class BasketService
+     * @static
+     */
 	pm.service('BasketService', function( API, UI, CMS, Checkout, Modal ) {
 
 		return {
@@ -11,9 +27,11 @@
 		};
 
         /**
-         * @param   addBasketList
-         * @param   isUpdate
-         * @return  Promise
+         * Add item to basket. Will fail and show a popup if item has order params
+         * @function addBasketItem
+         * @param   {Array}     addBasketList         Array containing the item to add
+         * @param   {boolean}   [isUpdate=false]      Indicating if item's OrderParams are updated
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function addBasketItem( addBasketList, isUpdate ) {
             if( !!addBasketList ) {
@@ -21,9 +39,11 @@
 
                 API.post( '/rest/checkout/basketitemslist/', addBasketList, true)
                     .done(function() {
+                        // Item has no OrderParams -> Refresh Checkout & BasketPreview
                         Checkout.loadCheckout()
                             .done(function() {
                                 refreshBasketPreview();
+                                // Show confirmation popup
                                 CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', '?ArticleID=' + addBasketList[0].BasketItemItemID).from('ItemView')
                                     .done(function(response) {
                                         UI.hideWaitScreen();
@@ -35,27 +55,37 @@
                         });
                     })
                     .fail(function(jqXHR) {
+                        // Adding item failed
                         var response = $.parseJSON(jqXHR.responseText);
                         if (!isUpdate && response.error.error_stack[0].code === 100) {
-
+                            // OrderParams are missing -> show popup
                             CMS.getContainer('CheckoutOrderParamsList', '?itemID=' + addBasketList[0].BasketItemItemID + '&quantity=' + addBasketList[0].BasketItemQuantity).from('Checkout')
                                 .done(function(response) {
                                     UI.hideWaitScreen();
                                     Modal.prepare()
                                         .setTemplate(response.data[0])
                                         .onConfirm(function() {
+                                            // save order params
                                             saveOrderParams(addBasketList)
                                         })
                                         .show();
                                 });
 
                         } else {
+                            // some other error occured
                             UI.printErrors(response.error.error_stack);
                         }
                     });
             }
         }
 
+        /**
+         * Read OrderParams from &lt;form> marked with <b>data-plenty-checkout-form="OrderParamsForm"</b> and inject
+         * read values in 'addBasketList'. Update item by calling <code>addBasketItem()</code> again
+         * @function saveOrderParams
+         * @private
+         * @param {Array} addBasketList Containing the current item to add. Read OrderParams will be injected
+         */
         function saveOrderParams( addBasketList ) {
             var orderParamsForm = $('[data-plenty-checkout-form="OrderParamsForm"]');
 
@@ -80,6 +110,16 @@
             addBasketItem( addBasketList, true );
         }
 
+        /**
+         * Inject an OrderParam.
+         * @function addOrderParamValue
+         * @private
+         * @param {Array} basketList The target to inject the value in.
+         * @param {number} position Position where to inject the value
+         * @param {number} paramId The ID of the OrderParam to inject
+         * @param {string|number} paramValue the value of the OrderParam to inject
+         * @returns {Array} Containing the item and the injected OrderParam
+         */
         function addOrderParamValue(basketList, position, paramId, paramValue) {
             if (position > 0 && basketList[position] == undefined)
             {
@@ -105,8 +145,10 @@
         }
 
         /**
-         * Remove item from basket
-         *
+         * Remove item from basket. Will show a confirmation popup at first.
+         * @function removeBasketItem
+         * @param {number}  BasketItemID The ID of the basket item to remove
+         * @param {boolean} [forceDelete=false]  Set true to remove the basket item without showing a confirmation popup
          * @return Promise
          */
         function removeBasketItem( BasketItemID, forceDelete ) {
@@ -121,6 +163,7 @@
                 }
             }
 
+            // calling the delete request
             function doDelete() {
                 UI.showWaitScreen();
                 API.delete('/rest/checkout/basketitemslist/?basketItemIdsList[0]='+BasketItemID)
@@ -141,6 +184,7 @@
             }
 
             if( !forceDelete ) {
+                // show confirmation popup
                 Modal.prepare()
                     .setTitle('Bitte bestätigen')
                     .setContent('<p>Möchten Sie den Artikel "' + itemName + '" wirklich aus dem Warenkorb entfernen?</p>')
@@ -158,6 +202,13 @@
             }
         }
 
+        /**
+         * Set a new quantity for the given BasketItem. If quantity is set to 0,
+         * remove the item.
+         * @function setItemQuantity
+         * @param {number} BasketItemID The ID of the basket item to change the quantity of
+         * @param {number} BasketItemQuantity  The new quantity to set or 0 to remove the item
+         */
         function setItemQuantity( BasketItemID, BasketItemQuantity ) {
             // delete item if quantity is 0
             if( BasketItemQuantity <= 0 ) {
@@ -202,6 +253,8 @@
 
         /**
          * Reload BasketPreview-Template and update basket totals
+         * @function refreshBasketPreview
+         * @private
          */
         function refreshBasketPreview() {
 
@@ -231,6 +284,12 @@
             $('[data-plenty-basket-preview="totalsItemSum"]').text( Checkout.getCheckout().Totals.TotalsItemSum );
         }
 
+        /**
+         * Read the coupon code from an &lt;input> element marked with <b>data-plenty-checkout-form="couponCode"</b>
+         * and try to add this coupon.
+         * @function addCoupon
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
         function addCoupon() {
             var params = {
                 CouponActiveCouponCode: $('[data-plenty-checkout-form="couponCode"]').val()
@@ -248,6 +307,11 @@
                 });
         }
 
+        /**
+         * Remove the currently added coupon
+         * @function removeCoupon
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
         function removeCoupon() {
             var params = {
                 CouponActiveCouponCode: Checkout.getCheckout().Coupon.CouponActiveCouponCode
@@ -271,4 +335,4 @@
 
 
 	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
-}(PlentyFramework));
+}(jQuery, PlentyFramework));

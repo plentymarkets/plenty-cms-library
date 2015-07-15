@@ -1,5 +1,21 @@
-(function(pm) {
+/**
+ * @module Services
+ */
+(function($, pm) {
 
+    /**
+     * Providing methods for checkout process like setting shipping & payment information and placing the order.<br>
+     * <b>Requires:</b>
+     * <ul>
+     *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "CMSFactory"}}CMSFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "CheckoutFactory"}}CheckoutFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "ModalFactory"}}ModalFactory{{/crossLink}}</li>
+     * </ul>
+     * @class CheckoutService
+     * @static
+     */
 	pm.service('CheckoutService', function(API, UI, CMS, Checkout, Modal) {
 
 		return {
@@ -13,6 +29,10 @@
             placeOrder: placeOrder
 		};
 
+        /**
+         * Load checkout data initially on page load
+         * @function init
+         */
         function init() {
             UI.showWaitScreen();
             Checkout.loadCheckout()
@@ -22,6 +42,12 @@
         }
 
 
+        /**
+         * Read customer sign and order information text from &lt;form> marked with <b>data-plenty-checkout-form="details"</b>
+         * and update checkout.
+         * @function setCustomerSignAndInfo
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
         function setCustomerSignAndInfo() {
             var form = $('[data-plenty-checkout-form="details"]');
             var values = form.getFormValues();
@@ -46,6 +72,12 @@
             }
         }
 
+        /**
+         * Read address data from &lt;form> marked with <b>data-plenty-checkout-form="shippingAddress"</b>.
+         * Create new shipping address or update the shipping address ID.
+         * @function saveShippingAddress
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
         function saveShippingAddress() {
             var form = $('[data-plenty-checkout-form="shippingAddress"]');
             var values = form.getFormValues();
@@ -112,6 +144,12 @@
             }
         }
 
+        /**
+         * Set the shipping profile used for this order and update checkout. Selected shipping profile will be
+         * read from &lt;form> marked with <b>data-plenty-checkout-form="shippingProfileSelect"</b>
+         * @function setShippingProfile
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
         function setShippingProfile() {
 
             var values = $('[data-plenty-checkout-form="shippingProfileSelect"]').getFormValues();
@@ -130,6 +168,11 @@
 
         }
 
+        /**
+         * Prepare method of payment to check if external checkout is used or addition content should be displayed
+         * @function preparePayment
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
         function preparePayment() {
             UI.showWaitScreen();
 
@@ -150,6 +193,13 @@
                 });
         }
 
+        /**
+         * Set the method of payment used for this order.
+         * @function setMethodOfPayment
+         * @param {number|undefined} paymentID  ID of the method of payment to use. Read from &lt;form> marked with
+         *                                      <b>data-plenty-checkout-form="methodOfPayment"</b> if unset.
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
         function setMethodOfPayment( paymentID ) {
 
             paymentID = paymentID || $('[data-plenty-checkout-form="methodOfPayment"]').getFormValues().MethodOfPaymentID;
@@ -167,6 +217,10 @@
                 });
         }
 
+        /**
+         * Display the popup to enter or edit customers bank details
+         * @function editBankDetails
+         */
         function editBankDetails() {
 
             UI.showWaitScreen();
@@ -191,6 +245,11 @@
 
         }
 
+        /**
+         * Read entered bank details from <b>data-plenty-checkout-form="bankDetails"</b> and update checkout.
+         * @function saveBankDetails
+         * @private
+         */
         function saveBankDetails() {
             var values = $('[data-plenty-checkout-form="bankDetails"]').getFormValues();
 
@@ -214,6 +273,12 @@
                 });
         }
 
+        /**
+         * Place the order prepared before and finish the checkout process.<br>
+         * Validate required checkboxes in <b>data-plenty-checkout-form="placeOrder"</b>
+         * @function placeOrder
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
         function placeOrder() {
             var form = $('[data-plenty-checkout-form="placeOrder"]');
             if ( form.validateForm() ) {
@@ -261,4 +326,4 @@
 
 
 	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
-}(PlentyFramework));
+}(jQuery, PlentyFramework));

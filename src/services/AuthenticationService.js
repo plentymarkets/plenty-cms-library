@@ -1,8 +1,19 @@
-(function (pm) {
+/**
+ * @module Services
+ */
+(function ($, pm) {
 
-    /****************************************
-     *        LOGIN & REGISTRATION          *
-     ****************************************/
+    /**
+     * Providing methods for logging in and out and registering new customers.<br>
+     * <b>Requires:</b>
+     * <ul>
+     *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "CheckoutFactory"}}CheckoutFactory{{/crossLink}}</li>
+     * </ul>
+     * @class AuthenticationService
+     * @static
+     */
     pm.service('AuthenticationService', function (API, UI, Checkout) {
 
         return {
@@ -16,9 +27,11 @@
         };
 
         /**
-         * Lost password
+         * Reading E-Mail from form marked with <b>data-plenty-checkout="lostPasswordForm"</b>
+         * and sends request to provide a new password to the entered E-Mail-Address.
          *
-         * @return    Promise
+         * @function resetPasswort
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function resetPassword() {
 
@@ -46,9 +59,12 @@
         }
 
         /**
-         * Handle customers login
+         * Try to login in with credentials readed from given &ltform> - element.
+         * On success redirect to forms 'action' attribute.
          *
-         * @return Promise
+         * @function customerLogin
+         * @param {object} form The jQuery-wrappd form-element to read the credentials from
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function customerLogin( form ) {
             if( form.validateForm() ) {
@@ -70,11 +86,11 @@
         }
 
         /**
-         * Evaluate invoice address form,
-         * modify checkout data and update checkout on server
+         * Setting the invoice address of a newly registered customer or a guest.
          *
-         * @param    invoiceAddress    object containing address-data sent to server via ReST-API
-         * @return    Promise
+         * @function setInvoiceAddress
+         * @param {object} invoiceAddress containing address-data sent to server
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function setInvoiceAddress( invoiceAddress ) {
 
@@ -87,10 +103,12 @@
         }
 
         /**
-         * Prepare address-data to register new customer
-         * on success, redirect to forms target referenced by action-attribute
+         * Prepare address-data to register new customer. Read the address-data from a &lt;form> marked with
+         * <b>data-plenty-checkout-form="customerRegistration"</b><br>
+         * On success, redirect to forms target referenced by action-attribute
          *
-         * @return Promise
+         * @function registerCustomer
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function registerCustomer() {
             var form = $('[data-plenty-checkout-form="customerRegistration"]');
@@ -132,9 +150,10 @@
         }
 
         /**
-         * Prepare address-data to register a guest
-         *
-         * @return Promise
+         * Prepare address-data to register a guest. Reads the address-data from a &lt;form> marked with
+         * <b>data-plenty-checkout-form="guestRegistration"</b>
+         * @function registerGuest
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function registerGuest() {
             var form = $('[data-plenty-checkout-form="guestRegistration"]');
@@ -172,9 +191,11 @@
         }
 
         /**
-         * Update address-data to register a guest
-         *
-         * @return Promise
+         * Update address-data to register a guest. Read the address-data from a &lt;form> marked with
+         * <b>data-plenty-checkout-form="guestRegistration"</b>
+         * @function updateGuestInvoiceAddress
+         * @return {object|undefined}   <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         *                              or <code>undefined</code if no changes were made
          */
         function updateGuestInvoiceAddress() {
             var form = $('[data-plenty-checkout-form="guestRegistration"]');
@@ -224,9 +245,11 @@
         }
 
         /**
-         * Updatee shipping address-data for guest
-         *
-         * @return Promise
+         * Update shipping address-data for guest. Read the address-data from a &lt;form> marked with
+         * <b>data-plenty-checkout-form="guestRegistration"</b>
+         * @function updateGuestAddresses
+         * @return {object|undefined}   <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         *                              or <code>undefined</code if no changes were made
          */
         function updateGuestAddresses() {
             var form = $('[data-plenty-checkout-form="guestRegistration"]');
@@ -324,4 +347,4 @@
         }
     }, ['APIFactory', 'UIFactory', 'CheckoutFactory']);
 
-}(PlentyFramework));
+}(jQuery, PlentyFramework));

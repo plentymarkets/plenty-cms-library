@@ -1,9 +1,15 @@
+/**
+ * @module Factories
+ */
 (function($, pm) {
 
     /**
      * Handles requests to ReST API. Provides a {{#crossLink "APIFactory/handleError:method"}}default error-handling{{/crossLink}}.
-     * Request parameters will be parsed to json internally
-     * @module Factories
+     * Request parameters will be parsed to json internally<br>
+     * <b>Requires:</b>
+     * <ul>
+     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
+     * </ul>
      * @class APIFactory
      * @static
      */
@@ -23,7 +29,7 @@
          * @function handleError
          * @private
          *
-         * @param {*} jqXHR   <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @param {object} jqXHR   <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function handleError( jqXHR ) {
             var responseText = $.parseJSON(jqXHR.responseText);

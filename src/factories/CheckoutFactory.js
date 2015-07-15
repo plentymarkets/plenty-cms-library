@@ -1,9 +1,17 @@
+/**
+ * @module Factories
+ */
 (function(pm) {
 
     /**
      * Holds checkout data for global access and provides methods
-     * for reloading content dynamically
-     * @module Factories
+     * for reloading content dynamically-<br>
+     * <b>Requires:</b>
+     * <ul>
+     *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "CMSFactory"}}CMSFactory{{/crossLink}}</li>
+     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
+     * </ul>
      * @class CheckoutFactory
      * @static
      */

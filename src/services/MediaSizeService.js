@@ -1,15 +1,47 @@
-(function(pm){
+/**
+ * @module Services
+ */
+(function($, pm){
 
+    /**
+     * Listens to window's size and trigger 'sizeChange' event if the Bootstrap interval changes.
+     * @class MediaSizeService
+     * @static
+     * @example
+     *      $(window).on('sizeChange', function(newValue, oldValue) {
+     *          console.log('The interval changed from ' + oldValue + ' to ' + newValue.');
+     *      });
+     */
     pm.service('MediaSizeService', function() {
 
         var bsInterval;
 
+        // recalculation of the current interval on window resize
+        $(window).resize( calculateMediaSize );
+
+        // initially calculation of the interval
+        $(document).ready( calculateMediaSize );
+
+        return {
+            interval: getInterval
+        };
+
+        /**
+         * Get the currently used Bootstrap interval
+         * @function getInterval
+         * @return {"xs"|"sm"|"md"|"lg"}
+         */
         function getInterval() {
             if( !!bsInterval ) calculateMediaSize();
 
             return bsInterval;
         }
 
+        /**
+         * Calculate the currently used Bootstrap interval
+         * @function calculateMediaSize
+         * @private
+         */
         function calculateMediaSize() {
             var size;
             if( !!window.matchMedia ) { // FIX IE support
@@ -31,14 +63,6 @@
         }
 
 
-        $(window).resize( calculateMediaSize );
-        $(document).ready( calculateMediaSize );
-
-
-        return {
-            interval: getInterval
-        };
-
     });
 
-}(PlentyFramework));
+}(jQuery, PlentyFramework));

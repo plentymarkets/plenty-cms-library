@@ -1,14 +1,28 @@
+/**
+ * @module Services
+ */
 (function($, pm) {
 
+    /**
+     * Provide templates for social share providers to inject them dynamically.
+     * @class SocialShareService
+     * @static
+     */
     pm.service('SocialShareService', function() {
+
+        if ( typeof(socialLangLocale) == 'undefined' ) socialLangLocale = 'en_US';
+        if ( typeof(socialLang) == 'undefined' ) socialLang = 'en';
 
         return {
             getSocialService: getService
         };
 
-        if ( typeof(socialLangLocale) == 'undefined' ) socialLangLocale = 'en_US';
-        if ( typeof(socialLang) == 'undefined' ) socialLang = 'en';
-
+        /**
+         * Get the template for social media provider
+         * @function getService
+         * @param {string} identifier name of the social media provider to get the template for
+         * @returns {string} the template to inject in DOM
+         */
         function getService( identifier ) {
             var services = {
                 'facebook-like' 	:	 '<iframe src="//www.facebook.com/plugins/like.php'
@@ -49,6 +63,12 @@
             return services[identifier];
         }
 
+        /**
+         * get the canonical URL if defined
+         * @function getURL
+         * @private
+         * @return {string} The Canonical URL if defined or the current URI
+         */
         function getURI() {
             var uri = document.location.href;
             var canonical = $("link[rel=canonical]").attr("href");
@@ -63,14 +83,23 @@
             return uri;
         }
 
-        // returns content of <meta name="" content=""> tags or '' if empty/non existant
+        /**
+         * returns content of &lt;meta name="" content=""> tags or '' if empty/non existant
+         * @function getMeta
+         * @private
+         * @param {string} name The meta name to get the value of;
+         */
         function getMeta(name) {
             var metaContent = $('meta[name="' + name + '"]').attr('content');
             return metaContent || '';
         }
 
-        // create tweet text from content of <meta name="DC.title"> and <meta name="DC.creator">
-        // fallback to content of <title> tag
+        /**
+         * create tweet text from content of &lt;meta name="DC.title"> and &lt;meta name="DC.creator">
+         * fallback to content of &lt;title> tag
+         * @function getTweetText
+         * @private
+         */
         function getTweetText() {
             var title = getMeta('DC.title');
             var creator = getMeta('DC.creator');

@@ -1,8 +1,10 @@
+/**
+ * @module Factories
+ */
 (function($, pm) {
 
     /**
      * Provides methods for creating and displaying modal popups.
-     * @module Factories
      * @class ModalFactory
      * @static
      */
@@ -24,7 +26,7 @@
         /**
          * Holds configuration of a modal and provides methods for displaying and hiding the modal
          * @class Modal
-         * @namespace ModalFactory
+         * @for ModalFactory
          * @returns {Modal}
          * @constructor
          */

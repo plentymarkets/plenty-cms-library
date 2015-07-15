@@ -1,10 +1,15 @@
+/**
+ * @module Services
+ */
 (function($, pm){
 
-    /****************************************
-     *              GUI HANDLING            *
-     ****************************************/
+    /**
+     * Handling navigation while checkout processes
+     * @class NavigatorService
+     * @static
+     *
+     */
     pm.service('NavigatorService', function() {
-
         var navigation  = [];		// contains navigation list elements
         var container   = [];		// content containers
         var current     = -1;		// index of currently shown content container
@@ -28,6 +33,30 @@
             fillNavigation: fillNavigation
         };
 
+        /**
+         * Initialize checkout navigation. Shows first container.
+         * @function init
+         * @example
+         * ```html
+         *  <button data-plenty-checkout="prev">zurück</button>
+         *  <ul data-plenty-checkout="navigation">
+         *      <li>Checkout Step 1</li>
+         *      <li>Checkout Step 2</li>
+         *      <li>...</li>
+         *  </ul>
+         *  <button data-plenty-checkout="next">weiter</button>
+         *
+         *  <div data-plenty-checkout="container">
+         *      <div data-plenty-checkout-id="step_1">
+         *          Checkout Step 1 Content
+         *      </div>
+         *      <div data-plenty-checkout-id="step_2">
+         *          Checkout Step 2 Content
+         *      </div>
+         *      <div> ... </div>
+         *  </div>
+         * ```
+         */
         function init() {
             // get elements from DOM
             navigation 	= 	$('[data-plenty-checkout="navigation"] > li');
@@ -103,6 +132,11 @@
             }
         }
 
+        /**
+         * Get the currently active checkout container.
+         * @function getCurrentContainer
+         * @return {{id: string, index: number}}
+         */
         function getCurrentContainer() {
             if (current >= 0) {
                 return {
@@ -114,16 +148,45 @@
             }
         }
 
+        /**
+         * Register an interceptor called before each tab change.
+         * Tabchange will break if any interceptor returns false;
+         * @param {function} interceptor The interceptor callback to register
+         * @chainable
+         * @returns {NavigatorService}
+         * @example
+         *      plenty.NavigatorService.beforeChange( function(targetContainer) {
+         *          if( targetContainer.id === 'details' ) {
+         *              // stop tabchange if user tries to access checkout container with id "details"
+         *              return false;
+         *          }
+         *          return true;
+         *      });
+         */
         function beforeChange( interceptor ) {
             interceptors.beforeChange.push( interceptor );
-            return pm.getInstance().Navigator;
+            return pm.getInstance().NavigatorService;
         }
 
+        /**
+         * Register an interceptor called after each tab change.
+         * @param {function} interceptor The interceptor callback to register
+         * @chainable
+         * @returns {NavigatorService}
+         */
         function afterChange( interceptor ) {
             interceptors.afterChange.push( interceptor );
-            return pm.getInstance().Navigator;
+            return pm.getInstance().NavigatorService;
         }
 
+        /**
+         * Call registered interceptors. Break if any interceptor returns false
+         * @function resolveInterceptors
+         * @private
+         * @param {"beforeChange"|"afterChange"} identifier Describe which interceptors should be called
+         * @param {object} params data passed to interceptor methods
+         * @returns {boolean} Conjunction of all interceptor return values
+         */
         function resolveInterceptors( identifier, params ) {
             var continueTabChange = true;
 
@@ -141,7 +204,9 @@
 
         /**
          * Show checkout tab given by index
-         * @param index Index of target tab, starting at 0
+         * @function goTo
+         * @param {number} index Index of target tab, starting at 0
+         * @param {boolean} [ignoreInterceptors=false] Set true to not call registered interceptors and force changing tab
          */
         function goTo(index, ignoreInterceptors) {
 
@@ -221,12 +286,23 @@
 
         }
 
+        /**
+         * Continue interrupted tabchange. Shorthand for: <code>goTo(targetContainer.index, true)</code>
+         * @function continueChange
+         * @param targetContainer The tab-object received from an interceptor
+         */
         function continueChange(targetContainer) {
             goTo(targetContainer.index, true);
         }
 
         /**
-         * Show next checkout tab if available
+         * Show next checkout tab if available. Shorthand for
+         * <code>
+         *     if (current < navigation.length - 1) {
+         *        goTo(current + 1);
+         *     }
+         * </code>
+         * @function next
          */
         function next() {
             if (current < navigation.length - 1) {
@@ -236,6 +312,7 @@
 
         /**
          * Show previous checkout tab if available
+         * @function next
          */
         function previous() {
             if (current > 0) {
@@ -245,7 +322,8 @@
 
         /**
          * Show checkout tab given by ID
-         * @param    containerID    ID of tab to show. Target tab must be marked with data-plenty-checkout-id="#..."
+         * @function goToID
+         * @param  {string} containerID ID of tab to show. Target tab must be marked with <b>data-plenty-checkout-id="#..."</b>
          */
         function goToID(containerID) {
             if (containerID == 'next') {
@@ -270,8 +348,9 @@
         }
 
         /**
-         * Calculate checkout navigations width to match its parent element
-         * by increasing its items padding
+         * Calculate navigation's width to match its parent element
+         * by increasing its items padding.
+         * @function fillNavigation
          */
         function fillNavigation() {
             // break if manager has not been inizialized
@@ -312,10 +391,6 @@
                 $(elem).children('span').css('paddingLeft', paddingLeft + 'px').css('paddingRight', paddingRight + 'px');
             });
         }
-
-/*
-        new PlentyFunction('[data-plenty-checkout-href]', );
-*/
 
     });
 

@@ -1,8 +1,10 @@
+/**
+ * @module Factories
+ */
 (function($, pm) {
 
     /**
      * Displaying error messages and handling wait screen
-     * @module Factories
      * @class UIFactory
      * @static
      */

@@ -1,8 +1,26 @@
+/**
+ * @module Services
+ */
 (function ($, pm) {
 
+    /**
+     * Provide methods for client-side form validation.
+     * @class ValidationService
+     * @static
+     */
     pm.service( 'ValidationService', function() {
 
+        return {
+            validate: validate
+        };
 
+        /**
+         * Check if element is a form element (input, select, textarea) or search for child form elements
+         * @function getFormControl
+         * @private
+         * @param  {object} element the element to get the form element from
+         * @return {object} a valid form element (input, select, textarea)
+         */
         function getFormControl( element ) {
             if( $(element).is('input') || $(element).is('select') || $(element).is('textarea') ) {
                 return $(element);
@@ -26,6 +44,13 @@
 
         }
 
+        /**
+         * Check given element has any value
+         * @function validateText
+         * @private
+         * @param {object} formControl the form element to validate
+         * @return {boolean}
+         */
         function validateText( formControl ) {
             // check if formControl is no checkbox or radio
             if ( $(formControl).is('input') || $(formControl).is('select') || $(formControl).is('textarea') ) {
@@ -38,6 +63,13 @@
             }
         }
 
+        /**
+         * Check given element's value is a valid email-address
+         * @function validateMail
+         * @private
+         * @param {object} formControl the form element to validate
+         * @return {boolean}
+         */
         function validateMail( formControl ) {
             var mailRegExp = /[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
             if ( validateText(formControl) ) {
@@ -47,6 +79,13 @@
             }
         }
 
+        /**
+         * Check given element's value is a valid number
+         * @function validateNumber
+         * @private
+         * @param {object} formControl the form element to validate
+         * @return {boolean}
+         */
         function validateNumber( formControl ) {
             if ( validateText(formControl) ) {
                 return $.isNumeric( $.trim( $(formControl).val() ) );
@@ -55,6 +94,14 @@
             }
         }
 
+        /**
+         * Check given element's value is equal to a references value
+         * @function validateValue
+         * @private
+         * @param {object} formControl the form element to validate
+         * @param {string} reference the required value
+         * @return {boolean}
+         */
         function validateValue( formControl, reference ) {
             if( $(reference).length > 0 ) {
                 return $.trim( $(formControl).val() ) == $.trim( $(reference).val() );
@@ -63,6 +110,55 @@
             }
         }
 
+        /**
+         * Validate a form. Triggers event 'validationFailed' if any element has an invalid value
+         * @function validate
+         * @param   {object}    form The form element to validate
+         * @returns {boolean}
+         * @example
+         *  ```html
+         *      <!-- add "error-class" to invalid elements -->
+         *      <form data-plenty-checkform="error-class">
+         *          <!-- check if value is "text" -->
+         *          <input type="text" data-plenty-validate="text">
+         *
+         *          <!-- check if value is a valid email-address -->
+         *          <input type="text" data-plenty-validate="mail">
+         *
+         *          <!-- check if value is a valid number -->
+         *          <input type="text" data-plenty-validate="number">
+         *
+         *          <!-- check if value is "foo" -->
+         *          <input type="text" data-plenty-validate="value" data-plenty-validation-value="foo">
+         *
+         *          <!-- check if values are identical -->
+         *          <input type="text" id="input1">
+         *          <input type="text" data-plenty-validate="value" data-plenty-validation-value="#input1">
+         *
+         *          <!-- validate radio buttons -->
+         *          <input type="radio" name="radioGroup" data-plenty-validate>
+         *          <input type="radio" name="radioGroup" data-plenty-validate>
+         *          <input type="radio" name="radioGroup" data-plenty-validate>
+         *
+         *          <!-- validate checkboxes -->
+         *          <input type="checkbox" name="checkboxGroup" data-plenty-validate="{min: 1, max: 2}">
+         *          <input type="checkbox" name="checkboxGroup" data-plenty-validate="{min: 1, max: 2}">
+         *          <input type="checkbox" name="checkboxGroup" data-plenty-validate="{min: 1, max: 2}">
+         *
+         *          <!-- add error class to parent container -->
+         *          <div data-plenty-validate="text">
+         *              <label>An Input</label>
+         *              <input type="text">
+         *          </div>
+         *
+         *       </form>
+         *    ```
+         *
+         * @example
+         *      $(form).on('validationFailed', function(missingFields) {
+         *          // handle missing fields
+         *      });
+         */
         function validate( form ) {
             var errorClass = !!$(form).attr('data-plenty-checkform') ? $(form).attr('data-plenty-checkform') : 'has-error';
             var missingFields = [];
@@ -186,18 +282,20 @@
                 return !hasError;
             }
         }
-
-        return {
-            validate: validate
-        }
     });
 
+    /**
+     * jQuery-Plugin to calling {{#crossLink "ValidationService/validate"}}ValidationService.validate{{/crossLink}}
+     * on jQuery wrapped elements.
+     * @return {boolean}
+     */
     $.fn.validateForm = function() {
         return pm.getInstance().ValidationService.validate( this );
     };
 
     /**
-     * Get the values of inner form elements.
+     * jQuery-Plugin to get the values of contained form elements.
+     * @return {object}
      */
     $.fn.getFormValues = function() {
 

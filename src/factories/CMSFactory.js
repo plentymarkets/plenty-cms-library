@@ -1,9 +1,15 @@
+/**
+ * @module Factories
+ */
 (function(pm) {
 
     /**
      * Provide methods for receiving layout containers, layout parameters
-     * or category content from API
-     * @module Factories
+     * or category content from API<br>
+     * <b>Requires:</b>
+     * <ul>
+     *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
+     * </ul>
      * @class CMSFactory
      * @static
      */
