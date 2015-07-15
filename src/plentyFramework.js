@@ -1,7 +1,12 @@
+/**
+ * @module PlentyFramework
+ */
 (function($) {
 
     /**
      * Framework providing client functions for plentymarkets Webshops.
+     * @class PlentyFramework
+     * @constructor
      */
     PlentyFramework = function() {};
 
@@ -11,15 +16,22 @@
         return instance;
     };
 
+    /**
+     * Collection of registered directives
+     * @type {Array}
+     * @static
+     */
     PlentyFramework.directives = [];
 
     /**
      * Register directive. Directives can be bound to dynamically added nodes by calling pm.bindPlentyFunctions();
+     * @function directive
+     * @static
      * @param   {string}    selector        jQuery selector of the DOM-elements to bind the directive to
      * @param   {function}  callback        Function to add directives behaviour
      * @param   {Array}     dependencies    List of required services. Services will be passed to callback function
      * @param   {boolean}   allowDuplicates Defines if a directive can be bound to the same element multiple times
-     * @returns {object}                    The created directive
+     * @return  {object}                    The created directive
      */
     PlentyFramework.directive = function(selector, callback, dependencies, allowDuplicates) {
         var directive = {
@@ -37,6 +49,7 @@
 
     /**
      * Bind registered directives.
+     * @function bindDirectives
      * @param {string} [directiveSelector] restrict binding to elements matching this selector
      */
     PlentyFramework.prototype.bindDirectives = function( directiveSelector ) {
@@ -76,6 +89,13 @@
     };
 
 
+    /**
+     * Collection of uncompiled registered factories & services.
+     * See {{#crossLink "PlentyFramework/compile:method"}}.compile(){{/crossLink}}
+     * @attribute components
+     * @static
+     * @type {{factories: {}, services: {}}}
+     */
     PlentyFramework.components = {
         factories: {},
         services: {}
@@ -83,10 +103,12 @@
 
     /**
      * Register a new service
-     * @param {string}      serviceName         Unique identifier of the service to get/ create
-     * @param {function}    serviceFunctions  Callback containing all public functions of this service.
-     * @param {Array}       [dependencies]      Identifiers of required services to inject in serviceFunctions
-     * @returns {object}                        The object described in serviceFunctions(). Can be received via PlentyFramework.[serviceName]
+     * @function service
+     * @static
+     * @param {string}      serviceName        Unique identifier of the service to get/ create
+     * @param {function}    serviceFunctions   Callback containing all public functions of this service.
+     * @param {Array}       [dependencies]     Identifiers of required services to inject in serviceFunctions
+     * @return {object}                        The object described in serviceFunctions(). Can be received via PlentyFramework.[serviceName]
      */
     PlentyFramework.service = function( serviceName, serviceFunctions, dependencies ) {
 
@@ -117,8 +139,11 @@
 
     /**
      * Returns an array containing required factories given by string identifier
-     * @param {Array}   dependencies    Names of required factories
-     * @returns {Array}                 Objects to apply to callback function
+     * @function resolveServices
+     * @static
+     * @private
+     * @param  {Array} dependencies    Names of required factories
+     * @return {Array}                 Objects to apply to callback function
      */
     PlentyFramework.resolveServices = function( dependencies ) {
         var compiledServices = [];
@@ -141,7 +166,22 @@
         return compiledServices;
     };
 
+    /**
+     * Collection of compiled factories
+     * @attribute factories
+     * @static
+     * @type {object}
+     */
     PlentyFramework.factories = {};
+
+    /**
+     * Register a new factory
+     * @function factory
+     * @static
+     * @param {string}      factoryName         A unique name of the new factory
+     * @param {function}    factoryFunctions    The function describing the factory
+     * @param {Array}       dependencies        List of required factories to inject
+     */
     PlentyFramework.factory = function( factoryName, factoryFunctions, dependencies ) {
 
         // Catch type mismatching for 'serviceName'
@@ -170,8 +210,11 @@
 
     /**
      * Returns an array containing required factories given by string identifier
-     * @param {Array}   dependencies    Names of required factories
-     * @returns {Array}                 Objects to apply to callback function
+     * @function resolveFactories
+     * @static
+     * @private
+     * @param  {Array}   dependencies  Names of required factories
+     * @return {Array}                 Objects to apply to callback function
      */
     PlentyFramework.resolveFactories = function( dependencies ) {
         var compiledFactories = [];
@@ -194,7 +237,11 @@
         return compiledFactories;
     };
 
-
+    /**
+     * Compile registered factories & services
+     * @function compile
+     * @static
+     */
     PlentyFramework.compile = function() {
 
         for( var factory in PlentyFramework.components.factories ) {

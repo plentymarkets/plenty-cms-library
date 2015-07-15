@@ -5,4 +5,5 @@
  * factories are not visible in instances of {{#crossLinkModule "PlentyFramework"}}PlentyFramework{{/crossLinkModule}}.
  *
  * @module Factories
+ * @main Factories
  */

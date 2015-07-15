@@ -1,4 +1,5 @@
 (function($, pm) {
+
 	pm.directive('[data-plenty="addBasketItemButton"]', function(i, button, BasketService)
     {
 
