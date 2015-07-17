@@ -2,17 +2,18 @@
 
     // Toggle target content on click.
     // Can be bound on checked-/ unchecked-property of radio buttons
-    pm.directive('[data-plenty-slidetoggle]', function(i, elem) {
+    pm.directive('[data-plenty-slidetoggle]', function(i, trigger) {
 
-        var target = $( $(this).attr('data-plenty-target') );
-        if ( $(elem)[0].tagName.toLowerCase() == 'input' && $(elem).attr('type').toLowerCase() == 'radio' ) {
+        var target = $( $(trigger).attr('data-plenty-target') );
+
+        if( $(trigger).is('input[type="radio"]') ) {
             // is radio button
-            var radioList = $('input[type="radio"][name="'+( $(elem).attr('name') )+'"]');
-            var visibleOnChecked = $(elem).is('[data-plenty-slidetoggle="unchecked"]');
+            var radioList = $('input[type="radio"][name="'+( $(trigger).attr('name') )+'"]');
+            var visibleOnChecked = $(trigger).is('[data-plenty-slidetoggle="checked"]');
             $(radioList).change(function() {
                 $(target).parents('[data-plenty-equal-target]').css('height', 'auto');
 
-                if ( $(this).is(':checked') && $(this)[0] === $(elem)[0] ) {
+                if ( $(this).is(':checked') && $(this)[0] === $(trigger)[0] ) {
                     // checked
                     if ( visibleOnChecked == true ) {
                         $(target).slideDown(400, function() {
@@ -39,13 +40,13 @@
             });
         } else {
             // is not radio button
-            $(elem).click(function() {
+            $(trigger).click(function() {
                 $(target).parents('[data-plenty-equal-target]').css('height', 'auto');
 
-                $(elem).addClass('animating');
+                $(trigger).addClass('animating');
                 $(target).slideToggle(400, function() {
-                    $(elem).removeClass('animating');
-                    $(elem).toggleClass('active');
+                    $(trigger).removeClass('animating');
+                    $(trigger).toggleClass('active');
                     pm.getInstance().bindDirectives('[data-plenty-equal]');
                 });
             });
