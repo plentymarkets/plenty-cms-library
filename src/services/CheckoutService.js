@@ -26,6 +26,7 @@
             preparePayment: preparePayment,
             setMethodOfPayment: setMethodOfPayment,
             editBankDetails: editBankDetails,
+            editCreditCard: editCreditCard,
             placeOrder: placeOrder
 		};
 
@@ -76,10 +77,16 @@
          * Read address data from &lt;form> marked with <b>data-plenty-checkout-form="shippingAddress"</b>.
          * Create new shipping address or update the shipping address ID.
          * @function saveShippingAddress
+         * @param {boolean} [validateForm = false] validate form before processing requests
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function saveShippingAddress() {
+        function saveShippingAddress( validateForm ) {
             var form = $('[data-plenty-checkout-form="shippingAddress"]');
+
+            if( !!validateForm && !$(form).validateForm() ) {
+                return null;
+            }
+
             var values = form.getFormValues();
 
             // TODO: move bootstrap specific function
@@ -184,8 +191,17 @@
 
                     } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
+                        var isBankDetails = $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('[data-plenty-checkout-form="bankDetails"]').length > 0;
+
                         Modal.prepare()
                             .setTemplate( response.data.CheckoutMethodOfPaymentAdditionalContent )
+                            .onConfirm(function() {
+                                if( isBankDetails ) {
+                                    return saveBankDetails();
+                                } else {
+                                    return saveCreditCard();
+                                }
+                            })
                             .show();
                     }
 
@@ -230,7 +246,6 @@
                     UI.hideWaitScreen();
                     Modal.prepare()
                         .setTemplate(response.data[0])
-                        .onConfirm(saveBankDetails)
                         .onDismiss(function() {
                             $('input[name="MethodOfPaymentID"]').each(function(i, radio) {
                                 if( $(radio).val() == Checkout.getCheckout().CheckoutMethodOfPaymentID ) {
@@ -249,28 +264,97 @@
          * Read entered bank details from <b>data-plenty-checkout-form="bankDetails"</b> and update checkout.
          * @function saveBankDetails
          * @private
+         * @return {boolean} the result of form validation
          */
         function saveBankDetails() {
-            var values = $('[data-plenty-checkout-form="bankDetails"]').getFormValues();
+            var form = $('[data-plenty-checkout-form="bankDetails"]');
 
-            var bankDetails = {
-                CustomerBankName:       values.customerBankDetails.bankName,
-                CustomerBLZ:            values.customerBankDetails.blz,
-                CustomerAccountNumber:  values.customerBankDetails.accountNo,
-                CustomerAccountOwner:   values.customerBankDetails.accountOwner,
-                CustomerIBAN:           values.customerBankDetails.iban,
-                CustomerBIC:            values.customerBankDetails.bic
-            };
+            if( form.validateForm() ) {
+                var values = form.getFormValues().checkout.customerBankDetails;
+
+                var bankDetails = {
+                    CustomerBankName:       values.bankName,
+                    CustomerBLZ:            values.blz,
+                    CustomerAccountNumber:  values.accountNo,
+                    CustomerAccountOwner:   values.accountOwner,
+                    CustomerIBAN:           values.iban,
+                    CustomerBIC:            values.bic
+                };
+
+                UI.showWaitScreen();
+                API.post("/rest/checkout/paymentinformationbankdetails/", bankDetails)
+                    .done(function () {
+                        Checkout.loadCheckout().done(function () {
+                            setMethodOfPayment(3);
+                            Checkout.reloadContainer('MethodsOfPaymentList');
+                            UI.hideWaitScreen();
+                        });
+                    });
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        /**
+         * Display a popup containing credit card form
+         * @function editCreditCard
+         */
+        function editCreditCard() {
 
             UI.showWaitScreen();
-            API.post("/rest/checkout/customerbankdetails/", bankDetails)
-                .done(function() {
-                    Checkout.loadCheckout().done(function() {
-                        setMethodOfPayment(3);
-                        Checkout.reloadContainer('MethodOfPaymentList');
-                        UI.hideWaitScreen();
-                    });
+
+            CMS.getContainer('CheckoutPaymentInformationCreditCard').from('Checkout')
+                .done(function(response) {
+                    UI.hideWaitScreen();
+                    Modal.prepare()
+                        .setTemplate(response.data[0])
+                        .onDismiss(function() {
+                            $('input[name="MethodOfPaymentID"]').each(function(i, radio) {
+                                if( $(radio).val() == Checkout.getCheckout().CheckoutMethodOfPaymentID ) {
+                                    $(radio).attr('checked', 'checked');
+                                } else {
+                                    $(radio).removeAttr('checked');
+                                }
+                            });
+                        })
+                        .show();
                 });
+        }
+
+        /**
+         * Read values from &lt;form> marked with <b>data-plenty-checkout-form="creditCard"</b> and update checkout.
+         * @function saveCreditCard
+         * @private
+         * @return {boolean} the result of form validation
+         */
+        function saveCreditCard() {
+            var form = $('[data-plenty-checkout-form="creditCard"]');
+
+            if( form.validateForm() ) {
+
+                var values = form.getFormValues().checkout.paymentInformationCC;
+
+                var creditCard = {
+                    Owner:      values.owner,
+                    Cvv2:       values.cvv2,
+                    Number:     values.number,
+                    Year:       values.year,
+                    Month:      values.month,
+                    Provider:   values.provider
+                };
+
+                UI.showWaitScreen();
+                API.post('/rest/checkout/paymentinformationcreditcard/', creditCard)
+                    .done(function() {
+                        Checkout.loadCheckout().done(function() {
+                            UI.hideWaitScreen();
+                        });
+                    });
+                return true;
+            } else {
+                return false;
+            }
         }
 
         /**

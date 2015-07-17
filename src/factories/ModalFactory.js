@@ -70,7 +70,8 @@
             modal.labelConfirm = 'Bestätigen';
 
             /**
-             * Callback when modal is confirmed by clicking confirmation button
+             * Callback when modal is confirmed by clicking confirmation button.
+             * Modal will not be dismissed if callback returns false.
              * @attribute onConfirm
              * @type {function}
              * @private
@@ -282,8 +283,8 @@
                     hide();
                 });
                 bsModal.find('[data-plenty-modal="confirm"]').click( function() {
-                    modal.onConfirm();
-                    hide(true);
+                    var close = modal.onConfirm();
+                    if( close ) hide(true);
                 });
 
                 bsModal.modal('show');
