@@ -21,6 +21,7 @@
 		return {
             init: init,
             setCustomerSignAndInfo: setCustomerSignAndInfo,
+            registerGuest: registerGuest,
             setShippingProfile: setShippingProfile,
             saveShippingAddress: saveShippingAddress,
             preparePayment: preparePayment,
@@ -88,72 +89,106 @@
         function saveShippingAddress( validateForm ) {
             var form = $('[data-plenty-checkout-form="shippingAddress"]');
 
-            if( !!validateForm && !$(form).validateForm() ) {
+            if( !!validateForm && !form.validateForm() ) {
                 return null;
             }
 
             var values = form.getFormValues();
+            var shippingAddressID = $('[name="shippingAddressID"]:checked').val();
 
             // TODO: move bootstrap specific function
             $('#shippingAdressSelect').modal('hide');
 
-            UI.showWaitScreen();
 
-            if ($('[name="shippingAddressID"]:checked').val() < 0) {
-                // create new shipping address
-                var shippingAddress = {
-                    FormOfAddressID: values.FormOfAddressID,
-                    Company: values.Company,
-                    FirstName: values.FirstName,
-                    LastName: values.LastName,
-                    Street: values.Street,
-                    HouseNo: values.HouseNo,
-                    AddressAdditional: values.AddressAdditional,
-                    ZIP: values.ZIP,
-                    City: values.City,
-                    CountryID: values.CountryID,
-                    Email: values.Email,
-                    Postnummer: values.Postnummer,
-                    PhoneNumber: values.PhoneNumber,
-                    FaxNumber: values.FaxNumber,
-                    VATNumber: values.VATNumber
-                };
+            if ( shippingAddressID < 0) {
+                // save separate
+                var shippingAddress = values;
 
-                return API.post("/rest/checkout/customershippingaddress/", shippingAddress)
-                    .done(function (response) {
+                if( !addressesAreEqual( shippingAddress, Checkout.getCheckout().CustomerShippingAddress) ) {
 
-                        Checkout.getCheckout().CheckoutCustomerShippingAddressID = response.data.ID;
-                        delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
-                        delete Checkout.getCheckout().CheckoutShippingProfileID;
+                    // new shipping address
+                    UI.showWaitScreen();
+                    return API.post("/rest/checkout/customershippingaddress/", shippingAddress)
+                        .done(function (response) {
 
-                        Checkout.setCheckout().done(function () {
+                            Checkout.getCheckout().CheckoutCustomerShippingAddressID = response.data.ID;
+                            delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
+                            delete Checkout.getCheckout().CheckoutShippingProfileID;
+
+                            Checkout.setCheckout().done(function () {
+                                Checkout.reloadContainer('MethodsOfPaymentList');
+                                // TODO: the following container may not be reloaded if guest registration
+                                if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
+                                    Checkout.reloadContainer('CustomerShippingAddress');
+                                }
+                                Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
+                                UI.hideWaitScreen();
+                            });
+                        });
+                } else {
+                    // no changes detected
+                    return API.idle();
+                }
+
+            } else {
+                if( shippingAddressID != Checkout.getCheckout().CheckoutCustomerShippingAddressID ) {
+                    // change shipping address id
+                    Checkout.getCheckout().CheckoutCustomerShippingAddressID = shippingAddressID;
+                    delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
+                    delete Checkout.getCheckout().CheckoutShippingProfileID;
+
+                    UI.showWaitScreen();
+                    return Checkout.setCheckout()
+                        .done(function () {
                             Checkout.reloadContainer('MethodsOfPaymentList');
-                            // TODO: the following container may not be reloaded if guest registration
-                            if ( Checkout.checkout().CustomerInvoiceAddress.LoginType == 2 ) {
-                                Checkout.reloadContainer('CustomerShippingAddress');
-                            }
-                            Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
+                            Checkout.reloadContainer('CustomerShippingAddress');
+                            Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
                             UI.hideWaitScreen();
+                        });
+                } else {
+                    return API.idle();
+                }
+            }
+        }
+
+        /**
+         * Prepare address-data to register a guest. Reads the address-data from a &lt;form> marked with
+         * <b>data-plenty-checkout-form="guestRegistration"</b>
+         * @function registerGuest
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
+        function registerGuest() {
+            var form = $('[data-plenty-checkout-form="guestRegistration"]');
+
+            var invoiceAddress = form.getFormValues();
+            invoiceAddress.LoginType = 1;
+
+
+            if( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) ) {
+
+                UI.showWaitScreen();
+                return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
+                    .done(function (response) {
+                        saveShippingAddress().done(function(){
+                            Checkout.getCheckout().CustomerInvoiceAddress = response.data;
+                            Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
                         });
                     });
 
+            } else {
 
-            } else if ( !! values.shippingAddressID ) {
-                // is not guest registration
+                return saveShippingAddress();
 
-                // change shipping address id
-                Checkout.getCheckout().CheckoutCustomerShippingAddressID = values.shippingAddressID;
-                delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
-                delete Checkout.getCheckout().CheckoutShippingProfileID;
-
-                return Checkout.setCheckout()
-                    .done(function () {
-                        Checkout.reloadContainer('MethodsOfPaymentList');
-                        Checkout.reloadContainer('CustomerShippingAddress');
-                        Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                        UI.hideWaitScreen();
-                    });
             }
+        }
+
+        function addressesAreEqual( address1, address2 ) {
+            for ( var key in address1 ) {
+                if ( address1[key]+'' !== address2[key]+'' && key !== 'EmailRepeat' ) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /**
