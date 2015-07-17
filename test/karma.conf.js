@@ -3,11 +3,13 @@ module.exports = function (config) {
         // base path, that will be used to resolve files and exclude
         basePath: '../',
 
-        frameworks: ['jasmine'],
+        frameworks: ['jasmine', 'jquery-1.7.2'],
 
         // list of files / patterns to load in the browser
         files: [
-            'test/**/*.js'
+            'test/**/*.js',
+            'src/*.js',
+            'src/**/*.js'
         ],
 
         // list of files to exclude
@@ -58,7 +60,7 @@ module.exports = function (config) {
             'karma-jasmine',
             //'karma-chrome-launcher',
             //'karma-firefox-launcher',
-            //'karma-jquery',
+            'karma-jquery',
             'karma-phantomjs-launcher',
             'karma-junit-reporter',
             'karma-commonjs'
