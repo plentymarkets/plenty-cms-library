@@ -7,5 +7,5 @@ describe("A suite is just a function", function() {
         expect(a).toBe(true);
     });
 
-    console.log("tests done!");
+    console.log("test tests done!");
 });

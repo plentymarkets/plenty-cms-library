@@ -6,3 +6,4 @@ debug
 doc
 callisto_dev
 test/*.xml
+test/spec/plentyFramework.spec.js
