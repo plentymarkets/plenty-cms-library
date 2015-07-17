@@ -70,7 +70,12 @@
                         UI.hideWaitScreen();
                     });
 
+            } else {
+                // No changes detected -> Do nothing
+                return API.idle();
             }
+
+
         }
 
         /**

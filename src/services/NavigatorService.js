@@ -150,7 +150,7 @@
 
         /**
          * Register an interceptor called before each tab change.
-         * Tabchange will break if any interceptor returns false;
+         * Tabchange will break if any interceptor returns false.
          * @param {function} interceptor The interceptor callback to register
          * @chainable
          * @returns {NavigatorService}
@@ -164,7 +164,7 @@
          *      });
          */
         function beforeChange( interceptor ) {
-            interceptors.beforeChange.push( interceptor );
+            interceptors.beforeChange.push(interceptor);
             return pm.getInstance().NavigatorService;
         }
 
@@ -180,19 +180,27 @@
         }
 
         /**
-         * Call registered interceptors. Break if any interceptor returns false
+         * Call registered interceptors. Break if any interceptor returns false.
+         * Do not call beforeChange-interceptors on initially tabchange
          * @function resolveInterceptors
          * @private
          * @param {"beforeChange"|"afterChange"} identifier Describe which interceptors should be called
-         * @param {object} params data passed to interceptor methods
+         * @param {number} index the index of the target container
          * @returns {boolean} Conjunction of all interceptor return values
          */
-        function resolveInterceptors( identifier, params ) {
+        function resolveInterceptors( identifier, index ) {
             var continueTabChange = true;
 
-            if( !!interceptors ) {
+            if( current >= 0 || identifier === 'afterChange' ) {
+
+                var currentContainer = getCurrentContainer();
+                var targetContainer = {
+                    index: index,
+                    id: $(container[index]).attr('data-plenty-checkout-id')
+                };
+
                 $.each(interceptors[identifier], function (i, interceptor) {
-                    if (interceptor(params) === false) {
+                    if (interceptor(currentContainer, targetContainer) === false) {
                         continueTabChange = false;
                         return false
                     }
@@ -210,15 +218,12 @@
          */
         function goTo(index, ignoreInterceptors) {
 
-            var targetContainer = {
-                index: index,
-                id: $(container[index]).attr('data-plenty-checkout-id')
-            };
 
-            var contentChanged = current !== index
+
+            var contentChanged = current !== index;
 
             if( contentChanged && !ignoreInterceptors ) {
-                if( !resolveInterceptors( "beforeChange", targetContainer ) ) {
+                if( !resolveInterceptors( "beforeChange", index ) ) {
                     return;
                 }
             }
@@ -281,7 +286,7 @@
             }
 
             if( contentChanged ) {
-                resolveInterceptors("afterChange", targetContainer);
+                resolveInterceptors("afterChange", index);
             }
 
         }

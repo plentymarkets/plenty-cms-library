@@ -343,6 +343,8 @@
                     Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                     UI.hideWaitScreen();
                 });
+            } else {
+                return API.idle();
             }
         }
     }, ['APIFactory', 'UIFactory', 'CheckoutFactory']);

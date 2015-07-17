@@ -19,7 +19,8 @@
             get: _get,
             post: _post,
             put: _put,
-            delete: _delete
+            delete: _delete,
+            idle: _idle
 		};
 
         /**
@@ -128,6 +129,14 @@
                 }
             );
 
+        }
+
+        /**
+         * Get a idle request doing nothing for chaining methods
+         * @returns {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         */
+        function _idle() {
+            return $.Deferred().resolve();
         }
 
     }, ['UIFactory']);
