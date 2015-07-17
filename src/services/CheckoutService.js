@@ -182,6 +182,14 @@
             }
         }
 
+        /**
+         * Check if values of addresses are equal
+         * @function addressesAreEqual
+         * @private
+         * @param {object} address1
+         * @param {object} address2
+         * @returns {boolean}
+         */
         function addressesAreEqual( address1, address2 ) {
             for ( var key in address1 ) {
                 if ( address1[key]+'' !== address2[key]+'' && key !== 'EmailRepeat' ) {
