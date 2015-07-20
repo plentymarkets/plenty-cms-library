@@ -1,5 +1,6 @@
 {
-  "name": "PlentyFramework",
+  "name": "plentymarketsCMStools",
+  "licence": "AGPL v3",
   "version": "0.9.0",
   "devDependencies": {
     "grunt": "~0.4.5",
