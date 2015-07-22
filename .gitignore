@@ -1,9 +1,8 @@
 *.iml
 .idea/
 node_modules
-dist
 debug
 doc
-callisto_dev
+callisto_2_3
 test/*.xml
 test/spec/plentyFramework.spec.js
