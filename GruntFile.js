@@ -36,7 +36,7 @@ module.exports = function(grunt) {
 
         uglify: {
             options: {
-                banner:  '/**\n * Licensed under AGBL v3\n * (https://github.com/plentymarkets/plentymarketsCMStools/blob/master/LICENSE)\n * =====================================================================================\n * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)\n * @author      Felix Dausch <felix.dausch@plentymarkets.com>\n * =====================================================================================\n*/'
+                banner:  '/**\n * Licensed under AGPL v3\n * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)\n * =====================================================================================\n * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)\n * @author      Felix Dausch <felix.dausch@plentymarkets.com>\n * =====================================================================================\n*/'
             },
             build: {
                 src: 'debug/<%= pkg.name %>-<%= pkg.version %>.js',
