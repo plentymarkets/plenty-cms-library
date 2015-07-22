@@ -5,31 +5,33 @@
 Improve the user experience of your plentymarkets webshop by simply adding some dynamic functions to your webshop layout.
 Just add some markup in your templates to bind different functionality.
 
-This library was build for usage in the [**Callisto Light**](http://standardtemplate.plenty-showcase.de/) webshop template,
-but easily can be adapted to other templates by using the provided JavaScript API.
+This library was build in combination to the [**Callisto Light**](http://standardtemplate.plenty-showcase.de/) webshop template,
+but can be easily adapted to other templates by using the provided JavaScript API.
 
 ## Table of contents
 
 - [Installation](#installation)
     - [Requirements](#requirements)
-    - [Using compiled library](#install-compiled-library)
+    - [Compiled library](#compiled-library)
     - [Custom builds](#custom-builds)
 - [Usage](#usage)
-    - [Usage in webshop templates](#using-libraries-in-your-webshop-templates)
-    - [Usaging the JavaScript API](#using-the-javascript-api-to-extend-the-library)
+    - [Usage in webshop templates](#using-the-library-in-your-webshop-templates)
+    - [Using the JavaScript API](#using-the-javascript-api)
+- [Copyright and License](#copyright-and-license)
 
 ## Installation
 
 ### Requirements
-- **jQuery**: The library requires jQuery. By default, jQuery is included in all plentymarkets Webshops.
+- **jQuery**: The library requires jQuery. By default, jQuery is included in all plentymarkets webshops.
 - **Twitter Bootstrap**: This library provides some UI functions based on [Twitter Bootstrap](http://getbootstrap.com/)
 - **Modernizr**: Some directives are using [Modernizr](http://modernizr.com/) to detect touch devices.
-- **Owl Carousel 1.x.x**: This [jQuery-Plugin](http://owlgraphic.com/owlcarousel/) is used for Slider directives.
+- **Owl Carousel 1.x.x**: This [jQuery-Plugin](http://owlgraphic.com/owlcarousel/) is used for slider directives.
 - **Lazy Load Plugin**: A jQuery plugin for loading images dynamically. [Project Page](http://www.appelsiini.net/projects/lazyload)
 
-### Install compiled library
+### Compiled library
 
-Include the `/dist/plentymarketsCMStools-X.X.X.min.js in your webshop template:
+Upload `/dist/plentymarketsCMStools-X.X.X.min.js` to your webshop's webspace and include it in your templates:
+
 ```html
 <script type="text/javascript src="/YOUR_LAYOUT_FOLDER/plentymarketsCMStools-X.X.X.min.js"></script>
 ```
@@ -37,6 +39,7 @@ Include the `/dist/plentymarketsCMStools-X.X.X.min.js in your webshop template:
 ### Custom builds
 
 Use [Grunt](http://gruntjs.com/) to compile your custom build. The following grunt tasks are provided by default:
+
 - **grunt debug** (default): Compile all factories, services and directives without minifying the result. Does not run any tests and doesn't' create a documentation.
 - **grunt doc**: Generates a documentation using [YUIDoc](http://yui.github.io/yuidoc/).
 - **grunt build**: Run karma tests, compile and uglify all components and generate/ refresh the documentation.
@@ -46,7 +49,7 @@ Use [Grunt](http://gruntjs.com/) to compile your custom build. The following gru
 
 This library is used by the plentymarkets [**Callisto Light**](http://standardtemplate.plenty-showcase.de/) webshop template.
 
-### Using libraries in your webshop templates
+### Using the library in your webshop templates
 
 #### Binding directives
 
@@ -65,11 +68,11 @@ plenty.BasketService.addItem( BasketItem );
 // 'plenty' is shorthand for PlentyFramework.getInstance();
 ```
 
-### Using the JavaScript API to extend the library
+### Using the JavaScript API
 
 #### Creating a custom directive
 
-Create your own directives using `PlentyFramework.directive( selector, callbackFn );`:
+Create your own directive using `PlentyFramework.directive( selector, callbackFn );`:
 ```js
 PlentyFramework.directive('.myClass', function(i, element) {
 	element.click(function() {
@@ -92,7 +95,7 @@ PlentyFramework.directive('.myClass', function(i, element, ServiceA, ServiceB) {
 ```
 #### Creating a custom services
 
-You can create custom service to provide global functions by using `PlentyFramework.service( serviceName, callbackFn );`:
+You can create a custom service to provide global functions by using `PlentyFramework.service( serviceName, callbackFn );`:
 ```js
 PlentyFramework.service('MyService', function() {
 	return {
@@ -135,5 +138,6 @@ PlentyFramework.factory('MyFactory', function( AnotherFactory ) {
 }, ['AnotherFactory']);
 ```
 
-## Copyright and licencse
-Copyright 2015 [plentymarkets GmbH](https://www.plentymarkets.com/). Released under [AGPL v3 license](https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE).
+## Copyright and license
+Copyright 2015 [plentymarkets GmbH](https://www.plentymarkets.com/).
+Released under [AGPL v3 license](https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE).
