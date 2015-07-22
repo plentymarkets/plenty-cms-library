@@ -31,7 +31,7 @@ but easily can be adapted to other templates by using the provided JavaScript AP
 
 Include the `/dist/plentymarketsCMStools-X.X.X.min.js in your webshop template:
 ```html
-	<script type="text/javascript src="/YOUR_LAYOUT_FOLDER/plentymarketsCMStools-X.X.X.min.js"></script>
+<script type="text/javascript src="/YOUR_LAYOUT_FOLDER/plentymarketsCMStools-X.X.X.min.js"></script>
 ```
 
 ### Custom builds
@@ -52,8 +52,8 @@ This library is used by the plentymarkets [**Callisto Light**](http://standardte
 
 Just add the *data*-attribute used for the directive you want to bind to any HTML element:
 ```html
-	<!-- Clicking this element will make the page scroll to top -->
-	<span data-plenty="toTop">Go to top</span>
+<!-- Clicking this element will make the page scroll to top -->
+<span data-plenty="toTop">Go to top</span>
 ```
 
 
@@ -61,8 +61,8 @@ Just add the *data*-attribute used for the directive you want to bind to any HTM
 
 You can call public methods of any service (e.g. *BasketService*) by calling `plenty.SERVICE_NAME.SERVICE_FUNCTION()`:
 ```js
-	plenty.BasketService.addItem( BasketItem );
-	// 'plenty' is shorthand for PlentyFramework.getInstance();
+plenty.BasketService.addItem( BasketItem );
+// 'plenty' is shorthand for PlentyFramework.getInstance();
 ```
 
 ### Using the JavaScript API to extend the library
@@ -71,68 +71,68 @@ You can call public methods of any service (e.g. *BasketService*) by calling `pl
 
 Create your own directives using `PlentyFramework.directive( selector, callbackFn );`:
 ```js
-	PlentyFramework.directive('.myClass', function(i, element) {
-		element.click(function() {
-			console.log('.myClass no ' + i + ' was clicked.');
-		});
+PlentyFramework.directive('.myClass', function(i, element) {
+	element.click(function() {
+		console.log('.myClass no ' + i + ' was clicked.');
 	});
+});
 ```
 
 Inject services in your directive:
 ```js
-	PlentyFramework.directive('.myClass', function(i, element, ServiceA, ServiceB) {
+PlentyFramework.directive('.myClass', function(i, element, ServiceA, ServiceB) {
 
-		ServiceA.doSomethingWithElement( element );
+	ServiceA.doSomethingWithElement( element );
 
-		element.click(function() {
-			ServiceB.doAnything();
-		});
+	element.click(function() {
+		ServiceB.doAnything();
+	});
 
-	}, ['ServiceA', 'ServiceB']);
+}, ['ServiceA', 'ServiceB']);
 ```
 #### Creating a custom services
 
 You can create custom service to provide global functions by using `PlentyFramework.service( serviceName, callbackFn );`:
 ```js
-	PlentyFramework.service('MyService', function() {
-		return {
-			publicFn: publicFn
-		}
+PlentyFramework.service('MyService', function() {
+	return {
+		publicFn: publicFn
+	}
 
-		function publicFn() {
-			var message = privateFn();
-		}
+	function publicFn() {
+		var message = privateFn();
+	}
 
-		function privateFn() {
-			return "I have been created inside a private function of 'MyService'";
-		}
-	});
+	function privateFn() {
+		return "I have been created inside a private function of 'MyService'";
+	}
+});
 ```
 
 You can inject factories in your service:
 ```js
-	PlentyFramework.service('MyService', function(FactoryA, FactoryB) {
+PlentyFramework.service('MyService', function(FactoryA, FactoryB) {
 
-		return {
-			callFactory: FactoryA.doSomething
-		}
+	return {
+		callFactory: FactoryA.doSomething
+	}
 
-	}, ['FactoryA', 'FactoryB']);
+}, ['FactoryA', 'FactoryB']);
 ```
 #### Creating a custom factory
 
 Create a factory to provide functions for services. Factories cannot be accessed from instances of PlentyFramework.
 Factories can inject other factories.
 ```js
-	PlentyFramework.factory('MyFactory', function( AnotherFactory ) {
-		return {
-			prepareInformation: publicFactoryFunction
-		}
+PlentyFramework.factory('MyFactory', function( AnotherFactory ) {
+	return {
+		prepareInformation: publicFactoryFunction
+	}
 
-		function publicFactoryFunction() {
-			return AnotherFactory.getInformation();
-		}
-	}, ['AnotherFactory']);
+	function publicFactoryFunction() {
+		return AnotherFactory.getInformation();
+	}
+}, ['AnotherFactory']);
 ```
 
 ## Copyright and licencse
