@@ -51,6 +51,13 @@ module.exports = function(grunt) {
                     outdir: 'doc/'
                 }
             }
+        },
+
+        copy: {
+            build: {
+                src: 'debug/<%= pkg.name %>-<%= pkg.version %>.js',
+                dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
+            }
         }
     });
 
@@ -58,11 +65,12 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-yuidoc');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-karma');
 
     grunt.registerTask('debug', ['clean:debug', 'concat:debug']);
     grunt.registerTask('doc', ['clean:doc', 'yuidoc:doc']);
-    grunt.registerTask('build', ['debug', 'doc', 'karma', 'clean:build', 'uglify:build']);
+    grunt.registerTask('build', ['debug', 'doc', 'karma', 'clean:build', 'uglify:build', 'copy:build']);
     grunt.registerTask('default', ['debug']);
 
 };
