@@ -12,7 +12,12 @@ PlentyFramework.compile();
 // Create global instance of PlentyFramework for usage in Webshop-Layouts
 var plenty = PlentyFramework.getInstance();
 
-// initially bind all registered directives
+/*
+ * initially bind all registered directives
+ *
+ * will not be tested. reasons:
+ * http://stackoverflow.com/questions/29153733/how-to-unit-test-a-document-ready-function-using-jasmine
+  */
 jQuery(document).ready(function() {
     plenty.bindDirectives();
 });

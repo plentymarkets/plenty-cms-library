@@ -32,7 +32,7 @@
 
             $.each(attributeInputsList, function (idx, elem) {
                 var match = elem.name.match(/^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/);
-                if(match && match[1]) // erst prüfen, ob es das Array überhaupt gibt.
+                if(match && match[1])
                 {
                     attributesList.push({
                         BasketItemAttributeID 		: match[1],
