@@ -5,4 +5,7 @@ debug
 doc
 callisto_2_3
 test/*.xml
-test/spec/plentyFramework.spec.js
+*.xml
+test/coverage/*
+callisto_dev
+dist

@@ -15,12 +15,14 @@ module.exports = function (config) {
         // list of files to exclude
         exclude: [],
 
-        preprocessors: {},
+        preprocessors: {
+            'src/**/*.js' : ['coverage']
+        },
 
         // use dots reporter, as travis terminal does not support escaping sequences
         // possible values: 'dots', 'progress'
         // CLI --reporters progress
-        reporters: ['progress', 'junit'],
+        reporters: ['progress', 'junit', 'coverage'],
 
         junitReporter: {
             // will be resolved to basePath (in the same way as files/exclude patterns)
@@ -42,7 +44,7 @@ module.exports = function (config) {
 
         // enable / disable watching file and executing tests whenever any file changes
         // CLI --auto-watch --no-auto-watch
-        autoWatch: false,
+        autoWatch: true,
 
         // If browser does not capture in given timeout [ms], kill it
         // CLI --capture-timeout 5000
@@ -61,9 +63,15 @@ module.exports = function (config) {
             //'karma-chrome-launcher',
             //'karma-firefox-launcher',
             'karma-jquery',
+            'karma-coverage',
             'karma-phantomjs-launcher',
             'karma-junit-reporter',
             'karma-commonjs'
-        ]
+        ],
+
+        coverageReporter : {
+            type : 'html',
+            dir  : 'test/coverage'
+        }
     })
 }

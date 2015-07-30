@@ -14,6 +14,7 @@
     "grunt-karma": "^0.11.2",
     "karma": "^0.12.37",
     "karma-commonjs": "0.0.13",
+    "karma-coverage": "^0.4.2",
     "karma-jasmine": "^0.3.6",
     "karma-jquery": "^0.1.0",
     "karma-junit-reporter": "^0.2.2",
