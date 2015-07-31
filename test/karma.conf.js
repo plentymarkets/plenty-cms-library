@@ -7,6 +7,7 @@ module.exports = function (config) {
 
         // list of files / patterns to load in the browser
         files: [
+            'test/helpers/mock-ajax.js',
             'test/**/*.js',
             'libs/modernizr.min.js',
             'src/*.js',
