@@ -2,10 +2,10 @@
 
 # plentymarkets CMS library
 
-Improve the user experience of your plentymarkets webshop by simply adding some dynamic functions to your webshop layout.
-Just add some markup in your templates to bind different functionality.
+Improve the user experience of your plentymarkets store by simply adding some dynamic functions to your store layout.
+Just add some markup in your templates to bind different functionalities.
 
-This library was build in combination to the [**Callisto Light**](http://standardtemplate.plenty-showcase.de/) webshop template,
+This library was built in combination with the [**Callisto Light**](http://standardtemplate.plenty-showcase.de/) store template,
 but can be easily adapted to other templates by using the provided JavaScript API.
 
 ## Table of contents
@@ -15,14 +15,14 @@ but can be easily adapted to other templates by using the provided JavaScript AP
     - [Compiled library](#compiled-library)
     - [Custom builds](#custom-builds)
 - [Usage](#usage)
-    - [Usage in webshop templates](#using-the-library-in-your-webshop-templates)
+    - [Usage in store templates](#using-the-library-in-your-store-templates)
     - [Using the JavaScript API](#using-the-javascript-api)
 - [Copyright and License](#copyright-and-license)
 
 ## Installation
 
 ### Requirements
-- **jQuery**: The library requires jQuery. By default, jQuery is included in all plentymarkets webshops.
+- **jQuery**: The library requires jQuery. By default, jQuery is included in all plentymarkets online stores.
 - **Twitter Bootstrap**: This library provides some UI functions based on [Twitter Bootstrap](http://getbootstrap.com/)
 - **Modernizr**: Some directives are using [Modernizr](http://modernizr.com/) to detect touch devices.
 - **Owl Carousel 1.x.x**: This [jQuery-Plugin](http://owlgraphic.com/owlcarousel/) is used for slider directives.
@@ -30,7 +30,7 @@ but can be easily adapted to other templates by using the provided JavaScript AP
 
 ### Compiled library
 
-Upload `/dist/plentymarketsCMStools-X.X.X.min.js` to your webshop's webspace and include it in your templates:
+Upload `/dist/plentymarketsCMStools-X.X.X.min.js` to your store's webspace and include it in your templates:
 
 ```html
 <script type="text/javascript src="/YOUR_LAYOUT_FOLDER/plentymarketsCMStools-X.X.X.min.js"></script>
@@ -47,9 +47,9 @@ Use [Grunt](http://gruntjs.com/) to compile your custom build. The following gru
 
 ## Usage
 
-This library is used by the plentymarkets [**Callisto Light**](http://standardtemplate.plenty-showcase.de/) webshop template.
+This library is used by the plentymarkets [**Callisto Light**](http://standardtemplate.plenty-showcase.de/) store template.
 
-### Using the library in your webshop templates
+### Using the library in your store templates
 
 #### Binding directives
 
