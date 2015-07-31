@@ -54,13 +54,14 @@ describe("Plentyframework initialization", function() {
 
     describe("PlentyFramework.prototype.bindDirectives", function () {
         it("should bind directives", function () {
-            spyOn(PlentyFramework.prototype, "bindDirectives");
-            //spyOn($, "each");
+            var plenty = pm.getInstance();
+            pm.directive("[foo]", function () {});
 
-            PlentyFramework.prototype.bindDirectives("[foo1]");
+            spyOn(plenty, "bindDirectives");
 
-            expect(PlentyFramework.prototype.bindDirectives).toHaveBeenCalledWith("[foo1]");
-            //expect($.each).toHaveBeenCalledWith(pm.directives);
+            plenty.bindDirectives();
+
+            expect(plenty.bindDirectives).toHaveBeenCalled();
         });
     });
 
@@ -77,6 +78,31 @@ describe("Plentyframework initialization", function() {
             pm.service("foo", null);
 
             expect(console.error).toHaveBeenCalledWith("Type mismatch: Expect second parameter to be a 'function', 'object' given.");
+        });
+    });
+
+    describe("PlentyFramework.resolveServices", function () {
+        it("should resolve some services", function () {
+            pm.service("fooService", function () {});
+            var fooService = pm.resolveServices(["fooService"]);
+
+            //PlentyFramework.components.services["fooService"].compile();
+
+            expect(fooService).toBe(fooService);
+        });
+
+        it("should throw Service not found exception", function () {
+            spyOn(console, "error");
+            var fooService = pm.resolveServices(["fooFactory"]);
+
+            expect(fooService).toEqual([]);
+            expect(console.error).toHaveBeenCalledWith('Cannot inject Service "fooFactory": Service not found.');
+        });
+    });
+
+    describe("PlentyFramework.factory", function () {
+        it("should register a factory", function () {
+
         });
     });
 });

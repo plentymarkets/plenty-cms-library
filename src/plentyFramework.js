@@ -201,13 +201,12 @@
             if( !PlentyFramework.prototype.hasOwnProperty(dependency) ) {
                 if( PlentyFramework.components.services.hasOwnProperty(dependency) ) {
                     PlentyFramework.components.services[dependency].compile();
+                    var service = PlentyFramework.prototype[dependency];
+                    compiledServices.push( service );
                 } else {
                     console.error('Cannot inject Service "' + dependency + '": Service not found.');
                 }
             }
-
-            var service = PlentyFramework.prototype[dependency];
-            compiledServices.push( service );
         });
 
         return compiledServices;
