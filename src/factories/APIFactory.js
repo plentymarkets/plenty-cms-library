@@ -42,8 +42,12 @@
          * @param {object} jqXHR   <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function handleError( jqXHR ) {
-            var responseText = $.parseJSON(jqXHR.responseText);
-            UI.printErrors( responseText.error.error_stack );
+            try {
+                var responseText = $.parseJSON(jqXHR.responseText);
+                UI.printErrors(responseText.error.error_stack);
+            } catch(e) {
+                UI.throwError( jqXHR.status, jqXHR.statusText );
+            }
         }
 
 
