@@ -33,10 +33,10 @@
         /**
          * Prepare the request to receive HTML-Content from CMS
          * @function getContainer
-         * @param   {string} containerName The Layoutcontainer to receive.
-         * @param   {string} [params='']   Additional GET-parameters. Will be appended to request URL
-         * @returns {object}               The prepared request. Call <code>.from( layoutGroup )</code> to specify the location in the CMS
-         *                                 (e.g. 'Checkout')
+         * @param   {string}    containerName The Layoutcontainer to receive.
+         * @param   {object}    params Additional GET-parameters.
+         * @returns {object}    The prepared request. Call <code>.from( layoutGroup )</code> to specify the location in the CMS
+         *                      (e.g. 'Checkout')
          * @example
          *          CMSFactory.getContainer( 'CheckoutTotals' ).from( 'Checkout' )
          *              .done(function( response ) {
@@ -47,10 +47,7 @@
         function getContainer( containerName, params ) {
 
             function from( layoutGroup ) {
-
-                params = params || '';
-                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/container_' + containerName.toLowerCase() + '/' + params );
-
+                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/container_' + containerName.toLowerCase() + '/', params );
             }
 
             return {
@@ -63,7 +60,7 @@
          * Prepare the request to receive Layout parameters for a template
          * @function getParams
          * @param   {string} containerName The Layoutcontainer to receive the parameteres of.
-         * @param   {string} [params='']   Additional GET-parameters. Will be appended to request URL
+         * @param   {object} params   Additional GET-parameters.
          * @returns {object}               The prepared request. Call <code>.from( layoutGroup )</code> to specify the location in the CMS
          *                                 (e.g. 'ItemView')
          * @example
@@ -76,10 +73,7 @@
         function getParams( containerName, params ) {
 
             function from( layoutGroup ) {
-
-                params = params || '';
-                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/' + containerName.toLowerCase() + '/' + params );
-
+                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/' + containerName.toLowerCase() + '/',  params );
             }
 
             return {

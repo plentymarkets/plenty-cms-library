@@ -53,7 +53,7 @@
                             .done(function() {
                                 refreshBasketPreview();
                                 // Show confirmation popup
-                                CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', '?ArticleID=' + addBasketList[0].BasketItemItemID).from('ItemView')
+                                CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', { ArticleID : addBasketList[0].BasketItemItemID }).from('ItemView')
                                     .done(function(response) {
                                         UI.hideWaitScreen();
                                         Modal.prepare()
@@ -68,7 +68,8 @@
                         var response = $.parseJSON(jqXHR.responseText);
                         if (!isUpdate && response.error.error_stack[0].code === 100) {
                             // OrderParams are missing -> show popup
-                            CMS.getContainer('CheckoutOrderParamsList', '?itemID=' + addBasketList[0].BasketItemItemID + '&quantity=' + addBasketList[0].BasketItemQuantity).from('Checkout')
+                            CMS.getContainer('CheckoutOrderParamsList', {   itemID : addBasketList[0].BasketItemItemID,
+                                                                            quantity : addBasketList[0].BasketItemQuantity }).from('Checkout')
                                 .done(function(response) {
                                     UI.hideWaitScreen();
                                     Modal.prepare()
