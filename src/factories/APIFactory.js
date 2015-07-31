@@ -53,15 +53,17 @@
          * @function get
          *
          * @param   {string}    url                     The URL to send the request to
+         * @param   {object}    params                  The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _get( url, ignoreErrors ) {
+        function _get( url, params, ignoreErrors ) {
 
             return $.ajax(
                 url,
                 {
                     type:       'GET',
+                    data:       params,
                     dataType:   'json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }

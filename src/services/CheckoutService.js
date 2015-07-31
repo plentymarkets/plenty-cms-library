@@ -33,6 +33,7 @@
             registerGuest: registerGuest,
             setShippingProfile: setShippingProfile,
             saveShippingAddress: saveShippingAddress,
+            loadAddressSuggestion: loadAddressSuggestion,
             preparePayment: preparePayment,
             setMethodOfPayment: setMethodOfPayment,
             editBankDetails: editBankDetails,
@@ -412,6 +413,39 @@
             } else {
                 return false;
             }
+        }
+
+        /**
+         * Display a popup containing address suggestions
+         * @param {string} type
+         */
+        function loadAddressSuggestion(type) {
+            UI.showWaitScreen();
+
+            //check login type
+            if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
+                var values = $('[data-plenty-checkout-form="shippingAddress"]').getFormValues();
+            }
+            else {
+                var values = $('[data-plenty-checkout-form="guestRegistration"]').getFormValues();
+            }
+
+            var params = {
+                street:         values.Street,
+                houseNo:        values.HouseNo,
+                ZIP:            values.ZIP,
+                city:           values.City,
+                postnummer:     values.Postnummer,
+                suggestionType: 'postfinder'
+            };
+
+            CMS.getContainer('CheckoutAddressSuggestionResultsList', params).from('Checkout')
+                .done(function (response) {
+                    UI.hideWaitScreen();
+                    Modal.prepare()
+                        .setTemplate(response.data[0])
+                        .show();
+                });
         }
 
         /**
