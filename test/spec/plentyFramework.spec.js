@@ -1,3 +1,12 @@
+/**
+ * Licensed under AGPL v3
+ * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
+ * =====================================================================================
+ * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
+ * @author      Maximilian Lauterbach <maximilian.lauterbach@plentymarkets.com>
+ * =====================================================================================
+ */
+
 describe("Plentyframework initialization", function() {
 
     var pm;
@@ -79,30 +88,100 @@ describe("Plentyframework initialization", function() {
 
             expect(console.error).toHaveBeenCalledWith("Type mismatch: Expect second parameter to be a 'function', 'object' given.");
         });
+
+        it("should register a service", function () {
+            var fooService = {
+                name: "fooService",
+                dependencies: []
+            };
+            spyOn(pm, "resolveFactories");
+
+            pm.service("fooService", function () {});
+            fooService.compile = pm.components.services["fooService"].compile;
+            pm.components.services["fooService"].compile();
+
+            expect(pm.components.services["fooService"]).toEqual(fooService);
+            expect(pm.resolveFactories).toHaveBeenCalled();
+        });
     });
 
     describe("PlentyFramework.resolveServices", function () {
-        it("should resolve some services", function () {
-            pm.service("fooService", function () {});
-            var fooService = pm.resolveServices(["fooService"]);
+        it("should resolve service dependencies", function () {
+            pm.service("bar", function () {});
+            pm.service("baz", function () {});
+            pm.service("fooService", function () {}, ["bar", "baz"]);
 
-            //PlentyFramework.components.services["fooService"].compile();
+            spyOn(pm.components.services["bar"], "compile");
+            spyOn(pm.components.services["baz"], "compile");
+            pm.resolveServices(["bar", "baz"]);
 
-            expect(fooService).toBe(fooService);
+            expect(pm.components.services["bar"].compile).toHaveBeenCalled();
+            expect(pm.components.services["baz"].compile).toHaveBeenCalled();
         });
 
-        it("should throw Service not found exception", function () {
+        it("should throw Service-not-found exception", function () {
             spyOn(console, "error");
-            var fooService = pm.resolveServices(["fooFactory"]);
 
-            expect(fooService).toEqual([]);
-            expect(console.error).toHaveBeenCalledWith('Cannot inject Service "fooFactory": Service not found.');
+            expect(pm.resolveServices(["nope"])).toEqual([]);
+            expect(console.error).toHaveBeenCalledWith('Cannot inject Service "nope": Service not found.');
         });
     });
 
     describe("PlentyFramework.factory", function () {
-        it("should register a factory", function () {
+        var factory = {
+            name: "fooFactory",
+            dependencies: []
+        };
 
+        it("should fail to register a factory on first param (factory name)", function () {
+            spyOn(console, "error");
+            pm.factory(undefined);
+
+            expect(console.error).toHaveBeenCalledWith("Type mismatch: Expect first parameter to be a 'string', 'undefined' given.");
+        });
+
+        it("should fail to register a factory on second param (factory functions)", function () {
+            spyOn(console, "error");
+            factory = pm.factory("fooFactory", undefined);
+
+            expect(console.error).toHaveBeenCalledWith("Type mismatch: Expect second parameter to be a 'function', 'undefined' given.");
+        });
+
+        it("should register a factory", function () {
+            var fooFactory = {
+                name: "fooFactory",
+                dependencies: []
+            };
+            spyOn(pm, "resolveFactories");
+
+            pm.factory("fooFactory", function () {});
+            fooFactory.compile = pm.components.factories["fooFactory"].compile;
+            pm.components.factories["fooFactory"].compile();
+
+            expect(pm.components.factories["fooFactory"]).toEqual(fooFactory);
+            expect(pm.resolveFactories).toHaveBeenCalled();
+        });
+    });
+
+    describe("PlentyFramework.resolveFactories", function () {
+        it("should resolve factory dependencies", function () {
+            pm.factory("bar", function () {});
+            pm.factory("baz", function () {});
+            pm.factory("fooFactory", function () {}, ["bar", "baz"]);
+
+            spyOn(pm.components.factories["bar"], "compile");
+            spyOn(pm.components.factories["baz"], "compile");
+            pm.resolveFactories(["bar", "baz"]);
+
+            expect(pm.components.factories["bar"].compile).toHaveBeenCalled();
+            expect(pm.components.factories["baz"].compile).toHaveBeenCalled();
+        });
+
+        it("should throw Service-not-found exception", function () {
+            spyOn(console, "error");
+
+            expect(pm.resolveFactories(["nope"])).toEqual([]);
+            expect(console.error).toHaveBeenCalledWith('Cannot inject Factory "nope": Factory not found.');
         });
     });
 });

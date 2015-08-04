@@ -177,6 +177,7 @@
             name: serviceName,
             dependencies: dependencies,
             compile: function() {
+                // TODO Max erklären, warum hier die Factories aufgerufen werden.
                 var params = PlentyFramework.resolveFactories( dependencies );
                 PlentyFramework.prototype[serviceName] = serviceFunctions.apply( null, params );
             }
@@ -197,7 +198,7 @@
 
         $.each( dependencies, function(j, dependency) {
 
-            // factory not found: try to compile dependent factory first
+            // service not found: try to compile dependent factory first
             if( !PlentyFramework.prototype.hasOwnProperty(dependency) ) {
                 if( PlentyFramework.components.services.hasOwnProperty(dependency) ) {
                     PlentyFramework.components.services[dependency].compile();
@@ -271,13 +272,12 @@
             if( !PlentyFramework.factories.hasOwnProperty(dependency) ) {
                 if( PlentyFramework.components.factories.hasOwnProperty(dependency) ) {
                     PlentyFramework.components.factories[dependency].compile();
+                    var factory = PlentyFramework.factories[dependency];
+                    compiledFactories.push( factory );
                 } else {
                     console.error('Cannot inject Factory "' + dependency + '": Factory not found.');
                 }
             }
-
-            var factory = PlentyFramework.factories[dependency];
-            compiledFactories.push( factory );
         });
 
         return compiledFactories;
