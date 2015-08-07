@@ -106,7 +106,6 @@
                 var elements = [];
                 // filter elements already bound
                 $(directive.selector).each(function (j, obj) {
-                    // console.log( obj, $(obj)[0], directive.elements);
                     if ($.inArray(obj, directive.elements) < 0) {
                         elements.push(obj);
                     }
@@ -177,7 +176,6 @@
             name: serviceName,
             dependencies: dependencies,
             compile: function() {
-                // TODO Max erklären, warum hier die Factories aufgerufen werden.
                 var params = PlentyFramework.resolveFactories( dependencies );
                 PlentyFramework.prototype[serviceName] = serviceFunctions.apply( null, params );
             }
@@ -198,16 +196,17 @@
 
         $.each( dependencies, function(j, dependency) {
 
-            // service not found: try to compile dependent factory first
+            // factory not found: try to compile dependent factory first
             if( !PlentyFramework.prototype.hasOwnProperty(dependency) ) {
                 if( PlentyFramework.components.services.hasOwnProperty(dependency) ) {
                     PlentyFramework.components.services[dependency].compile();
-                    var service = PlentyFramework.prototype[dependency];
-                    compiledServices.push( service );
                 } else {
                     console.error('Cannot inject Service "' + dependency + '": Service not found.');
+                    return false;
                 }
             }
+            var service = PlentyFramework.prototype[dependency];
+            compiledServices.push( service );
         });
 
         return compiledServices;
@@ -272,12 +271,13 @@
             if( !PlentyFramework.factories.hasOwnProperty(dependency) ) {
                 if( PlentyFramework.components.factories.hasOwnProperty(dependency) ) {
                     PlentyFramework.components.factories[dependency].compile();
-                    var factory = PlentyFramework.factories[dependency];
-                    compiledFactories.push( factory );
                 } else {
                     console.error('Cannot inject Factory "' + dependency + '": Factory not found.');
+                    return false;
                 }
             }
+            var factory = PlentyFramework.factories[dependency];
+            compiledFactories.push( factory );
         });
 
         return compiledFactories;
