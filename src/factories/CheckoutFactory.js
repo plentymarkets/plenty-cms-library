@@ -38,7 +38,7 @@
             loadCheckout: loadCheckout,
             reloadContainer: reloadContainer,
             reloadCatContent: reloadCatContent,
-            reloadItemContainer: reloadItemContainer,
+            reloadItemContainer: reloadItemContainer
 		};
 
 
@@ -68,8 +68,11 @@
 
             return API.get('/rest/checkout/')
                 .done(function(response) {
-                    if( !!response ) checkoutData = response.data;
-                    else API.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
+                    if( !!response ) {
+                        checkoutData = response.data;
+                        checkout = new Checkout();
+                    }
+                    else UI.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
                 });
         }
 
@@ -82,8 +85,11 @@
 
             return API.put('/rest/checkout', checkout)
                 .done(function(response) {
-                    if( !!response ) checkoutData = response.data;
-                    else API.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
+                    if( !!response ) {
+                        checkoutData = response.data;
+                        checkout = new Checkout();
+                    }
+                    else UI.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
                 });
 
         }
@@ -97,14 +103,15 @@
          */
         function reloadContainer( container ) {
             UI.showWaitScreen();
+
             return CMS.getContainer( "checkout"+container ).from( 'checkout' )
                 .done(function (response) {
                     $('[data-plenty-checkout-template="' + container + '"]')
                         .each(function (i, elem) {
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
-                            UI.hideWaitScreen();
                         });
+                    UI.hideWaitScreen();
                 });
         }
 

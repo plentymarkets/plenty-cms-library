@@ -113,6 +113,7 @@
 
             // increase instance counter to avoid showing multiple overlays
             waitScreenCount++;
+            return waitScreenCount;
         }
 
         /**
@@ -131,6 +132,7 @@
                 waitScreenCount = 0;
                 $('#PlentyWaitScreen').removeClass('in');
             }
+            return waitScreenCount;
         }
 
     });

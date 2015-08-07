@@ -7,10 +7,8 @@ describe("APIFactory", function() {
         jasmine.Ajax.install();
         jasmine.addMatchers( customMatcher );
 
-
         PlentyFramework.compile();
         APIFactory = PlentyFramework.factories['APIFactory'];
-
         UIFactory = PlentyFramework.factories['UIFactory'];
         spyOn( UIFactory, 'printErrors' );
         spyOn( UIFactory, 'throwError' )
@@ -30,7 +28,7 @@ describe("APIFactory", function() {
 
     });
 
-    describe("APIFactory.get", function() {
+    describe("APIFactory.GET", function() {
 
         it("handle errors if request fails and returns an error", function() {
 
