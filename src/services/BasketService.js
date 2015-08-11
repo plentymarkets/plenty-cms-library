@@ -76,7 +76,10 @@
                                         .setTemplate(response.data[0])
                                         .onConfirm(function() {
                                             // save order params
-                                            saveOrderParams(addBasketList)
+                                            saveOrderParams(addBasketList);
+
+                                            // close modal after saving order params
+                                            return true;
                                         })
                                         .show();
                                 });
