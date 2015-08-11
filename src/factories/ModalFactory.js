@@ -278,11 +278,12 @@
                                         </div>';
                 }
 
+
                 // inject modal in DOM
                 bsModal = $(modal.template);
 
-                if( bsModal.length > 1 ) {
-                    bsModal = $(modal.template).nextAll('.modal') || $(modal.template).find('.modal');
+                if( bsModal.length > 1 || !bsModal.is('.modal') ) {
+                    bsModal = $(modal.template).filter('.modal') || $(modal.template).find('.modal');
                 }
 
                 $(modal.container).append( bsModal );

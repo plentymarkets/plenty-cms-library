@@ -250,7 +250,6 @@
                     } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
                         var isBankDetails = $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('[data-plenty-checkout-form="bankDetails"]').length > 0;
-
                         Modal.prepare()
                             .setTemplate( response.data.CheckoutMethodOfPaymentAdditionalContent )
                             .onConfirm(function() {
@@ -312,6 +311,8 @@
                                     $(radio).removeAttr('checked');
                                 }
                             });
+                        }).onConfirm(function() {
+                            return saveBankDetails();
                         })
                         .show();
                 });
@@ -375,6 +376,8 @@
                                     $(radio).removeAttr('checked');
                                 }
                             });
+                        }).onConfirm(function() {
+                            return saveCreditCard();
                         })
                         .show();
                 });
