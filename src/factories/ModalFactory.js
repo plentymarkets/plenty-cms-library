@@ -259,34 +259,54 @@
                 if( !modal.template ) {
                     modal.template =    '<div class="modal fade"> \
                                             <div class="modal-dialog"> \
-                                                <div class="modal-content"> \
-                                                    <div class="modal-header"> \
-                                                        <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
-                                                        <h4 class="modal-title">' + modal.title + '</h4> \
-                                                    </div> \
-                                                    <div class="modal-body">' + modal.content + '</div> \
-                                                    <div class="modal-footer"> \
-                                                        <button type="button" class="btn btn-default" data-dismiss="modal"> \
-                                                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' + modal.labelDismiss + '  \
-                                                        </button> \
-                                                        <button type="button" class="btn btn-primary" data-dismiss="modal" data-plenty-modal="confirm"> \
-                                                            <span class="glyphicon glyphicon-trash" aria-hidden="true"></span> ' + modal.labelConfirm + ' \
-                                                        </button> \
-                                                    </div> \
-                                                </div> \
-                                            </div> \
+                                                <div class="modal-content">';
+
+                if( !!modal.title && modal.title.length > 0 ) {
+                    modal.template += '<div class="modal-header"> \
+                                            <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
+                                            <h4 class="modal-title">' + modal.title + '</h4> \
                                         </div>';
+                }
+
+                modal.template += '<div class="modal-body">' + modal.content + '</div> \
+                                        <div class="modal-footer">';
+
+                if( !!modal.labelDismiss && modal.labelDismiss.length > 0 ) {
+                    modal.template += '<button type="button" class="btn btn-default" data-dismiss="modal"> \
+                                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' + modal.labelDismiss + '  \
+                                        </button>';
+                }
+
+                modal.template += '<button type="button" class="btn btn-primary" data-dismiss="modal" data-plenty-modal="confirm"> \
+                                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> ' + modal.labelConfirm + ' \
+                                    </button> \
+                                </div> \
+                            </div> \
+                        </div> \
+                    </div>';
                 }
 
 
                 // inject modal in DOM
                 bsModal = $(modal.template);
 
+
+
                 if( bsModal.length > 1 || !bsModal.is('.modal') ) {
                     bsModal = $(modal.template).filter('.modal') || $(modal.template).find('.modal');
                 }
 
                 $(modal.container).append( bsModal );
+
+                var scripts = $(modal.template ).filter('script');
+                if( scripts.length > 0 ) {
+                    scripts.each(function( i, script ) {
+                        var element = document.createElement('script');
+                        element.type = 'text/javascript';
+                        element.innerHTML = $(script).text();
+                        $( modal.container ).append( element );
+                    });
+                }
 
                 // bind callback functions
                 bsModal.on('hidden.bs.modal', function() {

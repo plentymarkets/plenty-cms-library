@@ -3266,7 +3266,7 @@
 
             $.each(attributeInputsList, function (idx, elem) {
                 var match = elem.name.match(/^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/);
-                if(match && match[1]) // erst prüfen, ob es das Array überhaupt gibt.
+                if(match && match[1])
                 {
                     attributesList.push({
                         BasketItemAttributeID 		: match[1],
@@ -4072,7 +4072,12 @@ PlentyFramework.compile();
 // Create global instance of PlentyFramework for usage in Webshop-Layouts
 var plenty = PlentyFramework.getInstance();
 
-// initially bind all registered directives
+/*
+ * initially bind all registered directives
+ *
+ * will not be tested. reasons:
+ * http://stackoverflow.com/questions/29153733/how-to-unit-test-a-document-ready-function-using-jasmine
+  */
 jQuery(document).ready(function() {
     plenty.bindDirectives();
 });
