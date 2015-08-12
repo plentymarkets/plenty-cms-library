@@ -367,43 +367,73 @@
          * @function fillNavigation
          */
         function fillNavigation() {
-            // break if manager has not been inizialized
-            if( navigation.length <= 0 ) {
-                return;
-            }
+            // break if manager has not been initialized
+            var navigationCount = navigation.length;
+            if( navigationCount <= 0 ) return;
 
-            // set equal button width
-            $(buttonNext).css('width', 'auto');
-            $(buttonPrev).css('width', 'auto');
-            var buttonWidth = ($(buttonPrev).outerWidth() < $(buttonNext).outerWidth()) ? $(buttonNext).outerWidth(true) + 1 : $(buttonPrev).outerWidth(true) + 1;
-            $(buttonNext).width(buttonWidth);
-            $(buttonPrev).width(buttonWidth);
+            // reset inline styles
+            $(navigation).removeAttr('style');
+            $(navigation).children('span').removeAttr('style');
+            $(buttonNext).removeAttr('style');
+            $(buttonPrev).removeAttr('style');
+
+
+            var buttonWidth = ($(buttonPrev).outerWidth() < $(buttonNext).outerWidth()) ? $(buttonNext).outerWidth(true)+1 : $(buttonPrev).outerWidth(true)+1;
+            $(buttonNext).css({ width: buttonWidth+'px' });
+            $(buttonPrev).css({ width: buttonWidth+'px' });
 
             // calculate width to fill
-            var width = $(navigation).parent().parent().outerWidth(true) - (2 * buttonWidth);
-
+            var width = $(navigation).parent().parent().outerWidth(true) - ( 2 * buttonWidth);
             width -= parseInt($(navigation).parent().css('marginLeft')) + parseInt($(navigation).parent().css('marginRight'));
 
-            $(navigation).each(function (i, elem) {
-                width -= $(elem).children('span').width();
+            var padding = width;
+            var tabWidth = [];
+
+            $(navigation).each(function(i, elem) {
+                padding -= parseInt( $(elem).css('marginLeft') );
+                padding -= parseInt( $(elem).css('marginRight') );
+
+                tabWidth[i] = $(elem).children('span').width();
+                padding -= tabWidth[i];
+
+                padding -= parseInt( $(elem).children('span').css('marginLeft') );
+                padding -= parseInt( $(elem).children('span').css('marginRight') );
             });
 
-            var padding = parseInt(width / ($(navigation).length * 2));
-            var diff = width - ($(navigation).length * padding * 2);
+            var paddingEachItem = parseInt( padding / navigationCount );
 
-            $(navigation).each(function (i, elem) {
-                var paddingLeft = padding;
-                var paddingRight = padding;
-                if (diff > 0) {
-                    paddingLeft++;
-                    diff--;
+            var paddingLeft, paddingRight;
+            if ( paddingEachItem % 2 == 1 ) {
+                paddingLeft = ( paddingEachItem / 2 ) + 0.5;
+                paddingRight = ( paddingEachItem / 2 ) - 0.5;
+            }
+            else {
+                paddingLeft = paddingEachItem / 2;
+                paddingRight = paddingEachItem / 2;
+            }
+
+            var paddingLastItem = parseInt( padding - ( ( navigationCount - 1 ) * ( paddingLeft + paddingRight ) ) );
+            var paddingLastLeft, paddingLastRight;
+            if ( paddingLastItem % 2 == 1 ) {
+                paddingLastLeft = ( paddingLastItem / 2 ) + 0.5;
+                paddingLastRight = ( paddingLastItem / 2) - 0.5;
+            }
+            else {
+                paddingLastLeft = paddingLastItem / 2;
+                paddingLastRight = paddingLastItem / 2;
+            }
+
+            var diff = width;
+            $(navigation).each(function(i, elem) {
+                if ( i < navigationCount - 1) {
+                    $(elem).children('span').css({'paddingLeft': paddingLeft + 'px', 'paddingRight': paddingRight + 'px'}); //.parent().css({ width: ( tabWidth[i] + paddingLeft + paddingRight + parseInt( $(elem).children('span').css('marginLeft') ) + parseInt( $(elem).children('span').css('marginRight') ) )+'px' });
                 }
-                if (diff > 0) {
-                    paddingRight++;
-                    diff--;
+                else {
+                    $(elem).children('span').css({'paddingLeft': paddingLastLeft + 'px', 'paddingRight': paddingLastRight + 'px'}); //.parent().css({ width: ( tabWidth[i] + paddingLastLeft + paddingLastRight + parseInt( $(elem).children('span').css('marginLeft') ) + parseInt( $(elem).children('span').css('marginRight') ) )+'px' });
                 }
-                $(elem).children('span').css('paddingLeft', paddingLeft + 'px').css('paddingRight', paddingRight + 'px');
             });
+
+            //$(navigation).parent().css('marginRight', 0);
         }
 
     });
