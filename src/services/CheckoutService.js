@@ -131,6 +131,7 @@
                                 if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
                                     Checkout.reloadContainer('CustomerShippingAddress');
                                 }
+                                Checkout.reloadContainer('ShippingProfilesList');
                                 Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                                 UI.hideWaitScreen();
                             });
@@ -152,6 +153,7 @@
                         .done(function () {
                             Checkout.reloadContainer('MethodsOfPaymentList');
                             Checkout.reloadContainer('CustomerShippingAddress');
+                            Checkout.reloadContainer('ShippingProfilesList');
                             Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
                             UI.hideWaitScreen();
                         });
@@ -249,10 +251,15 @@
 
                     } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
+
+                        var isModal = $(response.data.CheckoutMethodOfPaymentAdditionalContent).filter('.modal' ).length + $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('.modal' ).length > 0;
                         var isBankDetails = $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('[data-plenty-checkout-form="bankDetails"]').length > 0;
-                        Modal.prepare()
-                            .setTemplate( response.data.CheckoutMethodOfPaymentAdditionalContent )
-                            .onConfirm(function() {
+                        var modal = Modal.prepare();
+
+                        if( isModal ) modal.setTemplate( response.data.CheckoutMethodOfPaymentAdditionalContent );
+                        else modal.setContent( response.data.CheckoutMethodOfPaymentAdditionalContent );
+
+                        modal.onConfirm(function() {
                                 if( isBankDetails ) {
                                     return saveBankDetails();
                                 } else {
@@ -486,12 +493,22 @@
                         } else if(response.data.MethodOfPaymentAdditionalContent != '') {
 
                             UI.hideWaitScreen();
-                            Modal.prepare()
-                                .setTemplate( response.data.MethodOfPaymentAdditionalContent)
-                                .onDismiss(function() {
-                                    document.location.href = form.attr('action');
-                                })
-                                .show();
+
+                            var isModal = $(response.data.MethodOfPaymentAdditionalContent).filter('.modal' ).length + $(response.data.MethodOfPaymentAdditionalContent).find('.modal' ).length > 0;
+                            var modal = Modal.prepare();
+
+                            if( isModal ) modal.setTemplate( response.data.MethodOfPaymentAdditionalContent );
+                            else {
+                                modal.setLabelDismiss('');
+                                modal.setContent( response.data.MethodOfPaymentAdditionalContent );
+                            }
+
+                            modal.onDismiss(function() {
+                                document.location.href = form.attr('action');
+                            }).onConfirm(function() {
+                                document.location.href = form.attr('action');
+                            }).show();
+
 
                         } else {
 
