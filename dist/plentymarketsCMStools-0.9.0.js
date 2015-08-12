@@ -106,7 +106,6 @@
                 var elements = [];
                 // filter elements already bound
                 $(directive.selector).each(function (j, obj) {
-                    // console.log( obj, $(obj)[0], directive.elements);
                     if ($.inArray(obj, directive.elements) < 0) {
                         elements.push(obj);
                     }
@@ -203,9 +202,9 @@
                     PlentyFramework.components.services[dependency].compile();
                 } else {
                     console.error('Cannot inject Service "' + dependency + '": Service not found.');
+                    return false;
                 }
             }
-
             var service = PlentyFramework.prototype[dependency];
             compiledServices.push( service );
         });
@@ -274,9 +273,9 @@
                     PlentyFramework.components.factories[dependency].compile();
                 } else {
                     console.error('Cannot inject Factory "' + dependency + '": Factory not found.');
+                    return false;
                 }
             }
-
             var factory = PlentyFramework.factories[dependency];
             compiledFactories.push( factory );
         });
@@ -354,8 +353,12 @@
          * @param {object} jqXHR   <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function handleError( jqXHR ) {
-            var responseText = $.parseJSON(jqXHR.responseText);
-            UI.printErrors( responseText.error.error_stack );
+            try {
+                var responseText = $.parseJSON(jqXHR.responseText);
+                UI.printErrors(responseText.error.error_stack);
+            } catch(e) {
+                UI.throwError( jqXHR.status, jqXHR.statusText );
+            }
         }
 
 
@@ -365,15 +368,17 @@
          * @function get
          *
          * @param   {string}    url                     The URL to send the request to
+         * @param   {object}    params                  The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _get( url, ignoreErrors ) {
+        function _get( url, params, ignoreErrors ) {
 
             return $.ajax(
                 url,
                 {
                     type:       'GET',
+                    data:       params,
                     dataType:   'json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
@@ -497,10 +502,10 @@
         /**
          * Prepare the request to receive HTML-Content from CMS
          * @function getContainer
-         * @param   {string} containerName The Layoutcontainer to receive.
-         * @param   {string} [params='']   Additional GET-parameters. Will be appended to request URL
-         * @returns {object}               The prepared request. Call <code>.from( layoutGroup )</code> to specify the location in the CMS
-         *                                 (e.g. 'Checkout')
+         * @param   {string}    containerName The Layoutcontainer to receive.
+         * @param   {object}    params Additional GET-parameters.
+         * @returns {object}    The prepared request. Call <code>.from( layoutGroup )</code> to specify the location in the CMS
+         *                      (e.g. 'Checkout')
          * @example
          *          CMSFactory.getContainer( 'CheckoutTotals' ).from( 'Checkout' )
          *              .done(function( response ) {
@@ -511,10 +516,7 @@
         function getContainer( containerName, params ) {
 
             function from( layoutGroup ) {
-
-                params = params || '';
-                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/container_' + containerName.toLowerCase() + '/' + params );
-
+                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/container_' + containerName.toLowerCase() + '/', params );
             }
 
             return {
@@ -527,7 +529,7 @@
          * Prepare the request to receive Layout parameters for a template
          * @function getParams
          * @param   {string} containerName The Layoutcontainer to receive the parameteres of.
-         * @param   {string} [params='']   Additional GET-parameters. Will be appended to request URL
+         * @param   {object} params   Additional GET-parameters.
          * @returns {object}               The prepared request. Call <code>.from( layoutGroup )</code> to specify the location in the CMS
          *                                 (e.g. 'ItemView')
          * @example
@@ -540,10 +542,7 @@
         function getParams( containerName, params ) {
 
             function from( layoutGroup ) {
-
-                params = params || '';
-                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/' + containerName.toLowerCase() + '/' + params );
-
+                return API.get( '/rest/' + layoutGroup.toLowerCase() + '/' + containerName.toLowerCase() + '/',  params );
             }
 
             return {
@@ -604,7 +603,7 @@
             loadCheckout: loadCheckout,
             reloadContainer: reloadContainer,
             reloadCatContent: reloadCatContent,
-            reloadItemContainer: reloadItemContainer,
+            reloadItemContainer: reloadItemContainer
 		};
 
 
@@ -634,8 +633,11 @@
 
             return API.get('/rest/checkout/')
                 .done(function(response) {
-                    if( !!response ) checkoutData = response.data;
-                    else API.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
+                    if( !!response ) {
+                        checkoutData = response.data;
+                        checkout = new Checkout();
+                    }
+                    else UI.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
                 });
         }
 
@@ -648,8 +650,11 @@
 
             return API.put('/rest/checkout', checkout)
                 .done(function(response) {
-                    if( !!response ) checkoutData = response.data;
-                    else API.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
+                    if( !!response ) {
+                        checkoutData = response.data;
+                        checkout = new Checkout();
+                    }
+                    else UI.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
                 });
 
         }
@@ -662,15 +667,16 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadContainer( container ) {
-            UI.showWaitScreen();
+            UI.showWaitScreen("reloadContainer");
+
             return CMS.getContainer( "checkout"+container ).from( 'checkout' )
                 .done(function (response) {
                     $('[data-plenty-checkout-template="' + container + '"]')
                         .each(function (i, elem) {
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
-                            UI.hideWaitScreen();
                         });
+                    UI.hideWaitScreen("reloadContainer");
                 });
         }
 
@@ -682,15 +688,15 @@
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadCatContent( catId ) {
-            UI.showWaitScreen();
+            UI.showWaitScreen("reloadCatContent");
             return CMS.getCategoryContent(catId)
                 .done(function(response) {
                     $('[data-plenty-checkout-catcontent="'+catId+'"]')
                         .each(function(i, elem) {
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
-                            UI.hideWaitScreen(true);
                         });
+                    UI.hideWaitScreen("reloadCatContent", true);
                 });
 
         }
@@ -703,15 +709,15 @@
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadItemContainer( container ) {
-            UI.showWaitScreen();
+            UI.showWaitScreen("reloadItemContainer");
             return CMS.getContainer( 'itemview' + container ).from( 'itemview' )
                 .done(function(response) {
                     $('[data-plenty-itemview-template="'+container+'"]')
                         .each(function(i, elem) {
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
-                            UI.hideWaitScreen();
                         });
+                    UI.hideWaitScreen("reloadItemContainer");
                 });
 
         }
@@ -740,8 +746,19 @@
 	pm.factory('ModalFactory', function() {
 
 		return {
-            prepare: prepare
+            prepare: prepare,
+            isModal: isModal
 		};
+
+        /**
+         * Detect if given html contains a valid modal
+         * @function isModal
+         * @param {string} html
+         * @returns {boolean}
+         */
+        function isModal( html ) {
+            return $(html).filter('.modal' ).length + $(html).find('.modal' ).length > 0;
+        }
 
         /**
          * Create a new Instance of {{#crossLink "ModalFactory.Modal"}}Modal{{/crossLink}}
@@ -827,21 +844,6 @@
             modal.container  = 'body';
 
             /**
-             * external html template to use for this modal.<br>
-             * Modals {{#crossLink "ModalFactory.Modal/title:attribute"}}title{{/crossLink}},
-             * {{#crossLink "ModalFactory.Modal/content:attribute"}}content{{/crossLink}} and
-             * {{#crossLink "ModalFactory.Modal/labelConfirm:attribute"}}button labels{{/crossLink}} will not be injected.
-             * {{#crossLink "ModalFactory.Modal/onDismiss:attribute"}}Callback methods{{/crossLink}} will be bound on modal.
-             * To bind {{#crossLink "ModalFactory.Modal/onConfirm"}}confirmation callback{{/crossLink}},
-             * mark elements with <b>data-plenty-modal="confirm"</b>
-             * @attribute template
-             * @type {string}
-             * @private
-             * @default ""
-             */
-            modal.template   = '';
-
-            /**
              * Timeout to close the modal automatically. Set &lt;0 to disable.
              * @attribute timeout
              * @type {number}
@@ -863,7 +865,6 @@
                 setLabelDismiss: setLabelDismiss,
                 onConfirm: onConfirm,
                 onDismiss: onDismiss,
-                setTemplate: setTemplate,
                 setTimeout: setTimeout,
                 show: show,
                 hide: hide
@@ -935,6 +936,8 @@
                 return this;
             }
 
+
+
             /**
              * Set the {{#crossLink "ModalFactory.Modal/container:attribute}}container{{/crossLink}} of the modal
              * @function setContainer
@@ -943,17 +946,6 @@
              */
             function setContainer( container ) {
                 modal.container = container;
-                return this;
-            }
-
-            /**
-             * Set the {{#crossLink "ModalFactory.Modal/template:attribute}}template{{/crossLink}} of the modal
-             * @function setTemplate
-             * @param   {string}    template The template to use for the modal
-             * @returns {Modal}     Modal object for chaining methods
-             */
-            function setTemplate( template ) {
-                modal.template = template;
                 return this;
             }
 
@@ -975,37 +967,27 @@
              * @function show
              */
             function show() {
-
-                if( !modal.template ) {
-                    modal.template =    '<div class="modal fade"> \
-                                            <div class="modal-dialog"> \
-                                                <div class="modal-content"> \
-                                                    <div class="modal-header"> \
-                                                        <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
-                                                        <h4 class="modal-title">' + modal.title + '</h4> \
-                                                    </div> \
-                                                    <div class="modal-body">' + modal.content + '</div> \
-                                                    <div class="modal-footer"> \
-                                                        <button type="button" class="btn btn-default" data-dismiss="modal"> \
-                                                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' + modal.labelDismiss + '  \
-                                                        </button> \
-                                                        <button type="button" class="btn btn-primary" data-dismiss="modal" data-plenty-modal="confirm"> \
-                                                            <span class="glyphicon glyphicon-trash" aria-hidden="true"></span> ' + modal.labelConfirm + ' \
-                                                        </button> \
-                                                    </div> \
-                                                </div> \
-                                            </div> \
-                                        </div>';
-                }
-
-                // inject modal in DOM
-                bsModal = $(modal.template);
-
-                if( bsModal.length > 1 ) {
-                    bsModal = $(modal.template).nextAll('.modal') || $(modal.template).find('.modal');
+                if( isModal( modal.content ) ) {
+                    bsModal = $(modal.content);
+                    if( bsModal.length > 1 || !bsModal.is('.modal') ) {
+                        bsModal = $(modal.content).filter('.modal') || $(modal.content).find('.modal');
+                    }
+                } else {
+                    bsModal = $( buildTemplate() );
                 }
 
                 $(modal.container).append( bsModal );
+
+                // append additional scripts executable
+                var scripts = $(modal.content).filter('script');
+                if( scripts.length > 0 ) {
+                    scripts.each(function( i, script ) {
+                        var element = document.createElement('script');
+                        element.type = 'text/javascript';
+                        element.innerHTML = $(script).text();
+                        $( modal.container ).append( element );
+                    });
+                }
 
                 // bind callback functions
                 bsModal.on('hidden.bs.modal', function() {
@@ -1033,6 +1015,45 @@
                     });
                 }
 
+            }
+
+            /**
+             * Wrap html content in bootstrap styled modal.
+             * @function buildTemplate
+             * @private
+             * @returns {string}
+             */
+            function buildTemplate() {
+
+                var template = '<div class="modal fade"> \
+                                    <div class="modal-dialog"> \
+                                        <div class="modal-content">';
+
+                if( !!modal.title && modal.title.length > 0 ) {
+                    template +=             '<div class="modal-header"> \
+                                                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
+                                                <h4 class="modal-title">' + modal.title + '</h4> \
+                                            </div>';
+                }
+
+                template +=                 '<div class="modal-body">' + modal.content + '</div> \
+                                             <div class="modal-footer">';
+
+                if( !!modal.labelDismiss && modal.labelDismiss.length > 0 ) {
+                    template +=                '<button type="button" class="btn btn-default" data-dismiss="modal"> \
+                                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' + modal.labelDismiss + '  \
+                                                </button>';
+                }
+
+                template +=                    '<button type="button" class="btn btn-primary" data-dismiss="modal" data-plenty-modal="confirm"> \
+                                                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> ' + modal.labelConfirm + ' \
+                                                </button> \
+                                            </div> \
+                                        </div> \
+                                    </div> \
+                                </div>';
+
+                return template;
             }
 
             /**
@@ -1143,6 +1164,7 @@
          * @default 0
          */
         var waitScreenCount = 0;
+        var waitScreenCallee = [];
 
         return {
             throwError: throwError,
@@ -1213,8 +1235,12 @@
          * {{#crossLink "UIFactory/waitScreenCount:attribute"}}waitScreenCount{{/crossLink}}
          * @function showWaitScreen
          */
-        function showWaitScreen() {
+        function showWaitScreen(caller) {
             waitScreenCount = waitScreenCount || 0;
+            if (!caller) {
+                console.warn("Missing calling function for Wait Screen!");
+            }
+            waitScreenCallee.push(caller);
             var waitScreen = $('#PlentyWaitScreen');
             // create wait-overlay if not exist
             if( waitScreen.length <= 0 ) {
@@ -1229,6 +1255,7 @@
 
             // increase instance counter to avoid showing multiple overlays
             waitScreenCount++;
+            return waitScreenCount;
         }
 
         /**
@@ -1237,16 +1264,25 @@
          * @function hideWaitScreen
          * @param {boolean} forceClose set true to hide wait screen independent from the value of waitScreenCount.
          */
-        function hideWaitScreen( forceClose ) {
+        function hideWaitScreen( caller, forceClose ) {
 
             // decrease overlay count
             waitScreenCount--;
+            if (!caller) {
+                console.warn("Missing calling function for Wait Screen!");
+            }
+            for (var i = waitScreenCallee.length - 1; i >= 0; i--) {
+                if (waitScreenCallee[i] === caller) {
+                    waitScreenCallee.splice(i, 1);
+                }
+            }
             // hide if all instances of overlays has been closed
             // or if closing is forced by user
             if( waitScreenCount <= 0 || !!forceClose ) {
                 waitScreenCount = 0;
                 $('#PlentyWaitScreen').removeClass('in');
             }
+            return waitScreenCount;
         }
 
     });
@@ -1313,11 +1349,11 @@
                     Email: values.Email
                 };
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("resetPassword");
                 return API.post("/rest/checkout/lostpassword/", params)
                     .done(function( response ) {
+                        UI.hideWaitScreen("resetPassword");
                         if ( response.data.IsMailSend == true ) {
-                            UI.hideWaitScreen();
                             $('[data-plenty-checkout="lostPasswordTextContainer"]').hide();
                             $('[data-plenty-checkout="lostPasswordSuccessMessage"]').show();
                         }
@@ -1343,12 +1379,13 @@
                     Password: values.loginPassword
                 };
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("customerLogin");
 
                 return API.post("/rest/checkout/login/", params)
                     .done(function () {
                         // successful login -> go to form's target referenced by action-attribute
                         window.location.href = form.attr('action');
+                        UI.hideWaitScreen("customerLogin");
                     });
             }
         }
@@ -1362,11 +1399,12 @@
          */
         function setInvoiceAddress( invoiceAddress ) {
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("setInvoiceAddress");
 
             return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                 .done(function (response) {
                     Checkout.getCheckout().CustomerInvoiceAddress = response.data;
+                    UI.hideWaitScreen("setInvoiceAddress");
                 });
         }
 
@@ -1461,11 +1499,12 @@
          * @function addBasketItem
          * @param   {Array}     addBasketList         Array containing the item to add
          * @param   {boolean}   [isUpdate=false]      Indicating if item's OrderParams are updated
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
         function addBasketItem( addBasketList, isUpdate ) {
             if( !!addBasketList ) {
-                UI.showWaitScreen();
+                UI.showWaitScreen("addBasketItem");
 
                 API.post( '/rest/checkout/basketitemslist/', addBasketList, true)
                     .done(function() {
@@ -1474,11 +1513,11 @@
                             .done(function() {
                                 refreshBasketPreview();
                                 // Show confirmation popup
-                                CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', '?ArticleID=' + addBasketList[0].BasketItemItemID).from('ItemView')
+                                CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', { ArticleID : addBasketList[0].BasketItemItemID }).from('ItemView')
                                     .done(function(response) {
-                                        UI.hideWaitScreen();
+                                        UI.hideWaitScreen("addBasketItem");
                                         Modal.prepare()
-                                            .setTemplate(response.data[0])
+                                            .setContent(response.data[0])
                                             .setTimeout(5000)
                                             .show();
                                     });
@@ -1489,14 +1528,18 @@
                         var response = $.parseJSON(jqXHR.responseText);
                         if (!isUpdate && response.error.error_stack[0].code === 100) {
                             // OrderParams are missing -> show popup
-                            CMS.getContainer('CheckoutOrderParamsList', '?itemID=' + addBasketList[0].BasketItemItemID + '&quantity=' + addBasketList[0].BasketItemQuantity).from('Checkout')
+                            CMS.getContainer('CheckoutOrderParamsList', {   itemID : addBasketList[0].BasketItemItemID,
+                                                                            quantity : addBasketList[0].BasketItemQuantity }).from('Checkout')
                                 .done(function(response) {
-                                    UI.hideWaitScreen();
+                                    UI.hideWaitScreen("addBasketItem");
                                     Modal.prepare()
-                                        .setTemplate(response.data[0])
+                                        .setContent(response.data[0])
                                         .onConfirm(function() {
                                             // save order params
-                                            saveOrderParams(addBasketList)
+                                            saveOrderParams(addBasketList);
+
+                                            // close modal after saving order params
+                                            return true;
                                         })
                                         .show();
                                 });
@@ -1595,7 +1638,7 @@
 
             // calling the delete request
             function doDelete() {
-                UI.showWaitScreen();
+                UI.showWaitScreen("doDelete");
                 API.delete('/rest/checkout/basketitemslist/?basketItemIdsList[0]='+BasketItemID)
                     .done(function() {
                         Checkout.loadCheckout().done(function() {
@@ -1605,8 +1648,8 @@
                                 Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
                             } else {
                                 Checkout.reloadContainer('Totals');
-                                UI.hideWaitScreen();
                             }
+                            UI.hideWaitScreen("doDelete");
 
                             refreshBasketPreview();
                         });
@@ -1659,7 +1702,7 @@
             if( !!basketItem && basketItem.BasketItemQuantity != BasketItemQuantity ) {
                 params[basketItemIndex].BasketItemQuantity = parseInt( BasketItemQuantity );
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("setItemQuantity");
                 API.post("/rest/checkout/basketitemslist/", params)
                     .done(function () {
                         Checkout.setCheckout().done(function () {
@@ -1674,7 +1717,7 @@
                             }
                             $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty-checkout="basket-item-price-total"]').html(basketItemsPriceTotal);
                             refreshBasketPreview();
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("setItemQuantity");
                         });
                     });
             }
@@ -1687,7 +1730,7 @@
          */
         function refreshBasketPreview() {
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("refreshBasketPreview");
             Checkout.reloadItemContainer('BasketPreviewList')
                 .done(function() {
 
@@ -1700,7 +1743,7 @@
                         }
                     });
 
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("refreshBasketPreview");
                 });
 
             //update quantity
@@ -1724,14 +1767,14 @@
                 CouponActiveCouponCode: $('[data-plenty-checkout-form="couponCode"]').val()
             };
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("addCoupon");
             return API.post("/rest/checkout/coupon/", params)
                 .done(function() {
                     Checkout.setCheckout()
                         .done(function() {
                             Checkout.reloadContainer('Coupon');
                             Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("addCoupon");
                         });
                 });
         }
@@ -1739,14 +1782,15 @@
         /**
          * Remove the currently added coupon
          * @function removeCoupon
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
         function removeCoupon() {
             var params = {
                 CouponActiveCouponCode: Checkout.getCheckout().Coupon.CouponActiveCouponCode
             };
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("removeCoupon");
 
             return API.delete("/rest/checkout/coupon/", params)
                 .done(function() {
@@ -1756,7 +1800,7 @@
 
                             Checkout.reloadContainer('Coupon');
                             Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("removeCoupon");
                         });
                 });
         }
@@ -1800,6 +1844,7 @@
             registerGuest: registerGuest,
             setShippingProfile: setShippingProfile,
             saveShippingAddress: saveShippingAddress,
+            loadAddressSuggestion: loadAddressSuggestion,
             preparePayment: preparePayment,
             setMethodOfPayment: setMethodOfPayment,
             editBankDetails: editBankDetails,
@@ -1812,10 +1857,10 @@
          * @function init
          */
         function init() {
-            UI.showWaitScreen();
+            UI.showWaitScreen("init");
             Checkout.loadCheckout()
                 .done(function() {
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("init");
                 });
         }
 
@@ -1840,11 +1885,11 @@
                 Checkout.getCheckout().CheckoutCustomerSign = values.CustomerSign;
                 Checkout.getCheckout().CheckoutOrderInfoText = values.OrderInfoText;
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("setCustomerSignAndInfo");
                 return Checkout.setCheckout()
                     .done(function () {
                         Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                        UI.hideWaitScreen();
+                        UI.hideWaitScreen("setCustomerSignAndInfo");
                     });
 
             } else {
@@ -1883,7 +1928,7 @@
                 if( !addressesAreEqual( shippingAddress, Checkout.getCheckout().CustomerShippingAddress) ) {
 
                     // new shipping address
-                    UI.showWaitScreen();
+                    UI.showWaitScreen("saveShippingAddress");
                     return API.post("/rest/checkout/customershippingaddress/", shippingAddress)
                         .done(function (response) {
 
@@ -1897,8 +1942,9 @@
                                 if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
                                     Checkout.reloadContainer('CustomerShippingAddress');
                                 }
+                                Checkout.reloadContainer('ShippingProfilesList');
                                 Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                                UI.hideWaitScreen();
+                                UI.hideWaitScreen("saveShippingAddress");
                             });
                         });
                 } else {
@@ -1913,13 +1959,14 @@
                     delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                     delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                    UI.showWaitScreen();
+                    UI.showWaitScreen("saveShippingAddress");
                     return Checkout.setCheckout()
                         .done(function () {
                             Checkout.reloadContainer('MethodsOfPaymentList');
                             Checkout.reloadContainer('CustomerShippingAddress');
+                            Checkout.reloadContainer('ShippingProfilesList');
                             Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("saveShippingAddress");
                         });
                 } else {
                     return API.idle();
@@ -1942,13 +1989,14 @@
 
             if( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) ) {
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("registerGuest");
                 return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                     .done(function (response) {
                         saveShippingAddress().done(function(){
                             Checkout.getCheckout().CustomerInvoiceAddress = response.data;
                             Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
                         });
+                        UI.hideWaitScreen("registerGuest");
                     });
 
             } else {
@@ -1989,12 +2037,12 @@
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("setShippingProfile");
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('MethodsOfPaymentList');
                     Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("setShippingProfile");
                 });
 
         }
@@ -2005,7 +2053,7 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function preparePayment() {
-            UI.showWaitScreen();
+            UI.showWaitScreen("preparePayment");
 
             return API.post("/rest/checkout/preparepayment/", null)
                 .done(function(response) {
@@ -2016,9 +2064,8 @@
                     } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
                         var isBankDetails = $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('[data-plenty-checkout-form="bankDetails"]').length > 0;
-
                         Modal.prepare()
-                            .setTemplate( response.data.CheckoutMethodOfPaymentAdditionalContent )
+                            .setContent( response.data.CheckoutMethodOfPaymentAdditionalContent )
                             .onConfirm(function() {
                                 if( isBankDetails ) {
                                     return saveBankDetails();
@@ -2029,7 +2076,7 @@
                             .show();
                     }
 
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("preparePayment");
                 });
         }
 
@@ -2048,12 +2095,12 @@
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("setMethodOfPayment");
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('ShippingProfilesList');
                     Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("setMethodOfPayment");
                 });
         }
 
@@ -2063,13 +2110,13 @@
          */
         function editBankDetails() {
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("editBankDetails");
 
             CMS.getContainer('CheckoutPaymentInformationBankDetails').from('Checkout')
                 .done(function(response) {
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("editBankDetails");
                     Modal.prepare()
-                        .setTemplate(response.data[0])
+                        .setContent(response.data[0])
                         .onDismiss(function() {
                             $('input[name="MethodOfPaymentID"]').each(function(i, radio) {
                                 if( $(radio).val() == Checkout.getCheckout().CheckoutMethodOfPaymentID ) {
@@ -2078,6 +2125,8 @@
                                     $(radio).removeAttr('checked');
                                 }
                             });
+                        }).onConfirm(function() {
+                            return saveBankDetails();
                         })
                         .show();
                 });
@@ -2105,13 +2154,13 @@
                     CustomerBIC:            values.bic
                 };
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("saveBankDetails");
                 API.post("/rest/checkout/paymentinformationbankdetails/", bankDetails)
                     .done(function () {
                         Checkout.loadCheckout().done(function () {
                             setMethodOfPayment(3);
                             Checkout.reloadContainer('MethodsOfPaymentList');
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("saveBankDetails");
                         });
                     });
                 return true;
@@ -2126,13 +2175,13 @@
          */
         function editCreditCard() {
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("editCreditCard");
 
             CMS.getContainer('CheckoutPaymentInformationCreditCard').from('Checkout')
                 .done(function(response) {
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("editCreditCard");
                     Modal.prepare()
-                        .setTemplate(response.data[0])
+                        .setContent(response.data[0])
                         .onDismiss(function() {
                             $('input[name="MethodOfPaymentID"]').each(function(i, radio) {
                                 if( $(radio).val() == Checkout.getCheckout().CheckoutMethodOfPaymentID ) {
@@ -2141,6 +2190,8 @@
                                     $(radio).removeAttr('checked');
                                 }
                             });
+                        }).onConfirm(function() {
+                            return saveCreditCard();
                         })
                         .show();
                 });
@@ -2168,17 +2219,50 @@
                     Provider:   values.provider
                 };
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("saveCreditCard");
                 API.post('/rest/checkout/paymentinformationcreditcard/', creditCard)
                     .done(function() {
                         Checkout.loadCheckout().done(function() {
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("saveCreditCard");
                         });
                     });
                 return true;
             } else {
                 return false;
             }
+        }
+
+        /**
+         * Display a popup containing address suggestions
+         * @param {string} type
+         */
+        function loadAddressSuggestion(type) {
+            UI.showWaitScreen("loadAddressSuggestion");
+
+            //check login type
+            if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
+                var values = $('[data-plenty-checkout-form="shippingAddress"]').getFormValues();
+            }
+            else {
+                var values = $('[data-plenty-checkout-form="guestRegistration"]').getFormValues();
+            }
+
+            var params = {
+                street:         values.Street,
+                houseNo:        values.HouseNo,
+                ZIP:            values.ZIP,
+                city:           values.City,
+                postnummer:     values.Postnummer,
+                suggestionType: 'postfinder'
+            };
+
+            CMS.getContainer('CheckoutAddressSuggestionResultsList', params).from('Checkout')
+                .done(function (response) {
+                    UI.hideWaitScreen("loadAddressSuggestion");
+                    Modal.prepare()
+                        .setContent(response.data[0])
+                        .show();
+                });
         }
 
         /**
@@ -2205,7 +2289,7 @@
                     PayoneInvoiceCheck:            values.payoneInvoiceCheck || 0
                 };
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("placeOrder");
 
                 return API.post("/rest/checkout/placeorder/", params)
                     .done(function(response) {
@@ -2215,13 +2299,16 @@
 
                         } else if(response.data.MethodOfPaymentAdditionalContent != '') {
 
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("placeOrder");
+
                             Modal.prepare()
-                                .setTemplate( response.data.MethodOfPaymentAdditionalContent)
+                                .setContent( response.data.MethodOfPaymentAdditionalContent )
+                                .setLabelDismiss( '' )
                                 .onDismiss(function() {
                                     document.location.href = form.attr('action');
-                                })
-                                .show();
+                                }).onConfirm(function() {
+                                    document.location.href = form.attr('action');
+                                }).show();
 
                         } else {
 
@@ -2681,43 +2768,73 @@
          * @function fillNavigation
          */
         function fillNavigation() {
-            // break if manager has not been inizialized
-            if( navigation.length <= 0 ) {
-                return;
-            }
+            // break if manager has not been initialized
+            var navigationCount = navigation.length;
+            if( navigationCount <= 0 ) return;
 
-            // set equal button width
-            $(buttonNext).css('width', 'auto');
-            $(buttonPrev).css('width', 'auto');
-            var buttonWidth = ($(buttonPrev).outerWidth() < $(buttonNext).outerWidth()) ? $(buttonNext).outerWidth(true) + 1 : $(buttonPrev).outerWidth(true) + 1;
-            $(buttonNext).width(buttonWidth);
-            $(buttonPrev).width(buttonWidth);
+            // reset inline styles
+            $(navigation).removeAttr('style');
+            $(navigation).children('span').removeAttr('style');
+            $(buttonNext).removeAttr('style');
+            $(buttonPrev).removeAttr('style');
+
+
+            var buttonWidth = ($(buttonPrev).outerWidth() < $(buttonNext).outerWidth()) ? $(buttonNext).outerWidth(true)+1 : $(buttonPrev).outerWidth(true)+1;
+            $(buttonNext).css({ width: buttonWidth+'px' });
+            $(buttonPrev).css({ width: buttonWidth+'px' });
 
             // calculate width to fill
-            var width = $(navigation).parent().parent().outerWidth(true) - (2 * buttonWidth);
-
+            var width = $(navigation).parent().parent().outerWidth(true) - ( 2 * buttonWidth);
             width -= parseInt($(navigation).parent().css('marginLeft')) + parseInt($(navigation).parent().css('marginRight'));
 
-            $(navigation).each(function (i, elem) {
-                width -= $(elem).children('span').width();
+            var padding = width;
+            var tabWidth = [];
+
+            $(navigation).each(function(i, elem) {
+                padding -= parseInt( $(elem).css('marginLeft') );
+                padding -= parseInt( $(elem).css('marginRight') );
+
+                tabWidth[i] = $(elem).children('span').width();
+                padding -= tabWidth[i];
+
+                padding -= parseInt( $(elem).children('span').css('marginLeft') );
+                padding -= parseInt( $(elem).children('span').css('marginRight') );
             });
 
-            var padding = parseInt(width / ($(navigation).length * 2));
-            var diff = width - ($(navigation).length * padding * 2);
+            var paddingEachItem = parseInt( padding / navigationCount );
 
-            $(navigation).each(function (i, elem) {
-                var paddingLeft = padding;
-                var paddingRight = padding;
-                if (diff > 0) {
-                    paddingLeft++;
-                    diff--;
+            var paddingLeft, paddingRight;
+            if ( paddingEachItem % 2 == 1 ) {
+                paddingLeft = ( paddingEachItem / 2 ) + 0.5;
+                paddingRight = ( paddingEachItem / 2 ) - 0.5;
+            }
+            else {
+                paddingLeft = paddingEachItem / 2;
+                paddingRight = paddingEachItem / 2;
+            }
+
+            var paddingLastItem = parseInt( padding - ( ( navigationCount - 1 ) * ( paddingLeft + paddingRight ) ) );
+            var paddingLastLeft, paddingLastRight;
+            if ( paddingLastItem % 2 == 1 ) {
+                paddingLastLeft = ( paddingLastItem / 2 ) + 0.5;
+                paddingLastRight = ( paddingLastItem / 2) - 0.5;
+            }
+            else {
+                paddingLastLeft = paddingLastItem / 2;
+                paddingLastRight = paddingLastItem / 2;
+            }
+
+            var diff = width;
+            $(navigation).each(function(i, elem) {
+                if ( i < navigationCount - 1) {
+                    $(elem).children('span').css({'paddingLeft': paddingLeft + 'px', 'paddingRight': paddingRight + 'px'}); //.parent().css({ width: ( tabWidth[i] + paddingLeft + paddingRight + parseInt( $(elem).children('span').css('marginLeft') ) + parseInt( $(elem).children('span').css('marginRight') ) )+'px' });
                 }
-                if (diff > 0) {
-                    paddingRight++;
-                    diff--;
+                else {
+                    $(elem).children('span').css({'paddingLeft': paddingLastLeft + 'px', 'paddingRight': paddingLastRight + 'px'}); //.parent().css({ width: ( tabWidth[i] + paddingLastLeft + paddingLastRight + parseInt( $(elem).children('span').css('marginLeft') ) + parseInt( $(elem).children('span').css('marginRight') ) )+'px' });
                 }
-                $(elem).children('span').css('paddingLeft', paddingLeft + 'px').css('paddingRight', paddingRight + 'px');
             });
+
+            //$(navigation).parent().css('marginRight', 0);
         }
 
     });

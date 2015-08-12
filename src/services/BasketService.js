@@ -40,11 +40,12 @@
          * @function addBasketItem
          * @param   {Array}     addBasketList         Array containing the item to add
          * @param   {boolean}   [isUpdate=false]      Indicating if item's OrderParams are updated
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
         function addBasketItem( addBasketList, isUpdate ) {
             if( !!addBasketList ) {
-                UI.showWaitScreen();
+                UI.showWaitScreen("addBasketItem");
 
                 API.post( '/rest/checkout/basketitemslist/', addBasketList, true)
                     .done(function() {
@@ -55,7 +56,7 @@
                                 // Show confirmation popup
                                 CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', { ArticleID : addBasketList[0].BasketItemItemID }).from('ItemView')
                                     .done(function(response) {
-                                        UI.hideWaitScreen();
+                                        UI.hideWaitScreen("addBasketItem");
                                         Modal.prepare()
                                             .setContent(response.data[0])
                                             .setTimeout(5000)
@@ -71,7 +72,7 @@
                             CMS.getContainer('CheckoutOrderParamsList', {   itemID : addBasketList[0].BasketItemItemID,
                                                                             quantity : addBasketList[0].BasketItemQuantity }).from('Checkout')
                                 .done(function(response) {
-                                    UI.hideWaitScreen();
+                                    UI.hideWaitScreen("addBasketItem");
                                     Modal.prepare()
                                         .setContent(response.data[0])
                                         .onConfirm(function() {
@@ -178,7 +179,7 @@
 
             // calling the delete request
             function doDelete() {
-                UI.showWaitScreen();
+                UI.showWaitScreen("doDelete");
                 API.delete('/rest/checkout/basketitemslist/?basketItemIdsList[0]='+BasketItemID)
                     .done(function() {
                         Checkout.loadCheckout().done(function() {
@@ -188,8 +189,8 @@
                                 Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
                             } else {
                                 Checkout.reloadContainer('Totals');
-                                UI.hideWaitScreen();
                             }
+                            UI.hideWaitScreen("doDelete");
 
                             refreshBasketPreview();
                         });
@@ -242,7 +243,7 @@
             if( !!basketItem && basketItem.BasketItemQuantity != BasketItemQuantity ) {
                 params[basketItemIndex].BasketItemQuantity = parseInt( BasketItemQuantity );
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("setItemQuantity");
                 API.post("/rest/checkout/basketitemslist/", params)
                     .done(function () {
                         Checkout.setCheckout().done(function () {
@@ -257,7 +258,7 @@
                             }
                             $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty-checkout="basket-item-price-total"]').html(basketItemsPriceTotal);
                             refreshBasketPreview();
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("setItemQuantity");
                         });
                     });
             }
@@ -270,7 +271,7 @@
          */
         function refreshBasketPreview() {
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("refreshBasketPreview");
             Checkout.reloadItemContainer('BasketPreviewList')
                 .done(function() {
 
@@ -283,7 +284,7 @@
                         }
                     });
 
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("refreshBasketPreview");
                 });
 
             //update quantity
@@ -307,14 +308,14 @@
                 CouponActiveCouponCode: $('[data-plenty-checkout-form="couponCode"]').val()
             };
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("addCoupon");
             return API.post("/rest/checkout/coupon/", params)
                 .done(function() {
                     Checkout.setCheckout()
                         .done(function() {
                             Checkout.reloadContainer('Coupon');
                             Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("addCoupon");
                         });
                 });
         }
@@ -322,14 +323,15 @@
         /**
          * Remove the currently added coupon
          * @function removeCoupon
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
         function removeCoupon() {
             var params = {
                 CouponActiveCouponCode: Checkout.getCheckout().Coupon.CouponActiveCouponCode
             };
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("removeCoupon");
 
             return API.delete("/rest/checkout/coupon/", params)
                 .done(function() {
@@ -339,7 +341,7 @@
 
                             Checkout.reloadContainer('Coupon');
                             Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                            UI.hideWaitScreen();
+                            UI.hideWaitScreen("removeCoupon");
                         });
                 });
         }

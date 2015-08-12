@@ -102,7 +102,7 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadContainer( container ) {
-            UI.showWaitScreen();
+            UI.showWaitScreen("reloadContainer");
 
             return CMS.getContainer( "checkout"+container ).from( 'checkout' )
                 .done(function (response) {
@@ -111,7 +111,7 @@
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                         });
-                    UI.hideWaitScreen();
+                    UI.hideWaitScreen("reloadContainer");
                 });
         }
 
@@ -123,15 +123,15 @@
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadCatContent( catId ) {
-            UI.showWaitScreen();
+            UI.showWaitScreen("reloadCatContent");
             return CMS.getCategoryContent(catId)
                 .done(function(response) {
                     $('[data-plenty-checkout-catcontent="'+catId+'"]')
                         .each(function(i, elem) {
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
-                            UI.hideWaitScreen(true);
                         });
+                    UI.hideWaitScreen("reloadCatContent", true);
                 });
 
         }
@@ -144,15 +144,15 @@
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadItemContainer( container ) {
-            UI.showWaitScreen();
+            UI.showWaitScreen("reloadItemContainer");
             return CMS.getContainer( 'itemview' + container ).from( 'itemview' )
                 .done(function(response) {
                     $('[data-plenty-itemview-template="'+container+'"]')
                         .each(function(i, elem) {
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
-                            UI.hideWaitScreen();
                         });
+                    UI.hideWaitScreen("reloadItemContainer");
                 });
 
         }
