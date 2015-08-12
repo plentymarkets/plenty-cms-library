@@ -139,7 +139,6 @@
                 setLabelDismiss: setLabelDismiss,
                 onConfirm: onConfirm,
                 onDismiss: onDismiss,
-                setTemplate: setTemplate,
                 setTimeout: setTimeout,
                 show: show,
                 hide: hide
@@ -221,19 +220,6 @@
              */
             function setContainer( container ) {
                 modal.container = container;
-                return this;
-            }
-
-            /**
-             * Set the {{#crossLink "ModalFactory.Modal/template:attribute}}template{{/crossLink}} of the modal.
-             * Deprecated! Use setContent() instead.
-             * @deprecated
-             * @function setTemplate
-             * @param   {string}    template The template to use for the modal
-             * @returns {Modal}     Modal object for chaining methods
-             */
-            function setTemplate( template ) {
-                this.setContent( template );
                 return this;
             }
 
