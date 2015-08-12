@@ -57,7 +57,7 @@
                                     .done(function(response) {
                                         UI.hideWaitScreen();
                                         Modal.prepare()
-                                            .setTemplate(response.data[0])
+                                            .setContent(response.data[0])
                                             .setTimeout(5000)
                                             .show();
                                     });
@@ -73,7 +73,7 @@
                                 .done(function(response) {
                                     UI.hideWaitScreen();
                                     Modal.prepare()
-                                        .setTemplate(response.data[0])
+                                        .setContent(response.data[0])
                                         .onConfirm(function() {
                                             // save order params
                                             saveOrderParams(addBasketList);

@@ -251,15 +251,10 @@
 
                     } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
-
-                        var isModal = $(response.data.CheckoutMethodOfPaymentAdditionalContent).filter('.modal' ).length + $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('.modal' ).length > 0;
                         var isBankDetails = $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('[data-plenty-checkout-form="bankDetails"]').length > 0;
-                        var modal = Modal.prepare();
-
-                        if( isModal ) modal.setTemplate( response.data.CheckoutMethodOfPaymentAdditionalContent );
-                        else modal.setContent( response.data.CheckoutMethodOfPaymentAdditionalContent );
-
-                        modal.onConfirm(function() {
+                        Modal.prepare()
+                            .setContent( response.data.CheckoutMethodOfPaymentAdditionalContent )
+                            .onConfirm(function() {
                                 if( isBankDetails ) {
                                     return saveBankDetails();
                                 } else {
@@ -309,7 +304,7 @@
                 .done(function(response) {
                     UI.hideWaitScreen();
                     Modal.prepare()
-                        .setTemplate(response.data[0])
+                        .setContent(response.data[0])
                         .onDismiss(function() {
                             $('input[name="MethodOfPaymentID"]').each(function(i, radio) {
                                 if( $(radio).val() == Checkout.getCheckout().CheckoutMethodOfPaymentID ) {
@@ -374,7 +369,7 @@
                 .done(function(response) {
                     UI.hideWaitScreen();
                     Modal.prepare()
-                        .setTemplate(response.data[0])
+                        .setContent(response.data[0])
                         .onDismiss(function() {
                             $('input[name="MethodOfPaymentID"]').each(function(i, radio) {
                                 if( $(radio).val() == Checkout.getCheckout().CheckoutMethodOfPaymentID ) {
@@ -453,7 +448,7 @@
                 .done(function (response) {
                     UI.hideWaitScreen();
                     Modal.prepare()
-                        .setTemplate(response.data[0])
+                        .setContent(response.data[0])
                         .show();
                 });
         }
@@ -494,21 +489,14 @@
 
                             UI.hideWaitScreen();
 
-                            var isModal = $(response.data.MethodOfPaymentAdditionalContent).filter('.modal' ).length + $(response.data.MethodOfPaymentAdditionalContent).find('.modal' ).length > 0;
-                            var modal = Modal.prepare();
-
-                            if( isModal ) modal.setTemplate( response.data.MethodOfPaymentAdditionalContent );
-                            else {
-                                modal.setLabelDismiss('');
-                                modal.setContent( response.data.MethodOfPaymentAdditionalContent );
-                            }
-
-                            modal.onDismiss(function() {
-                                document.location.href = form.attr('action');
-                            }).onConfirm(function() {
-                                document.location.href = form.attr('action');
-                            }).show();
-
+                            Modal.prepare()
+                                .setContent( response.data.MethodOfPaymentAdditionalContent )
+                                .setLabelDismiss( '' )
+                                .onDismiss(function() {
+                                    document.location.href = form.attr('action');
+                                }).onConfirm(function() {
+                                    document.location.href = form.attr('action');
+                                }).show();
 
                         } else {
 

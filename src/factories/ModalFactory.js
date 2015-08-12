@@ -20,8 +20,19 @@
 	pm.factory('ModalFactory', function() {
 
 		return {
-            prepare: prepare
+            prepare: prepare,
+            isModal: isModal
 		};
+
+        /**
+         * Detect if given html contains a valid modal
+         * @function isModal
+         * @param {string} html
+         * @returns {boolean}
+         */
+        function isModal( html ) {
+            return $(html).filter('.modal' ).length + $(html).find('.modal' ).length > 0;
+        }
 
         /**
          * Create a new Instance of {{#crossLink "ModalFactory.Modal"}}Modal{{/crossLink}}
@@ -105,21 +116,6 @@
              * @default "body"
              */
             modal.container  = 'body';
-
-            /**
-             * external html template to use for this modal.<br>
-             * Modals {{#crossLink "ModalFactory.Modal/title:attribute"}}title{{/crossLink}},
-             * {{#crossLink "ModalFactory.Modal/content:attribute"}}content{{/crossLink}} and
-             * {{#crossLink "ModalFactory.Modal/labelConfirm:attribute"}}button labels{{/crossLink}} will not be injected.
-             * {{#crossLink "ModalFactory.Modal/onDismiss:attribute"}}Callback methods{{/crossLink}} will be bound on modal.
-             * To bind {{#crossLink "ModalFactory.Modal/onConfirm"}}confirmation callback{{/crossLink}},
-             * mark elements with <b>data-plenty-modal="confirm"</b>
-             * @attribute template
-             * @type {string}
-             * @private
-             * @default ""
-             */
-            modal.template   = '';
 
             /**
              * Timeout to close the modal automatically. Set &lt;0 to disable.
@@ -215,6 +211,8 @@
                 return this;
             }
 
+
+
             /**
              * Set the {{#crossLink "ModalFactory.Modal/container:attribute}}container{{/crossLink}} of the modal
              * @function setContainer
@@ -227,13 +225,15 @@
             }
 
             /**
-             * Set the {{#crossLink "ModalFactory.Modal/template:attribute}}template{{/crossLink}} of the modal
+             * Set the {{#crossLink "ModalFactory.Modal/template:attribute}}template{{/crossLink}} of the modal.
+             * Deprecated! Use setContent() instead.
+             * @deprecated
              * @function setTemplate
              * @param   {string}    template The template to use for the modal
              * @returns {Modal}     Modal object for chaining methods
              */
             function setTemplate( template ) {
-                modal.template = template;
+                this.setContent( template );
                 return this;
             }
 
@@ -255,50 +255,19 @@
              * @function show
              */
             function show() {
-
-                if( !modal.template ) {
-                    modal.template =    '<div class="modal fade"> \
-                                            <div class="modal-dialog"> \
-                                                <div class="modal-content">';
-
-                if( !!modal.title && modal.title.length > 0 ) {
-                    modal.template += '<div class="modal-header"> \
-                                            <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
-                                            <h4 class="modal-title">' + modal.title + '</h4> \
-                                        </div>';
-                }
-
-                modal.template += '<div class="modal-body">' + modal.content + '</div> \
-                                        <div class="modal-footer">';
-
-                if( !!modal.labelDismiss && modal.labelDismiss.length > 0 ) {
-                    modal.template += '<button type="button" class="btn btn-default" data-dismiss="modal"> \
-                                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' + modal.labelDismiss + '  \
-                                        </button>';
-                }
-
-                modal.template += '<button type="button" class="btn btn-primary" data-dismiss="modal" data-plenty-modal="confirm"> \
-                                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> ' + modal.labelConfirm + ' \
-                                    </button> \
-                                </div> \
-                            </div> \
-                        </div> \
-                    </div>';
-                }
-
-
-                // inject modal in DOM
-                bsModal = $(modal.template);
-
-
-
-                if( bsModal.length > 1 || !bsModal.is('.modal') ) {
-                    bsModal = $(modal.template).filter('.modal') || $(modal.template).find('.modal');
+                if( isModal( modal.content ) ) {
+                    bsModal = $(modal.content);
+                    if( bsModal.length > 1 || !bsModal.is('.modal') ) {
+                        bsModal = $(modal.content).filter('.modal') || $(modal.content).find('.modal');
+                    }
+                } else {
+                    bsModal = $( buildTemplate() );
                 }
 
                 $(modal.container).append( bsModal );
 
-                var scripts = $(modal.template ).filter('script');
+                // append additional scripts executable
+                var scripts = $(modal.content).filter('script');
                 if( scripts.length > 0 ) {
                     scripts.each(function( i, script ) {
                         var element = document.createElement('script');
@@ -334,6 +303,45 @@
                     });
                 }
 
+            }
+
+            /**
+             * Wrap html content in bootstrap styled modal.
+             * @function buildTemplate
+             * @private
+             * @returns {string}
+             */
+            function buildTemplate() {
+
+                var template = '<div class="modal fade"> \
+                                    <div class="modal-dialog"> \
+                                        <div class="modal-content">';
+
+                if( !!modal.title && modal.title.length > 0 ) {
+                    template +=             '<div class="modal-header"> \
+                                                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
+                                                <h4 class="modal-title">' + modal.title + '</h4> \
+                                            </div>';
+                }
+
+                template +=                 '<div class="modal-body">' + modal.content + '</div> \
+                                             <div class="modal-footer">';
+
+                if( !!modal.labelDismiss && modal.labelDismiss.length > 0 ) {
+                    template +=                '<button type="button" class="btn btn-default" data-dismiss="modal"> \
+                                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' + modal.labelDismiss + '  \
+                                                </button>';
+                }
+
+                template +=                    '<button type="button" class="btn btn-primary" data-dismiss="modal" data-plenty-modal="confirm"> \
+                                                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> ' + modal.labelConfirm + ' \
+                                                </button> \
+                                            </div> \
+                                        </div> \
+                                    </div> \
+                                </div>';
+
+                return template;
             }
 
             /**
