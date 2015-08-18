@@ -301,7 +301,8 @@
          * Read the coupon code from an &lt;input> element marked with <b>data-plenty-checkout-form="couponCode"</b>
          * and try to add this coupon.
          * @function addCoupon
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
         function addCoupon() {
             var params = {
@@ -313,9 +314,8 @@
                 .done(function() {
                     Checkout.setCheckout()
                         .done(function() {
-                            Checkout.reloadContainer('Coupon');
-                            Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                            UI.hideWaitScreen("addCoupon");
+
+                            updateContainer();
                         });
                 });
         }
@@ -339,14 +339,25 @@
                         .done(function() {
                             delete Checkout.getCheckout().Coupon;
 
-                            Checkout.reloadContainer('Coupon');
-                            Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                            UI.hideWaitScreen("removeCoupon");
+                            updateContainer();
                         });
                 });
         }
 
-
+        // update container
+        function updateContainer() {
+            Checkout.reloadContainer('Coupon');
+            // reload category, if we are at checkout
+            if ( $('[data-plenty-checkout-catcontent="' + pm.getGlobal('checkoutConfirmCatID') + '"]').length > 0 ) {
+                Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
+            }
+            else
+                // reload totals, if we are at basket
+                if ( $('[data-plenty-checkout-template="Totals"]').length > 0 ) {
+                Checkout.reloadContainer('Totals');
+            }
+            UI.hideWaitScreen("addCoupon");
+        }
 
 	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
 }(jQuery, PlentyFramework));

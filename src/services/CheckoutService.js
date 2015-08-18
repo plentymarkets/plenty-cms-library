@@ -85,8 +85,6 @@
                 // No changes detected -> Do nothing
                 return API.idle();
             }
-
-
         }
 
         /**
@@ -99,8 +97,8 @@
         function saveShippingAddress( validateForm ) {
             var form = $('[data-plenty-checkout-form="shippingAddress"]');
 
-            if( !!validateForm && !form.validateForm() ) {
-                return null;
+            if( !validateForm && !form.validateForm() ) {
+                return false;
             }
 
             var values = form.getFormValues();
@@ -108,7 +106,6 @@
 
             // TODO: move bootstrap specific function
             $('#shippingAdressSelect').modal('hide');
-
 
             if ( shippingAddressID < 0) {
                 // save separate

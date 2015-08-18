@@ -1164,7 +1164,7 @@
          * @default 0
          */
         var waitScreenCount = 0;
-        var waitScreenCallee = [];
+        var waitScreenCaller = [];
 
         return {
             throwError: throwError,
@@ -1226,7 +1226,7 @@
                 popup.show();
             }
 
-            hideWaitScreen(true);
+            hideWaitScreen("printErrors", true);
         }
 
 
@@ -1237,19 +1237,20 @@
          */
         function showWaitScreen(caller) {
             waitScreenCount = waitScreenCount || 0;
+
             if (!caller) {
                 console.warn("Missing calling function for Wait Screen!");
+            } else {
+                waitScreenCaller.push(caller);
             }
-            waitScreenCallee.push(caller);
+
             var waitScreen = $('#PlentyWaitScreen');
             // create wait-overlay if not exist
             if( waitScreen.length <= 0 ) {
-                waitScreen = $('<div id="PlentyWaitScreen" class="overlay overlay-wait"></div>');
+                waitScreen = $('<div id="PlentyWaitScreen" class="overlay overlay-wait in"></div>');
                 $('body').append(waitScreen);
-            }
-
-            // show wait screen if not already visible
-            if( !waitScreen.is('.in') ) {
+            } else {
+                // show wait screen if not already visible
                 waitScreen.addClass('in');
             }
 
@@ -1268,14 +1269,18 @@
 
             // decrease overlay count
             waitScreenCount--;
+
             if (!caller) {
                 console.warn("Missing calling function for Wait Screen!");
-            }
-            for (var i = waitScreenCallee.length - 1; i >= 0; i--) {
-                if (waitScreenCallee[i] === caller) {
-                    waitScreenCallee.splice(i, 1);
+            } else {
+                // remove caller from list
+                for (var i = waitScreenCaller.length - 1; i >= 0; i--) {
+                    if (waitScreenCaller[i] === caller) {
+                        waitScreenCaller.splice(i, 1);
+                    }
                 }
             }
+
             // hide if all instances of overlays has been closed
             // or if closing is forced by user
             if( waitScreenCount <= 0 || !!forceClose ) {
@@ -1760,7 +1765,8 @@
          * Read the coupon code from an &lt;input> element marked with <b>data-plenty-checkout-form="couponCode"</b>
          * and try to add this coupon.
          * @function addCoupon
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
         function addCoupon() {
             var params = {
@@ -1772,9 +1778,8 @@
                 .done(function() {
                     Checkout.setCheckout()
                         .done(function() {
-                            Checkout.reloadContainer('Coupon');
-                            Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                            UI.hideWaitScreen("addCoupon");
+
+                            updateContainer();
                         });
                 });
         }
@@ -1798,14 +1803,25 @@
                         .done(function() {
                             delete Checkout.getCheckout().Coupon;
 
-                            Checkout.reloadContainer('Coupon');
-                            Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                            UI.hideWaitScreen("removeCoupon");
+                            updateContainer();
                         });
                 });
         }
 
-
+        // update container
+        function updateContainer() {
+            Checkout.reloadContainer('Coupon');
+            // reload category, if we are at checkout
+            if ( $('[data-plenty-checkout-catcontent="' + pm.getGlobal('checkoutConfirmCatID') + '"]').length > 0 ) {
+                Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
+            }
+            else
+                // reload totals, if we are at basket
+                if ( $('[data-plenty-checkout-template="Totals"]').length > 0 ) {
+                Checkout.reloadContainer('Totals');
+            }
+            UI.hideWaitScreen("addCoupon");
+        }
 
 	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
 }(jQuery, PlentyFramework));
@@ -1896,8 +1912,6 @@
                 // No changes detected -> Do nothing
                 return API.idle();
             }
-
-
         }
 
         /**
@@ -1910,8 +1924,8 @@
         function saveShippingAddress( validateForm ) {
             var form = $('[data-plenty-checkout-form="shippingAddress"]');
 
-            if( !!validateForm && !form.validateForm() ) {
-                return null;
+            if( !validateForm && !form.validateForm() ) {
+                return false;
             }
 
             var values = form.getFormValues();
@@ -1919,7 +1933,6 @@
 
             // TODO: move bootstrap specific function
             $('#shippingAdressSelect').modal('hide');
-
 
             if ( shippingAddressID < 0) {
                 // save separate
@@ -3141,7 +3154,6 @@
             var errorClass = !!$(form).attr('data-plenty-checkform') ? $(form).attr('data-plenty-checkform') : 'has-error';
             var missingFields = [];
 
-
             var hasError = false;
 
             // check every required input inside form
@@ -3228,6 +3240,27 @@
                 }
             });
 
+            // scroll to element on 'validationFailed'
+            $(form).on('validationFailed', function() {
+                var distanceTop = 50;
+                var errorOffset = $(form).find('.has-error').first().offset().top;
+                var scrollTarget = $('html, body');
+
+                // if form is inside of modal, scroll modal instead of body
+                if( $(form).parents('.modal').length > 0 ) {
+                    scrollTarget = $(form).parents('.modal');
+                } else if( $(form).is('.modal') ) {
+                    scrollTarget = $(form);
+                }
+
+                // only scroll if error is outside of viewport
+                if( errorOffset - distanceTop < window.pageYOffset || errorOffset > (window.pageYOffset + window.innerHeight) ) {
+                    scrollTarget.animate({
+                        scrollTop: errorOffset - distanceTop
+                    });
+                }
+            });
+
             if ( hasError ) {
                 // remove error class on focus
                 $(form).find('.has-error').each(function(i, elem) {
@@ -3268,7 +3301,7 @@
      * @return {boolean}
      */
     $.fn.validateForm = function() {
-        return pm.getInstance().ValidationService.validate( this );
+        return pm.getInstance().ValidationService.validate( this );;
     };
 
     /**
@@ -4068,6 +4101,19 @@
             }, 400);
             return false;
         });
+
+        var positionToTopButton = function() {
+            if( $(document).scrollTop() > 100 ) {
+                $(elem).addClass('visible');
+            } else {
+                $(elem).removeClass('visible');
+            }
+        };
+
+        $(window).on("scroll resize", function() {
+            positionToTopButton();
+        });
+
     });
 
 }(jQuery, PlentyFramework));
