@@ -17,13 +17,12 @@
      * <b>Requires:</b>
      * <ul>
      *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
-     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
      *     <li>{{#crossLink "CheckoutFactory"}}CheckoutFactory{{/crossLink}}</li>
      * </ul>
      * @class AuthenticationService
      * @static
      */
-    pm.service('AuthenticationService', function (API, UI, Checkout) {
+    pm.service('AuthenticationService', function (API, Checkout) {
 
         return {
             resetPassword: resetPassword,
@@ -51,10 +50,8 @@
                     Email: values.Email
                 };
 
-                UI.showWaitScreen("resetPassword");
                 return API.post("/rest/checkout/lostpassword/", params)
                     .done(function( response ) {
-                        UI.hideWaitScreen("resetPassword");
                         if ( response.data.IsMailSend == true ) {
                             $('[data-plenty-checkout="lostPasswordTextContainer"]').hide();
                             $('[data-plenty-checkout="lostPasswordSuccessMessage"]').show();
@@ -81,13 +78,10 @@
                     Password: values.loginPassword
                 };
 
-                UI.showWaitScreen("customerLogin");
-
                 return API.post("/rest/checkout/login/", params)
                     .done(function () {
                         // successful login -> go to form's target referenced by action-attribute
                         window.location.href = form.attr('action');
-                        UI.hideWaitScreen("customerLogin");
                     });
             }
         }
@@ -101,12 +95,9 @@
          */
         function setInvoiceAddress( invoiceAddress ) {
 
-            UI.showWaitScreen("setInvoiceAddress");
-
             return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                 .done(function (response) {
                     Checkout.getCheckout().CustomerInvoiceAddress = response.data;
-                    UI.hideWaitScreen("setInvoiceAddress");
                 });
         }
 
@@ -156,6 +147,6 @@
                     });
             }
         }
-    }, ['APIFactory', 'UIFactory', 'CheckoutFactory']);
+    }, ['APIFactory', 'CheckoutFactory']);
 
 }(jQuery, PlentyFramework));

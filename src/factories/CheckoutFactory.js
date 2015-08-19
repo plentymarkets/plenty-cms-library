@@ -102,7 +102,6 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadContainer( container ) {
-            UI.showWaitScreen("reloadContainer");
 
             return CMS.getContainer( "checkout"+container ).from( 'checkout' )
                 .done(function (response) {
@@ -111,7 +110,6 @@
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                         });
-                    UI.hideWaitScreen("reloadContainer");
                 });
         }
 
@@ -123,7 +121,7 @@
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadCatContent( catId ) {
-            UI.showWaitScreen("reloadCatContent");
+
             return CMS.getCategoryContent(catId)
                 .done(function(response) {
                     $('[data-plenty-checkout-catcontent="'+catId+'"]')
@@ -131,7 +129,6 @@
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                         });
-                    UI.hideWaitScreen("reloadCatContent", true);
                 });
 
         }
@@ -144,7 +141,7 @@
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadItemContainer( container ) {
-            UI.showWaitScreen("reloadItemContainer");
+
             return CMS.getContainer( 'itemview' + container ).from( 'itemview' )
                 .done(function(response) {
                     $('[data-plenty-itemview-template="'+container+'"]')
@@ -152,7 +149,6 @@
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                         });
-                    UI.hideWaitScreen("reloadItemContainer");
                 });
 
         }

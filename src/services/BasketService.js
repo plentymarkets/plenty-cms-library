@@ -44,8 +44,8 @@
          *     Object</a>
          */
         function addBasketItem( addBasketList, isUpdate ) {
+
             if( !!addBasketList ) {
-                UI.showWaitScreen("addBasketItem");
 
                 API.post( '/rest/checkout/basketitemslist/', addBasketList, true)
                     .done(function() {
@@ -56,7 +56,6 @@
                                 // Show confirmation popup
                                 CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', { ArticleID : addBasketList[0].BasketItemItemID }).from('ItemView')
                                     .done(function(response) {
-                                        UI.hideWaitScreen("addBasketItem");
                                         Modal.prepare()
                                             .setContent(response.data[0])
                                             .setTimeout(5000)
@@ -72,7 +71,6 @@
                             CMS.getContainer('CheckoutOrderParamsList', {   itemID : addBasketList[0].BasketItemItemID,
                                                                             quantity : addBasketList[0].BasketItemQuantity }).from('Checkout')
                                 .done(function(response) {
-                                    UI.hideWaitScreen("addBasketItem");
                                     Modal.prepare()
                                         .setContent(response.data[0])
                                         .onConfirm(function() {
@@ -179,7 +177,6 @@
 
             // calling the delete request
             function doDelete() {
-                UI.showWaitScreen("doDelete");
                 API.delete('/rest/checkout/basketitemslist/?basketItemIdsList[0]='+BasketItemID)
                     .done(function() {
                         Checkout.loadCheckout().done(function() {
@@ -190,7 +187,6 @@
                             } else {
                                 Checkout.reloadContainer('Totals');
                             }
-                            UI.hideWaitScreen("doDelete");
 
                             refreshBasketPreview();
                         });
@@ -243,7 +239,6 @@
             if( !!basketItem && basketItem.BasketItemQuantity != BasketItemQuantity ) {
                 params[basketItemIndex].BasketItemQuantity = parseInt( BasketItemQuantity );
 
-                UI.showWaitScreen("setItemQuantity");
                 API.post("/rest/checkout/basketitemslist/", params)
                     .done(function () {
                         Checkout.setCheckout().done(function () {
@@ -258,7 +253,6 @@
                             }
                             $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty-checkout="basket-item-price-total"]').html(basketItemsPriceTotal);
                             refreshBasketPreview();
-                            UI.hideWaitScreen("setItemQuantity");
                         });
                     });
             }
@@ -271,7 +265,6 @@
          */
         function refreshBasketPreview() {
 
-            UI.showWaitScreen("refreshBasketPreview");
             Checkout.reloadItemContainer('BasketPreviewList')
                 .done(function() {
 
@@ -284,7 +277,6 @@
                         }
                     });
 
-                    UI.hideWaitScreen("refreshBasketPreview");
                 });
 
             //update quantity
@@ -309,7 +301,6 @@
                 CouponActiveCouponCode: $('[data-plenty-checkout-form="couponCode"]').val()
             };
 
-            UI.showWaitScreen("addCoupon");
             return API.post("/rest/checkout/coupon/", params)
                 .done(function() {
                     Checkout.setCheckout()
@@ -330,8 +321,6 @@
             var params = {
                 CouponActiveCouponCode: Checkout.getCheckout().Coupon.CouponActiveCouponCode
             };
-
-            UI.showWaitScreen("removeCoupon");
 
             return API.delete("/rest/checkout/coupon/", params)
                 .done(function() {
@@ -356,7 +345,6 @@
                 if ( $('[data-plenty-checkout-template="Totals"]').length > 0 ) {
                 Checkout.reloadContainer('Totals');
             }
-            UI.hideWaitScreen("addCoupon");
         }
 
 	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);

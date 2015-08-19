@@ -17,7 +17,6 @@
      * <b>Requires:</b>
      * <ul>
      *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
-     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
      *     <li>{{#crossLink "CMSFactory"}}CMSFactory{{/crossLink}}</li>
      *     <li>{{#crossLink "CheckoutFactory"}}CheckoutFactory{{/crossLink}}</li>
      *     <li>{{#crossLink "ModalFactory"}}ModalFactory{{/crossLink}}</li>
@@ -25,7 +24,7 @@
      * @class CheckoutService
      * @static
      */
-	pm.service('CheckoutService', function(API, UI, CMS, Checkout, Modal) {
+	pm.service('CheckoutService', function(API, CMS, Checkout, Modal) {
 
 		return {
             init: init,
@@ -46,11 +45,7 @@
          * @function init
          */
         function init() {
-            UI.showWaitScreen("init");
-            Checkout.loadCheckout()
-                .done(function() {
-                    UI.hideWaitScreen("init");
-                });
+            Checkout.loadCheckout();
         }
 
 
@@ -74,11 +69,9 @@
                 Checkout.getCheckout().CheckoutCustomerSign = values.CustomerSign;
                 Checkout.getCheckout().CheckoutOrderInfoText = values.OrderInfoText;
 
-                UI.showWaitScreen("setCustomerSignAndInfo");
                 return Checkout.setCheckout()
                     .done(function () {
                         Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                        UI.hideWaitScreen("setCustomerSignAndInfo");
                     });
 
             } else {
@@ -114,7 +107,6 @@
                 if( !addressesAreEqual( shippingAddress, Checkout.getCheckout().CustomerShippingAddress) ) {
 
                     // new shipping address
-                    UI.showWaitScreen("saveShippingAddress");
                     return API.post("/rest/checkout/customershippingaddress/", shippingAddress)
                         .done(function (response) {
 
@@ -130,7 +122,6 @@
                                 }
                                 Checkout.reloadContainer('ShippingProfilesList');
                                 Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                                UI.hideWaitScreen("saveShippingAddress");
                             });
                         });
                 } else {
@@ -145,14 +136,12 @@
                     delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                     delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                    UI.showWaitScreen("saveShippingAddress");
                     return Checkout.setCheckout()
                         .done(function () {
                             Checkout.reloadContainer('MethodsOfPaymentList');
                             Checkout.reloadContainer('CustomerShippingAddress');
                             Checkout.reloadContainer('ShippingProfilesList');
                             Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
-                            UI.hideWaitScreen("saveShippingAddress");
                         });
                 } else {
                     return API.idle();
@@ -175,14 +164,12 @@
 
             if( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) ) {
 
-                UI.showWaitScreen("registerGuest");
                 return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                     .done(function (response) {
                         saveShippingAddress().done(function(){
                             Checkout.getCheckout().CustomerInvoiceAddress = response.data;
                             Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
                         });
-                        UI.hideWaitScreen("registerGuest");
                     });
 
             } else {
@@ -223,12 +210,10 @@
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
 
-            UI.showWaitScreen("setShippingProfile");
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('MethodsOfPaymentList');
                     Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                    UI.hideWaitScreen("setShippingProfile");
                 });
 
         }
@@ -239,7 +224,6 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function preparePayment() {
-            UI.showWaitScreen("preparePayment");
 
             return API.post("/rest/checkout/preparepayment/", null)
                 .done(function(response) {
@@ -261,8 +245,6 @@
                             })
                             .show();
                     }
-
-                    UI.hideWaitScreen("preparePayment");
                 });
         }
 
@@ -281,12 +263,10 @@
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-            UI.showWaitScreen("setMethodOfPayment");
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('ShippingProfilesList');
                     Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                    UI.hideWaitScreen("setMethodOfPayment");
                 });
         }
 
@@ -296,11 +276,8 @@
          */
         function editBankDetails() {
 
-            UI.showWaitScreen("editBankDetails");
-
             CMS.getContainer('CheckoutPaymentInformationBankDetails').from('Checkout')
                 .done(function(response) {
-                    UI.hideWaitScreen("editBankDetails");
                     Modal.prepare()
                         .setContent(response.data[0])
                         .onDismiss(function() {
@@ -340,13 +317,11 @@
                     CustomerBIC:            values.bic
                 };
 
-                UI.showWaitScreen("saveBankDetails");
                 API.post("/rest/checkout/paymentinformationbankdetails/", bankDetails)
                     .done(function () {
                         Checkout.loadCheckout().done(function () {
                             setMethodOfPayment(3);
                             Checkout.reloadContainer('MethodsOfPaymentList');
-                            UI.hideWaitScreen("saveBankDetails");
                         });
                     });
                 return true;
@@ -361,11 +336,8 @@
          */
         function editCreditCard() {
 
-            UI.showWaitScreen("editCreditCard");
-
             CMS.getContainer('CheckoutPaymentInformationCreditCard').from('Checkout')
                 .done(function(response) {
-                    UI.hideWaitScreen("editCreditCard");
                     Modal.prepare()
                         .setContent(response.data[0])
                         .onDismiss(function() {
@@ -405,12 +377,9 @@
                     Provider:   values.provider
                 };
 
-                UI.showWaitScreen("saveCreditCard");
                 API.post('/rest/checkout/paymentinformationcreditcard/', creditCard)
                     .done(function() {
-                        Checkout.loadCheckout().done(function() {
-                            UI.hideWaitScreen("saveCreditCard");
-                        });
+                        Checkout.loadCheckout();
                     });
                 return true;
             } else {
@@ -423,7 +392,6 @@
          * @param {string} type
          */
         function loadAddressSuggestion(type) {
-            UI.showWaitScreen("loadAddressSuggestion");
 
             //check login type
             if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
@@ -444,7 +412,6 @@
 
             CMS.getContainer('CheckoutAddressSuggestionResultsList', params).from('Checkout')
                 .done(function (response) {
-                    UI.hideWaitScreen("loadAddressSuggestion");
                     Modal.prepare()
                         .setContent(response.data[0])
                         .show();
@@ -475,8 +442,6 @@
                     PayoneInvoiceCheck:            values.payoneInvoiceCheck || 0
                 };
 
-                UI.showWaitScreen("placeOrder");
-
                 return API.post("/rest/checkout/placeorder/", params)
                     .done(function(response) {
                         if(response.data.MethodOfPaymentRedirectURL != '') {
@@ -484,8 +449,6 @@
                             document.location.href = response.data.MethodOfPaymentRedirectURL;
 
                         } else if(response.data.MethodOfPaymentAdditionalContent != '') {
-
-                            UI.hideWaitScreen("placeOrder");
 
                             Modal.prepare()
                                 .setContent( response.data.MethodOfPaymentAdditionalContent )
@@ -506,5 +469,5 @@
         }
 
 
-	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
+	}, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
 }(jQuery, PlentyFramework));

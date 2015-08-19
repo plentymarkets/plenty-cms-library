@@ -27,7 +27,6 @@
          * @default 0
          */
         var waitScreenCount = 0;
-        var waitScreenCaller = [];
 
         return {
             throwError: throwError,
@@ -98,14 +97,8 @@
          * {{#crossLink "UIFactory/waitScreenCount:attribute"}}waitScreenCount{{/crossLink}}
          * @function showWaitScreen
          */
-        function showWaitScreen(caller) {
+        function showWaitScreen() {
             waitScreenCount = waitScreenCount || 0;
-
-            if (!caller) {
-                console.warn("Missing calling function for Wait Screen!");
-            } else {
-                waitScreenCaller.push(caller);
-            }
 
             var waitScreen = $('#PlentyWaitScreen');
             // create wait-overlay if not exist
@@ -128,21 +121,10 @@
          * @function hideWaitScreen
          * @param {boolean} forceClose set true to hide wait screen independent from the value of waitScreenCount.
          */
-        function hideWaitScreen( caller, forceClose ) {
+        function hideWaitScreen( forceClose ) {
 
             // decrease overlay count
             waitScreenCount--;
-
-            if (!caller) {
-                console.warn("Missing calling function for Wait Screen!");
-            } else {
-                // remove caller from list
-                for (var i = waitScreenCaller.length - 1; i >= 0; i--) {
-                    if (waitScreenCaller[i] === caller) {
-                        waitScreenCaller.splice(i, 1);
-                    }
-                }
-            }
 
             // hide if all instances of overlays has been closed
             // or if closing is forced by user

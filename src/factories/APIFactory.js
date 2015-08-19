@@ -59,9 +59,12 @@
          * @param   {string}    url                     The URL to send the request to
          * @param   {object}    params                  The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
+         * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _get( url, params, ignoreErrors ) {
+        function _get( url, params, ignoreErrors, runInBackground ) {
+
+            if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
                 url,
@@ -71,7 +74,9 @@
                     dataType:   'json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
-            );
+            ).always( function() {
+                    if( !runInBackground ) UI.hideWaitScreen();
+                });
 
         }
 
@@ -83,9 +88,12 @@
          * @param   {string}    url                     The URL to send the request to
          * @param   {object}    data                    The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
+         * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _post( url, data, ignoreErrors ) {
+        function _post( url, data, ignoreErrors, runInBackground ) {
+
+            if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
                 url,
@@ -95,7 +103,9 @@
                     dataType:   'json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
-            );
+            ).always( function() {
+                    if( !runInBackground ) UI.hideWaitScreen();
+                });
         }
 
         /**
@@ -106,9 +116,12 @@
          * @param   {string}    url                     The URL to send the request to
          * @param   {object}    data                    The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
+         * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _put( url, data, ignoreErrors ) {
+        function _put( url, data, ignoreErrors, runInBackground ) {
+
+            if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
                 url,
@@ -118,7 +131,9 @@
                     dataType:   'json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
-            );
+            ).always( function() {
+                    if( !runInBackground ) UI.hideWaitScreen();
+                });
 
         }
 
@@ -130,9 +145,12 @@
          * @param   {string}    url                     The URL to send the request to
          * @param   {object}    data                    The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
+         * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @returns {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _delete( url, data, ignoreErrors ) {
+        function _delete( url, data, ignoreErrors, runInBackground ) {
+
+            if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
                 url,
@@ -142,7 +160,9 @@
                     dataType:   'json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
-            );
+            ).always( function() {
+                    if( !runInBackground ) UI.hideWaitScreen();
+                });
 
         }
 
