@@ -51,11 +51,11 @@
                     Email: values.Email
                 };
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("resetPassword");
                 return API.post("/rest/checkout/lostpassword/", params)
                     .done(function( response ) {
+                        UI.hideWaitScreen("resetPassword");
                         if ( response.data.IsMailSend == true ) {
-                            UI.hideWaitScreen();
                             $('[data-plenty-checkout="lostPasswordTextContainer"]').hide();
                             $('[data-plenty-checkout="lostPasswordSuccessMessage"]').show();
                         }
@@ -81,12 +81,13 @@
                     Password: values.loginPassword
                 };
 
-                UI.showWaitScreen();
+                UI.showWaitScreen("customerLogin");
 
                 return API.post("/rest/checkout/login/", params)
                     .done(function () {
                         // successful login -> go to form's target referenced by action-attribute
                         window.location.href = form.attr('action');
+                        UI.hideWaitScreen("customerLogin");
                     });
             }
         }
@@ -100,11 +101,12 @@
          */
         function setInvoiceAddress( invoiceAddress ) {
 
-            UI.showWaitScreen();
+            UI.showWaitScreen("setInvoiceAddress");
 
             return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                 .done(function (response) {
                     Checkout.getCheckout().CustomerInvoiceAddress = response.data;
+                    UI.hideWaitScreen("setInvoiceAddress");
                 });
         }
 

@@ -16,6 +16,19 @@
             }, 400);
             return false;
         });
+
+        var positionToTopButton = function() {
+            if( $(document).scrollTop() > 100 ) {
+                $(elem).addClass('visible');
+            } else {
+                $(elem).removeClass('visible');
+            }
+        };
+
+        $(window).on("scroll resize", function() {
+            positionToTopButton();
+        });
+
     });
 
 }(jQuery, PlentyFramework));

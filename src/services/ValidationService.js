@@ -172,7 +172,6 @@
             var errorClass = !!$(form).attr('data-plenty-checkform') ? $(form).attr('data-plenty-checkform') : 'has-error';
             var missingFields = [];
 
-
             var hasError = false;
 
             // check every required input inside form
@@ -259,6 +258,27 @@
                 }
             });
 
+            // scroll to element on 'validationFailed'
+            $(form).on('validationFailed', function() {
+                var distanceTop = 50;
+                var errorOffset = $(form).find('.has-error').first().offset().top;
+                var scrollTarget = $('html, body');
+
+                // if form is inside of modal, scroll modal instead of body
+                if( $(form).parents('.modal').length > 0 ) {
+                    scrollTarget = $(form).parents('.modal');
+                } else if( $(form).is('.modal') ) {
+                    scrollTarget = $(form);
+                }
+
+                // only scroll if error is outside of viewport
+                if( errorOffset - distanceTop < window.pageYOffset || errorOffset > (window.pageYOffset + window.innerHeight) ) {
+                    scrollTarget.animate({
+                        scrollTop: errorOffset - distanceTop
+                    });
+                }
+            });
+
             if ( hasError ) {
                 // remove error class on focus
                 $(form).find('.has-error').each(function(i, elem) {
@@ -299,7 +319,7 @@
      * @return {boolean}
      */
     $.fn.validateForm = function() {
-        return pm.getInstance().ValidationService.validate( this );
+        return pm.getInstance().ValidationService.validate( this );;
     };
 
     /**
