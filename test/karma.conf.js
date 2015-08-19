@@ -12,7 +12,7 @@ module.exports = function (config) {
             'test/helpers/*.js',
             'test/helpers/responses/*.js',
             'test/**/*.js',
-            'libs/modernizr.min.js'
+            'libs/**.js'
         ],
 
         // list of files to exclude
