@@ -2,21 +2,42 @@ var Responses = Responses || {};
 Responses.GET = Responses.GET || {};
 
 Responses.GET.checkout = {
-  error: {
-    code: 0,
-    error_stack: [],
-    message: ""
-  },
-  data: {
-    BasketItemsList: [
-      {
-        BasketItemID: 982,
-        BasketItemItemID: 2742,
-        BasketItemQuantity: 1
-      }
-    ],
-    CheckoutMethodOfPaymentID: 2
-  }
+    error: {
+        code: 0,
+        error_stack: [],
+        message: ""
+    },
+    data: {
+        BasketItemsList: [
+        {
+            BasketItemID: 982,
+            BasketItemItemID: 2742,
+            BasketItemQuantity: 1
+        }
+        ],
+        CheckoutMethodOfPaymentID: 2
+    }
+};
+
+Responses.GET.basketItemsList = {
+    error: {
+        code: 0,
+        error_stack: [],
+        message: ""
+    },
+    data : [
+        {
+            BasketItemID : 982,
+            BasketItemItemID : 2742,
+            BasketItemQuantity : 2,
+        },
+        {
+            BasketItemID : 983,
+            BasketItemItemID : 2312,
+            BasketItemQuantity : 5,
+        }
+    ]
+
 };
 
 Responses.GET.container_totals = {
