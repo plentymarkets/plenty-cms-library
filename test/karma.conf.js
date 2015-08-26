@@ -12,7 +12,13 @@ module.exports = function (config) {
             'test/helpers/*.js',
             'test/helpers/responses/*.js',
             'test/**/*.js',
-            'libs/**.js'
+            'libs/**.js',
+            {
+                pattern: 'test/helpers/fixtures/*.html',
+                watched: true,
+                included: false,
+                served: true
+            }
         ],
 
         // list of files to exclude

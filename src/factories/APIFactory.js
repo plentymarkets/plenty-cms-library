@@ -101,6 +101,7 @@
                     type:       'POST',
                     data:       JSON.stringify(data),
                     dataType:   'json',
+                    contentType:'application/json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
             ).always( function() {
@@ -129,6 +130,7 @@
                     type:       'PUT',
                     data:       JSON.stringify(data),
                     dataType:   'json',
+                    contentType:'application/json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
             ).always( function() {
@@ -158,6 +160,7 @@
                     type:       'DELETE',
                     data:       JSON.stringify(data),
                     dataType:   'json',
+                    contentType:'application/json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
             ).always( function() {

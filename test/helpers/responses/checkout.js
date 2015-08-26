@@ -1,5 +1,6 @@
 var Responses = Responses || {};
 Responses.GET = Responses.GET || {};
+Responses.POST = Responses.POST || {};
 
 Responses.GET.checkout = {
     error: {
@@ -29,12 +30,12 @@ Responses.GET.basketItemsList = {
         {
             BasketItemID : 982,
             BasketItemItemID : 2742,
-            BasketItemQuantity : 2,
+            BasketItemQuantity : 2
         },
         {
             BasketItemID : 983,
             BasketItemItemID : 2312,
-            BasketItemQuantity : 5,
+            BasketItemQuantity : 5
         }
     ]
 
@@ -71,4 +72,16 @@ Responses.GET.container_basketpreviewlist = {
     data: [
         '<div data-test="">New itemview content</div>'
     ]
+};
+
+Responses.POST.checkout = Responses.POST.checkout || {};
+Responses.POST.checkout.lostPassword = {
+    error: {
+        code: 0,
+        error_stack: [],
+        message: ""
+    },
+    data: {
+        IsMailSend: true
+    }
 };

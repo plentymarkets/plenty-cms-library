@@ -1,0 +1,200 @@
+<form action="http://standardtemplate.plenty-showcase.de/bestellvorgang/kasse/" onsubmit="plenty.AuthenticationService.registerCustomer(); return false;" data-plenty-checkform="has-error" data-plenty-checkout-form="customerRegistration">
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Rechnungsdaten</h3>
+        </div>
+        <div class="panel-body padding-bottom-1">
+
+            <div class="hr-text margin-top-1 margin-bottom-05 muted">
+                <span>Kundendaten</span>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div data-plenty-validate="mail" class="form-group">
+                        <label for="registrationEmail">E-Mail-Adresse</label>
+                        <input type="text" value="" name="Email" placeholder="E-Mail-Adresse" id="registrationEmail" class="form-control">
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div data-plenty-validation-value="#registrationEmail" data-plenty-validate="value" class="form-group">
+                        <label for="registrationEmailRepeat">E-Mail-Adresse wiederholen</label>
+                        <input type="text" value="" name="EmailRepeat" placeholder="E-Mail-Adresse wiederholen" id="registrationEmailRepeat" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div data-plenty-checkout-registration="" class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div data-plenty-validate="text" class="form-group">
+                        <label for="registrationPassword">Passwort</label>
+                        <input type="password" value="" name="Password" placeholder="Passwort" id="registrationPassword" class="form-control">
+                    </div>
+                </div>
+                <div data-plenty-checkout-registration="" class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div data-plenty-validation-value="#registrationPassword" data-plenty-validate="value" class="form-group">
+                        <label for="registrationPasswordRepeat">Passwort wiederholen</label>
+                        <input type="password" value="" name="PasswordRepeat" placeholder="Passwort wiederholen" id="registrationPasswordRepeat" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+
+
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div class="form-group">
+                        <label for="registrationBirthDay">Geburtsdatum (Tag<span class="sr-only">)</span></label>
+                        <label for="registrationBirthMonth" class="separate"><span class="sr-only">Geburtsdatum (</span>Monat<span class="sr-only">)</span></label>
+                        <label for="registrationBirthYear" class="separate"><span class="sr-only">Geburtsdatum (</span>Jahr)</label>
+                        <div class="form-inline form-block-3">
+                            <input type="text" value="" maxlength="2" name="BirthDay" placeholder="TT" id="registrationBirthDay" class="form-control width-25"><!--
+									--><input type="text" value="" maxlength="2" name="BirthMonth" placeholder="MM" id="registrationBirthMonth" class="form-control width-25"><!--
+									--><input type="text" value="" maxlength="4" name="BirthYear" placeholder="JJJJ" id="registrationBirthYear" class="form-control width-50">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div class="form-group">
+                        <label for="registrationPhone">Telefon</label>
+                        <input type="text" value="" name="PhoneNumber" placeholder="Telefon" id="registrationPhone" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="hr-text margin-bottom-05 muted">
+                <span>Rechnungsanschrift</span>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div class="form-group">
+                        <label for="registrationFormOfAddress">Anrede</label>
+                        <select name="FormOfAddressID" id="registrationFormOfAddress" class="form-control">
+                            <option value="0">Herr</option>
+                            <option value="1">Frau</option>
+                            <option value="2">Firma</option>
+                            <option value="3">Familie</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group disabled">
+                        <label for="registrationCompany">Firma</label>
+                        <input type="text" value="" disabled="" name="Company" placeholder="Firma" id="registrationCompany" class="form-control">
+                    </div>
+
+                    <div data-plenty-validate="text" class="form-group">
+                        <label for="registrationFirstName">Vorname</label>
+                        <input type="text" value="" name="FirstName" placeholder="Vorname" id="registrationFirstName" class="form-control">
+                    </div>
+
+                    <div data-plenty-validate="text" class="form-group">
+                        <label for="registrationLastName">Nachname</label>
+                        <input type="text" value="" name="LastName" placeholder="Nachname" id="registrationLastName" class="form-control">
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div class="form-group">
+                        <label for="registrationAdditional">Adresszusatz</label>
+                        <input type="text" value="" name="AddressAdditional" placeholder="Adresszusatz (z.B. c/o)" id="registrationAdditional" class="form-control">
+                    </div>
+
+
+
+
+                    <div data-plenty-validate="text, text" class="form-group">
+                        <label for="registrationStreet">Straße</label><label for="registrationNumber">Hausnr.</label>
+                        <div class="form-inline form-block-2">
+                            <input type="text" value="" name="Street" placeholder="Straße" class="form-control width-75" id="registrationStreet"><!--
+									--><input type="text" value="" name="HouseNo" placeholder="Nr." id="registrationNumber" class="form-control width-25">
+                        </div>
+                    </div>
+
+
+
+
+                    <div data-plenty-validate="text, text" class="form-group">
+                        <label for="registrationZip">PLZ</label><label for="registrationCity">Ort</label>
+                        <div class="form-inline form-block-2">
+                            <input type="text" value="" name="ZIP" placeholder="PLZ" id="registrationZip" class="form-control width-25"><!--
+								--><input type="text" value="" name="City" placeholder="Ort" id="registrationCity" class="form-control width-75">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registrationCountry">Land</label>
+                        <select name="CountryID" id="registrationCountry" class="form-control">
+
+                            <option value="256">
+                                Büsingen, Deutschland
+                            </option>
+
+                            <option selected="" value="1">
+                                Deutschland
+                            </option>
+
+                            <option value="4">
+                                Schweiz
+                            </option>
+
+                            <option value="12">
+                                United Kingdom
+                            </option>
+
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="hr-text margin-top-05">
+                <span><span data-plenty-target="#additionalInvoiceFields" data-plenty-slidetoggle="" class="btn btn-default">Optionale Felder</span></span>
+            </div>
+
+            <div style="display: none;" id="additionalInvoiceFields">
+                <div class="row margin-top-1">
+                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="registrationFax">Fax</label>
+                            <input type="text" value="" name="FaxNumber" placeholder="Fax" id="registrationFax" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="registrationMobile">Mobile</label>
+                            <input type="text" value="" name="MobileNumber" placeholder="Mobile" id="registrationMobile" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="registrationPostNumber">Postnummer</label>
+                            <input type="text" value="" name="Postnummer" placeholder="Postnummer" id="registrationPostNumber" class="form-control">
+                        </div>
+                    </div>
+
+
+
+                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="registrationVatNumber">USt-IdNr.</label>
+                            <input type="text" value="" name="VATNumber" placeholder="USt-IdNr." id="registrationVatNumber" class="form-control">
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="margin-top-2 text-right">
+        <button type="submit" class="btn btn-primary btn-lg btn-block-xs"><span aria-hidden="true" class="glyphicon glyphicon-ok"></span> Registrierung abschließen</button>
+    </div>
+
+</form>
