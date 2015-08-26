@@ -62,11 +62,11 @@
         }
 
         /**
-         * Try to login in with credentials readed from given &ltform> - element.
+         * Try to login in with credentials read from given &ltform> - element.
          * On success redirect to forms 'action' attribute.
          *
          * @function customerLogin
-         * @param {object} form The jQuery-wrappd form-element to read the credentials from
+         * @param {object} form The jQuery-wrapped form-element to read the credentials from
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function customerLogin( form ) {
@@ -81,7 +81,8 @@
                 return API.post("/rest/checkout/login/", params)
                     .done(function () {
                         // successful login -> go to form's target referenced by action-attribute
-                        window.location.href = form.attr('action');
+                        window.location.assign( form.attr('action') );
+
                     });
             }
         }
@@ -111,6 +112,7 @@
          */
         function registerCustomer() {
             var form = $('[data-plenty-checkout-form="customerRegistration"]');
+
             if( form.validateForm() ) {
                 var values = form.getFormValues();
 
@@ -143,7 +145,7 @@
 
                 return setInvoiceAddress(invoiceAddress)
                     .done(function () {
-                        window.location.href = form.attr('action');
+                        window.location.assign( form.attr('action') );
                     });
             }
         }

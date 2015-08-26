@@ -229,7 +229,7 @@
                 .done(function(response) {
                     if( response.data.CheckoutMethodOfPaymentRedirectURL != '') {
 
-                        document.location.href = response.data.CheckoutMethodOfPaymentRedirectURL;
+                        document.location.assign( response.data.CheckoutMethodOfPaymentRedirectURL );
 
                     } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
@@ -446,7 +446,7 @@
                     .done(function(response) {
                         if(response.data.MethodOfPaymentRedirectURL != '') {
 
-                            document.location.href = response.data.MethodOfPaymentRedirectURL;
+                            window.location.assign( response.data.MethodOfPaymentRedirectURL );
 
                         } else if(response.data.MethodOfPaymentAdditionalContent != '') {
 
@@ -454,14 +454,14 @@
                                 .setContent( response.data.MethodOfPaymentAdditionalContent )
                                 .setLabelDismiss( '' )
                                 .onDismiss(function() {
-                                    document.location.href = form.attr('action');
+                                    window.location.assign( form.attr('action') );
                                 }).onConfirm(function() {
-                                    document.location.href = form.attr('action');
+                                    window.location.assign( form.attr('action') );
                                 }).show();
 
                         } else {
 
-                            document.location.href = form.attr('action');
+                            window.location.assign( form.attr('action') );
 
                         }
                     });

@@ -17,7 +17,7 @@
 
             $('[data-plenty-link="'+identifier+'"]').click(function() {
                 if( MediaSizeService.interval() != 'xs' ) {
-                    window.location.href = href;
+                    window.location.assign( href );
                 }
             });
         });

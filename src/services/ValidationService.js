@@ -176,7 +176,6 @@
 
             // check every required input inside form
             $(form).find('[data-plenty-validate], input.Required').each(function(i, elem) {
-
                 // validate text inputs
                 var validationKeys = !!$(elem).attr('data-plenty-validate') ? $(elem).attr('data-plenty-validate') : 'text';
                 validationKeys = validationKeys.split(',');
@@ -319,7 +318,7 @@
      * @return {boolean}
      */
     $.fn.validateForm = function() {
-        return pm.getInstance().ValidationService.validate( this );;
+        return pm.getInstance().ValidationService.validate( this );
     };
 
     /**
