@@ -28,6 +28,7 @@ but can be easily adapted to other templates by using the provided JavaScript AP
 - **Owl Carousel 1.x.x**: This [jQuery-Plugin](http://owlgraphic.com/owlcarousel/) is used for slider directives.
 - **Lazy Load Plugin**: A jQuery plugin for loading images dynamically. [Project Page](http://www.appelsiini.net/projects/lazyload)
 
+
 ### Compiled library
 
 Upload `/dist/plentymarketsCMStools-X.X.X.min.js` to your store's webspace and include it in your templates:
