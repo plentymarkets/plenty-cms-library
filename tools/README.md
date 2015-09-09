@@ -46,7 +46,7 @@ ScriptLoader.load({
 	position: 'head',
 
 	// The path to the folder containing all your JavaScript files
-	rootPath: {% GetGlobal('LayoutFolder'); %},
+	rootPath: '{% GetGlobal('LayoutFolder'); %}',
 
 	// The path to your .json-file. This parameter is not required if your .json-file is stored inside 'rootPath'
 	sourceMap:'{% GetGlobal('LayoutFolder'); %}/js/plenty/scripts.json'
