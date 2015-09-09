@@ -34,9 +34,9 @@ Adding scripts to your plentymarkets Webshop does not require editing multiple l
 }
 ```
 
-2. Load the `ScriptLoader.js` inside the <head> of your different layouts
+2. Load the `ScriptLoader.js` inside the `<head>` of your different layouts
 
-3. Call `ScriptLoader.load()` in your different layouts inside your <head> and <body> elements:
+3. Call `ScriptLoader.load()` in your different layouts inside your `<head>` and `<body>` elements:
 ```js
 ScriptLoader.load({
 	// Define the design to load the scripts for, e.g. PageDesignContent
