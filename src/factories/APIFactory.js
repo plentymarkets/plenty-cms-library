@@ -62,7 +62,7 @@
          * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _get( url, params, ignoreErrors, runInBackground ) {
+        function _get( url, params, ignoreErrors, runInBackground, sync ) {
 
             if( !runInBackground ) UI.showWaitScreen();
 
@@ -72,6 +72,7 @@
                     type:       'GET',
                     data:       params,
                     dataType:   'json',
+                    async:      !sync,
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
             ).always( function() {

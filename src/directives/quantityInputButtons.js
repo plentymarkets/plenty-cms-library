@@ -13,21 +13,21 @@
     pm.directive('[data-plenty="quantityInputButtonPlus"]', function(i, elem) {
         // quantity input plus/minus buttons
         $(elem).click(function() {
-            var input = $(elem).closest('[data-plenty="quantityInputWrapper"]').find('input');
-            var value = parseInt( $(input).val() );
-            var maxLength = ( $(input).attr('maxlength') != undefined ) ? parseInt($(input).attr('maxlength')) : 1000;
+            var input = $($(elem).closest('[data-plenty="quantityInputWrapper"]').find('input'));
+            var value = parseInt( input.val() );
+            var maxLength = parseInt(input.attr('maxlength')) || 1000;
             if ( ( (value + 1) + '').length <= maxLength ) {
-                $(input).val(value + 1);
+                input.val(value + 1);
             }
         });
     });
 
     pm.directive('[data-plenty="quantityInputButtonMinus"]', function(i, elem) {
         $(elem).click(function() {
-            var input = $(elem).closest('[data-plenty="quantityInputWrapper"]').find('input');
-            var value = parseInt( $(input).val() );
+            var input = $($(elem).closest('[data-plenty="quantityInputWrapper"]').find('input'));
+            var value = parseInt( input.val() );
             if ( value > 1 ) {
-                $(input).val(value - 1);
+                input.val(value - 1);
             }
         });
     });
@@ -36,15 +36,16 @@
     pm.directive('[data-basket-item-id] [data-plenty="quantityInputButtonPlus"], [data-basket-item-id] [data-plenty="quantityInputButtonMinus"]', function(i, button) {
         $(button).click(function() {
 
-            if( !!$(button).data('timeout') ) {
-                window.clearTimeout( $(button).data('timeout') );
+            var self = $(this);
+            if( !!self.data('timeout') ) {
+                window.clearTimeout( self.data('timeout') );
             }
 
             var timeout = window.setTimeout(function() {
-                $(button).parents('[data-plenty="quantityInputWrapper"]').find('[data-plenty="quantityInput"]').trigger('change');
+                self.parents('[data-plenty="quantityInputWrapper"]').find('[data-plenty="quantityInput"]').trigger('change');
             }, 1000);
 
-            $(button).data('timeout', timeout);
+            self.data('timeout', timeout);
 
         });
     });
@@ -52,8 +53,9 @@
     pm.directive('[data-basket-item-id] [data-plenty="quantityInput"]', function(i, input, BasketService) {
         $(input).change( function() {
 
-            var newQuantity = parseInt( $(input).val() );
-            var basketItemID = $(input).parents('[data-basket-item-id]').attr('data-basket-item-id');
+            var self = $(this);
+            var newQuantity = parseInt( self.val() );
+            var basketItemID = self.parents('[data-basket-item-id]').attr('data-basket-item-id');
 
             BasketService.setItemQuantity(
                 basketItemID,

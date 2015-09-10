@@ -34,7 +34,7 @@ describe("CheckoutFactory", function() {
     it("should receive checkout data from API", function() {
 
         expect( CheckoutFactory.getCheckout() ).toBeDefined();
-        expect( Object.keys(CheckoutFactory.getCheckout()).length ).toBe( 0 );
+        expect( Object.keys(CheckoutFactory.getCheckout()).length ).toBeGreaterThan( 0 );
 
         CheckoutFactory.loadCheckout();
 

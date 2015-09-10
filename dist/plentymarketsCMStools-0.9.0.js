@@ -370,9 +370,12 @@
          * @param   {string}    url                     The URL to send the request to
          * @param   {object}    params                  The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
+         * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _get( url, params, ignoreErrors ) {
+        function _get( url, params, ignoreErrors, runInBackground, sync ) {
+
+            if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
                 url,
@@ -380,9 +383,12 @@
                     type:       'GET',
                     data:       params,
                     dataType:   'json',
+                    async:      !sync,
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
-            );
+            ).always( function() {
+                    if( !runInBackground ) UI.hideWaitScreen();
+                });
 
         }
 
@@ -394,9 +400,12 @@
          * @param   {string}    url                     The URL to send the request to
          * @param   {object}    data                    The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
+         * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _post( url, data, ignoreErrors ) {
+        function _post( url, data, ignoreErrors, runInBackground ) {
+
+            if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
                 url,
@@ -404,9 +413,12 @@
                     type:       'POST',
                     data:       JSON.stringify(data),
                     dataType:   'json',
+                    contentType:'application/json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
-            );
+            ).always( function() {
+                    if( !runInBackground ) UI.hideWaitScreen();
+                });
         }
 
         /**
@@ -417,9 +429,12 @@
          * @param   {string}    url                     The URL to send the request to
          * @param   {object}    data                    The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
+         * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _put( url, data, ignoreErrors ) {
+        function _put( url, data, ignoreErrors, runInBackground ) {
+
+            if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
                 url,
@@ -427,9 +442,12 @@
                     type:       'PUT',
                     data:       JSON.stringify(data),
                     dataType:   'json',
+                    contentType:'application/json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
-            );
+            ).always( function() {
+                    if( !runInBackground ) UI.hideWaitScreen();
+                });
 
         }
 
@@ -441,9 +459,12 @@
          * @param   {string}    url                     The URL to send the request to
          * @param   {object}    data                    The data to append to requests body. Will be converted to JSON internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
+         * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
          * @returns {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function _delete( url, data, ignoreErrors ) {
+        function _delete( url, data, ignoreErrors, runInBackground ) {
+
+            if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
                 url,
@@ -451,9 +472,12 @@
                     type:       'DELETE',
                     data:       JSON.stringify(data),
                     dataType:   'json',
+                    contentType:'application/json',
                     error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
                 }
-            );
+            ).always( function() {
+                    if( !runInBackground ) UI.hideWaitScreen();
+                });
 
         }
 
@@ -617,8 +641,8 @@
          * @returns {Checkout} Instance of checkout object
          */
         function getCheckout() {
-            if( !checkout ) {
-                checkout = new Checkout();
+            if(!checkout || !checkoutData) {
+                loadCheckout(true);
             }
 
             return checkout;
@@ -629,9 +653,9 @@
          * @function loadCheckout
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function loadCheckout() {
+        function loadCheckout(sync) {
 
-            return API.get('/rest/checkout/')
+            return API.get('/rest/checkout/', null, false, true, sync)
                 .done(function(response) {
                     if( !!response ) {
                         checkoutData = response.data;
@@ -667,7 +691,6 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadContainer( container ) {
-            UI.showWaitScreen("reloadContainer");
 
             return CMS.getContainer( "checkout"+container ).from( 'checkout' )
                 .done(function (response) {
@@ -676,7 +699,6 @@
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                         });
-                    UI.hideWaitScreen("reloadContainer");
                 });
         }
 
@@ -688,7 +710,7 @@
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadCatContent( catId ) {
-            UI.showWaitScreen("reloadCatContent");
+
             return CMS.getCategoryContent(catId)
                 .done(function(response) {
                     $('[data-plenty-checkout-catcontent="'+catId+'"]')
@@ -696,7 +718,6 @@
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                         });
-                    UI.hideWaitScreen("reloadCatContent", true);
                 });
 
         }
@@ -709,7 +730,7 @@
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function reloadItemContainer( container ) {
-            UI.showWaitScreen("reloadItemContainer");
+
             return CMS.getContainer( 'itemview' + container ).from( 'itemview' )
                 .done(function(response) {
                     $('[data-plenty-itemview-template="'+container+'"]')
@@ -717,7 +738,6 @@
                             $(elem).html(response.data[0]);
                             pm.getInstance().bindDirectives();
                         });
-                    UI.hideWaitScreen("reloadItemContainer");
                 });
 
         }
@@ -1164,7 +1184,6 @@
          * @default 0
          */
         var waitScreenCount = 0;
-        var waitScreenCaller = [];
 
         return {
             throwError: throwError,
@@ -1235,14 +1254,8 @@
          * {{#crossLink "UIFactory/waitScreenCount:attribute"}}waitScreenCount{{/crossLink}}
          * @function showWaitScreen
          */
-        function showWaitScreen(caller) {
+        function showWaitScreen() {
             waitScreenCount = waitScreenCount || 0;
-
-            if (!caller) {
-                console.warn("Missing calling function for Wait Screen!");
-            } else {
-                waitScreenCaller.push(caller);
-            }
 
             var waitScreen = $('#PlentyWaitScreen');
             // create wait-overlay if not exist
@@ -1265,21 +1278,10 @@
          * @function hideWaitScreen
          * @param {boolean} forceClose set true to hide wait screen independent from the value of waitScreenCount.
          */
-        function hideWaitScreen( caller, forceClose ) {
+        function hideWaitScreen( forceClose ) {
 
             // decrease overlay count
             waitScreenCount--;
-
-            if (!caller) {
-                console.warn("Missing calling function for Wait Screen!");
-            } else {
-                // remove caller from list
-                for (var i = waitScreenCaller.length - 1; i >= 0; i--) {
-                    if (waitScreenCaller[i] === caller) {
-                        waitScreenCaller.splice(i, 1);
-                    }
-                }
-            }
 
             // hide if all instances of overlays has been closed
             // or if closing is forced by user
@@ -1320,13 +1322,12 @@
      * <b>Requires:</b>
      * <ul>
      *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
-     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
      *     <li>{{#crossLink "CheckoutFactory"}}CheckoutFactory{{/crossLink}}</li>
      * </ul>
      * @class AuthenticationService
      * @static
      */
-    pm.service('AuthenticationService', function (API, UI, Checkout) {
+    pm.service('AuthenticationService', function (API, Checkout) {
 
         return {
             resetPassword: resetPassword,
@@ -1354,10 +1355,8 @@
                     Email: values.Email
                 };
 
-                UI.showWaitScreen("resetPassword");
                 return API.post("/rest/checkout/lostpassword/", params)
                     .done(function( response ) {
-                        UI.hideWaitScreen("resetPassword");
                         if ( response.data.IsMailSend == true ) {
                             $('[data-plenty-checkout="lostPasswordTextContainer"]').hide();
                             $('[data-plenty-checkout="lostPasswordSuccessMessage"]').show();
@@ -1368,11 +1367,11 @@
         }
 
         /**
-         * Try to login in with credentials readed from given &ltform> - element.
+         * Try to login in with credentials read from given &ltform> - element.
          * On success redirect to forms 'action' attribute.
          *
          * @function customerLogin
-         * @param {object} form The jQuery-wrappd form-element to read the credentials from
+         * @param {object} form The jQuery-wrapped form-element to read the credentials from
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function customerLogin( form ) {
@@ -1384,13 +1383,11 @@
                     Password: values.loginPassword
                 };
 
-                UI.showWaitScreen("customerLogin");
-
                 return API.post("/rest/checkout/login/", params)
                     .done(function () {
                         // successful login -> go to form's target referenced by action-attribute
-                        window.location.href = form.attr('action');
-                        UI.hideWaitScreen("customerLogin");
+                        window.location.assign( form.attr('action') );
+
                     });
             }
         }
@@ -1404,12 +1401,9 @@
          */
         function setInvoiceAddress( invoiceAddress ) {
 
-            UI.showWaitScreen("setInvoiceAddress");
-
             return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                 .done(function (response) {
                     Checkout.getCheckout().CustomerInvoiceAddress = response.data;
-                    UI.hideWaitScreen("setInvoiceAddress");
                 });
         }
 
@@ -1423,6 +1417,7 @@
          */
         function registerCustomer() {
             var form = $('[data-plenty-checkout-form="customerRegistration"]');
+
             if( form.validateForm() ) {
                 var values = form.getFormValues();
 
@@ -1455,11 +1450,11 @@
 
                 return setInvoiceAddress(invoiceAddress)
                     .done(function () {
-                        window.location.href = form.attr('action');
+                        window.location.assign( form.attr('action') );
                     });
             }
         }
-    }, ['APIFactory', 'UIFactory', 'CheckoutFactory']);
+    }, ['APIFactory', 'CheckoutFactory']);
 
 }(jQuery, PlentyFramework));
 /**
@@ -1493,7 +1488,7 @@
 
 		return {
 			addItem: addBasketItem,
-            removeItem: removeBasketItem,
+            removeBasketItem: removeBasketItem,
             setItemQuantity: setItemQuantity,
             addCoupon: addCoupon,
             removeCoupon: removeCoupon
@@ -1508,8 +1503,8 @@
          *     Object</a>
          */
         function addBasketItem( addBasketList, isUpdate ) {
+
             if( !!addBasketList ) {
-                UI.showWaitScreen("addBasketItem");
 
                 API.post( '/rest/checkout/basketitemslist/', addBasketList, true)
                     .done(function() {
@@ -1520,7 +1515,6 @@
                                 // Show confirmation popup
                                 CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', { ArticleID : addBasketList[0].BasketItemItemID }).from('ItemView')
                                     .done(function(response) {
-                                        UI.hideWaitScreen("addBasketItem");
                                         Modal.prepare()
                                             .setContent(response.data[0])
                                             .setTimeout(5000)
@@ -1536,7 +1530,6 @@
                             CMS.getContainer('CheckoutOrderParamsList', {   itemID : addBasketList[0].BasketItemItemID,
                                                                             quantity : addBasketList[0].BasketItemQuantity }).from('Checkout')
                                 .done(function(response) {
-                                    UI.hideWaitScreen("addBasketItem");
                                     Modal.prepare()
                                         .setContent(response.data[0])
                                         .onConfirm(function() {
@@ -1643,7 +1636,6 @@
 
             // calling the delete request
             function doDelete() {
-                UI.showWaitScreen("doDelete");
                 API.delete('/rest/checkout/basketitemslist/?basketItemIdsList[0]='+BasketItemID)
                     .done(function() {
                         Checkout.loadCheckout().done(function() {
@@ -1654,7 +1646,6 @@
                             } else {
                                 Checkout.reloadContainer('Totals');
                             }
-                            UI.hideWaitScreen("doDelete");
 
                             refreshBasketPreview();
                         });
@@ -1707,7 +1698,6 @@
             if( !!basketItem && basketItem.BasketItemQuantity != BasketItemQuantity ) {
                 params[basketItemIndex].BasketItemQuantity = parseInt( BasketItemQuantity );
 
-                UI.showWaitScreen("setItemQuantity");
                 API.post("/rest/checkout/basketitemslist/", params)
                     .done(function () {
                         Checkout.setCheckout().done(function () {
@@ -1722,7 +1712,6 @@
                             }
                             $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty-checkout="basket-item-price-total"]').html(basketItemsPriceTotal);
                             refreshBasketPreview();
-                            UI.hideWaitScreen("setItemQuantity");
                         });
                     });
             }
@@ -1735,7 +1724,6 @@
          */
         function refreshBasketPreview() {
 
-            UI.showWaitScreen("refreshBasketPreview");
             Checkout.reloadItemContainer('BasketPreviewList')
                 .done(function() {
 
@@ -1748,7 +1736,6 @@
                         }
                     });
 
-                    UI.hideWaitScreen("refreshBasketPreview");
                 });
 
             //update quantity
@@ -1773,7 +1760,6 @@
                 CouponActiveCouponCode: $('[data-plenty-checkout-form="couponCode"]').val()
             };
 
-            UI.showWaitScreen("addCoupon");
             return API.post("/rest/checkout/coupon/", params)
                 .done(function() {
                     Checkout.setCheckout()
@@ -1794,8 +1780,6 @@
             var params = {
                 CouponActiveCouponCode: Checkout.getCheckout().Coupon.CouponActiveCouponCode
             };
-
-            UI.showWaitScreen("removeCoupon");
 
             return API.delete("/rest/checkout/coupon/", params)
                 .done(function() {
@@ -1820,7 +1804,6 @@
                 if ( $('[data-plenty-checkout-template="Totals"]').length > 0 ) {
                 Checkout.reloadContainer('Totals');
             }
-            UI.hideWaitScreen("addCoupon");
         }
 
 	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
@@ -1844,7 +1827,6 @@
      * <b>Requires:</b>
      * <ul>
      *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
-     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
      *     <li>{{#crossLink "CMSFactory"}}CMSFactory{{/crossLink}}</li>
      *     <li>{{#crossLink "CheckoutFactory"}}CheckoutFactory{{/crossLink}}</li>
      *     <li>{{#crossLink "ModalFactory"}}ModalFactory{{/crossLink}}</li>
@@ -1852,7 +1834,7 @@
      * @class CheckoutService
      * @static
      */
-	pm.service('CheckoutService', function(API, UI, CMS, Checkout, Modal) {
+	pm.service('CheckoutService', function(API, CMS, Checkout, Modal) {
 
 		return {
             init: init,
@@ -1873,11 +1855,7 @@
          * @function init
          */
         function init() {
-            UI.showWaitScreen("init");
-            Checkout.loadCheckout()
-                .done(function() {
-                    UI.hideWaitScreen("init");
-                });
+            Checkout.loadCheckout();
         }
 
 
@@ -1901,11 +1879,9 @@
                 Checkout.getCheckout().CheckoutCustomerSign = values.CustomerSign;
                 Checkout.getCheckout().CheckoutOrderInfoText = values.OrderInfoText;
 
-                UI.showWaitScreen("setCustomerSignAndInfo");
                 return Checkout.setCheckout()
                     .done(function () {
                         Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                        UI.hideWaitScreen("setCustomerSignAndInfo");
                     });
 
             } else {
@@ -1941,7 +1917,6 @@
                 if( !addressesAreEqual( shippingAddress, Checkout.getCheckout().CustomerShippingAddress) ) {
 
                     // new shipping address
-                    UI.showWaitScreen("saveShippingAddress");
                     return API.post("/rest/checkout/customershippingaddress/", shippingAddress)
                         .done(function (response) {
 
@@ -1957,7 +1932,6 @@
                                 }
                                 Checkout.reloadContainer('ShippingProfilesList');
                                 Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                                UI.hideWaitScreen("saveShippingAddress");
                             });
                         });
                 } else {
@@ -1972,14 +1946,12 @@
                     delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                     delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                    UI.showWaitScreen("saveShippingAddress");
                     return Checkout.setCheckout()
                         .done(function () {
                             Checkout.reloadContainer('MethodsOfPaymentList');
                             Checkout.reloadContainer('CustomerShippingAddress');
                             Checkout.reloadContainer('ShippingProfilesList');
                             Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
-                            UI.hideWaitScreen("saveShippingAddress");
                         });
                 } else {
                     return API.idle();
@@ -2002,14 +1974,12 @@
 
             if( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) ) {
 
-                UI.showWaitScreen("registerGuest");
                 return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                     .done(function (response) {
                         saveShippingAddress().done(function(){
                             Checkout.getCheckout().CustomerInvoiceAddress = response.data;
                             Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
                         });
-                        UI.hideWaitScreen("registerGuest");
                     });
 
             } else {
@@ -2050,12 +2020,10 @@
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
 
-            UI.showWaitScreen("setShippingProfile");
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('MethodsOfPaymentList');
                     Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                    UI.hideWaitScreen("setShippingProfile");
                 });
 
         }
@@ -2066,13 +2034,12 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function preparePayment() {
-            UI.showWaitScreen("preparePayment");
 
             return API.post("/rest/checkout/preparepayment/", null)
                 .done(function(response) {
                     if( response.data.CheckoutMethodOfPaymentRedirectURL != '') {
 
-                        document.location.href = response.data.CheckoutMethodOfPaymentRedirectURL;
+                        document.location.assign( response.data.CheckoutMethodOfPaymentRedirectURL );
 
                     } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
@@ -2088,8 +2055,6 @@
                             })
                             .show();
                     }
-
-                    UI.hideWaitScreen("preparePayment");
                 });
         }
 
@@ -2108,12 +2073,10 @@
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-            UI.showWaitScreen("setMethodOfPayment");
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('ShippingProfilesList');
                     Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                    UI.hideWaitScreen("setMethodOfPayment");
                 });
         }
 
@@ -2123,11 +2086,8 @@
          */
         function editBankDetails() {
 
-            UI.showWaitScreen("editBankDetails");
-
             CMS.getContainer('CheckoutPaymentInformationBankDetails').from('Checkout')
                 .done(function(response) {
-                    UI.hideWaitScreen("editBankDetails");
                     Modal.prepare()
                         .setContent(response.data[0])
                         .onDismiss(function() {
@@ -2167,13 +2127,11 @@
                     CustomerBIC:            values.bic
                 };
 
-                UI.showWaitScreen("saveBankDetails");
                 API.post("/rest/checkout/paymentinformationbankdetails/", bankDetails)
                     .done(function () {
                         Checkout.loadCheckout().done(function () {
                             setMethodOfPayment(3);
                             Checkout.reloadContainer('MethodsOfPaymentList');
-                            UI.hideWaitScreen("saveBankDetails");
                         });
                     });
                 return true;
@@ -2188,11 +2146,8 @@
          */
         function editCreditCard() {
 
-            UI.showWaitScreen("editCreditCard");
-
             CMS.getContainer('CheckoutPaymentInformationCreditCard').from('Checkout')
                 .done(function(response) {
-                    UI.hideWaitScreen("editCreditCard");
                     Modal.prepare()
                         .setContent(response.data[0])
                         .onDismiss(function() {
@@ -2232,12 +2187,9 @@
                     Provider:   values.provider
                 };
 
-                UI.showWaitScreen("saveCreditCard");
                 API.post('/rest/checkout/paymentinformationcreditcard/', creditCard)
                     .done(function() {
-                        Checkout.loadCheckout().done(function() {
-                            UI.hideWaitScreen("saveCreditCard");
-                        });
+                        Checkout.loadCheckout();
                     });
                 return true;
             } else {
@@ -2250,7 +2202,6 @@
          * @param {string} type
          */
         function loadAddressSuggestion(type) {
-            UI.showWaitScreen("loadAddressSuggestion");
 
             //check login type
             if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
@@ -2271,7 +2222,6 @@
 
             CMS.getContainer('CheckoutAddressSuggestionResultsList', params).from('Checkout')
                 .done(function (response) {
-                    UI.hideWaitScreen("loadAddressSuggestion");
                     Modal.prepare()
                         .setContent(response.data[0])
                         .show();
@@ -2302,30 +2252,26 @@
                     PayoneInvoiceCheck:            values.payoneInvoiceCheck || 0
                 };
 
-                UI.showWaitScreen("placeOrder");
-
                 return API.post("/rest/checkout/placeorder/", params)
                     .done(function(response) {
                         if(response.data.MethodOfPaymentRedirectURL != '') {
 
-                            document.location.href = response.data.MethodOfPaymentRedirectURL;
+                            window.location.assign( response.data.MethodOfPaymentRedirectURL );
 
                         } else if(response.data.MethodOfPaymentAdditionalContent != '') {
-
-                            UI.hideWaitScreen("placeOrder");
 
                             Modal.prepare()
                                 .setContent( response.data.MethodOfPaymentAdditionalContent )
                                 .setLabelDismiss( '' )
                                 .onDismiss(function() {
-                                    document.location.href = form.attr('action');
+                                    window.location.assign( form.attr('action') );
                                 }).onConfirm(function() {
-                                    document.location.href = form.attr('action');
+                                    window.location.assign( form.attr('action') );
                                 }).show();
 
                         } else {
 
-                            document.location.href = form.attr('action');
+                            window.location.assign( form.attr('action') );
 
                         }
                     });
@@ -2333,7 +2279,7 @@
         }
 
 
-	}, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
+	}, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory']);
 }(jQuery, PlentyFramework));
 /**
  * Licensed under AGPL v3
@@ -3158,7 +3104,6 @@
 
             // check every required input inside form
             $(form).find('[data-plenty-validate], input.Required').each(function(i, elem) {
-
                 // validate text inputs
                 var validationKeys = !!$(elem).attr('data-plenty-validate') ? $(elem).attr('data-plenty-validate') : 'text';
                 validationKeys = validationKeys.split(',');
@@ -3301,7 +3246,7 @@
      * @return {boolean}
      */
     $.fn.validateForm = function() {
-        return pm.getInstance().ValidationService.validate( this );;
+        return pm.getInstance().ValidationService.validate( this );
     };
 
     /**
@@ -3758,21 +3703,21 @@
     pm.directive('[data-plenty="quantityInputButtonPlus"]', function(i, elem) {
         // quantity input plus/minus buttons
         $(elem).click(function() {
-            var input = $(elem).closest('[data-plenty="quantityInputWrapper"]').find('input');
-            var value = parseInt( $(input).val() );
-            var maxLength = ( $(input).attr('maxlength') != undefined ) ? parseInt($(input).attr('maxlength')) : 1000;
+            var input = $($(elem).closest('[data-plenty="quantityInputWrapper"]').find('input'));
+            var value = parseInt( input.val() );
+            var maxLength = parseInt(input.attr('maxlength')) || 1000;
             if ( ( (value + 1) + '').length <= maxLength ) {
-                $(input).val(value + 1);
+                input.val(value + 1);
             }
         });
     });
 
     pm.directive('[data-plenty="quantityInputButtonMinus"]', function(i, elem) {
         $(elem).click(function() {
-            var input = $(elem).closest('[data-plenty="quantityInputWrapper"]').find('input');
-            var value = parseInt( $(input).val() );
+            var input = $($(elem).closest('[data-plenty="quantityInputWrapper"]').find('input'));
+            var value = parseInt( input.val() );
             if ( value > 1 ) {
-                $(input).val(value - 1);
+                input.val(value - 1);
             }
         });
     });
@@ -3781,15 +3726,16 @@
     pm.directive('[data-basket-item-id] [data-plenty="quantityInputButtonPlus"], [data-basket-item-id] [data-plenty="quantityInputButtonMinus"]', function(i, button) {
         $(button).click(function() {
 
-            if( !!$(button).data('timeout') ) {
-                window.clearTimeout( $(button).data('timeout') );
+            var self = $(this);
+            if( !!self.data('timeout') ) {
+                window.clearTimeout( self.data('timeout') );
             }
 
             var timeout = window.setTimeout(function() {
-                $(button).parents('[data-plenty="quantityInputWrapper"]').find('[data-plenty="quantityInput"]').trigger('change');
+                self.parents('[data-plenty="quantityInputWrapper"]').find('[data-plenty="quantityInput"]').trigger('change');
             }, 1000);
 
-            $(button).data('timeout', timeout);
+            self.data('timeout', timeout);
 
         });
     });
@@ -3797,8 +3743,9 @@
     pm.directive('[data-basket-item-id] [data-plenty="quantityInput"]', function(i, input, BasketService) {
         $(input).change( function() {
 
-            var newQuantity = parseInt( $(input).val() );
-            var basketItemID = $(input).parents('[data-basket-item-id]').attr('data-basket-item-id');
+            var self = $(this);
+            var newQuantity = parseInt( self.val() );
+            var basketItemID = self.parents('[data-basket-item-id]').attr('data-basket-item-id');
 
             BasketService.setItemQuantity(
                 basketItemID,
@@ -3830,7 +3777,7 @@
 
             $('[data-plenty-link="'+identifier+'"]').click(function() {
                 if( MediaSizeService.interval() != 'xs' ) {
-                    window.location.href = href;
+                    window.location.assign( href );
                 }
             });
         });

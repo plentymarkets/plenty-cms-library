@@ -52,8 +52,8 @@
          * @returns {Checkout} Instance of checkout object
          */
         function getCheckout() {
-            if( !checkout ) {
-                checkout = new Checkout();
+            if(!checkout || !checkoutData) {
+                loadCheckout(true);
             }
 
             return checkout;
@@ -64,9 +64,9 @@
          * @function loadCheckout
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
-        function loadCheckout() {
+        function loadCheckout(sync) {
 
-            return API.get('/rest/checkout/')
+            return API.get('/rest/checkout/', null, false, true, sync)
                 .done(function(response) {
                     if( !!response ) {
                         checkoutData = response.data;
