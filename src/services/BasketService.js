@@ -38,55 +38,33 @@
         /**
          * Add item to basket. Will fail and show a popup if item has order params
          * @function addBasketItem
-         * @param   {Array}     addBasketList         Array containing the item to add
+         * @param   {Array}     article         Array containing the item to add
          * @param   {boolean}   [isUpdate=false]      Indicating if item's OrderParams are updated
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
          *     Object</a>
          */
-        function addBasketItem( addBasketList, isUpdate ) {
+        function addBasketItem( article ) {
 
-            if( !!addBasketList ) {
+            if( !!article ) {
 
-                API.post( '/rest/checkout/basketitemslist/', addBasketList, true)
-                    .done(function() {
-                        // Item has no OrderParams -> Refresh Checkout & BasketPreview
-                        Checkout.loadCheckout()
-                            .done(function() {
-                                refreshBasketPreview();
-                                // Show confirmation popup
-                                CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', { ArticleID : addBasketList[0].BasketItemItemID }).from('ItemView')
-                                    .done(function(response) {
-                                        Modal.prepare()
-                                            .setContent(response.data[0])
-                                            .setTimeout(5000)
-                                            .show();
-                                    });
-                        });
-                    })
-                    .fail(function(jqXHR) {
-                        // Adding item failed
-                        var response = $.parseJSON(jqXHR.responseText);
-                        if (!isUpdate && response.error.error_stack[0].code === 100) {
-                            // OrderParams are missing -> show popup
-                            CMS.getContainer('CheckoutOrderParamsList', {   itemID : addBasketList[0].BasketItemItemID,
-                                                                            quantity : addBasketList[0].BasketItemQuantity }).from('Checkout')
-                                .done(function(response) {
-                                    Modal.prepare()
-                                        .setContent(response.data[0])
-                                        .onConfirm(function() {
-                                            // save order params
-                                            saveOrderParams(addBasketList);
+                API.get( '/rest/checkout/container_' + 'CheckoutOrderParamsList'.toLowerCase() + '/',
+                    {   itemID : article[0].BasketItemItemID,
+                        quantity : article[0].BasketItemQuantity }).done(function (resp) {
+                            // checking for order params!
+                            if (resp.data[0].indexOf("form-group") > 0) {
+                                Modal.prepare()
+                                    .setContent(resp.data[0])
+                                    .onConfirm(function() {
+                                        // save order params
+                                        saveOrderParams(article);
 
-                                            // close modal after saving order params
-                                            return true;
-                                        })
-                                        .show();
-                                });
-
-                        } else {
-                            // some other error occured
-                            UI.printErrors(response.error.error_stack);
-                        }
+                                        // close modal after saving order params
+                                        return true;
+                                    })
+                                    .show();
+                            } else {
+                                addArticle(article);
+                            }
                     });
             }
         }
@@ -96,15 +74,16 @@
          * read values in 'addBasketList'. Update item by calling <code>addBasketItem()</code> again
          * @function saveOrderParams
          * @private
-         * @param {Array} addBasketList Containing the current item to add. Read OrderParams will be injected
+         * @param {Array} articleWithParams Containing the current item to add. Read OrderParams will be injected
          */
-        function saveOrderParams( addBasketList ) {
+        function saveOrderParams( articleWithParams ) {
             var orderParamsForm = $('[data-plenty-checkout-form="OrderParamsForm"]');
 
+            //TODO use $("[data-plenty-checkout-form='OrderParamsForm']").serializeArray() to get order params
             //Groups
             orderParamsForm.find('[name^="ParamGroup"]').each(function(){
                 var match = this.name.match(/^ParamGroup\[(\d+)]\[(\d+)]$/);
-                addBasketList = addOrderParamValue(addBasketList, match[1], $(this).val(), $(this).val());
+                articleWithParams = addOrderParamValue(articleWithParams, match[1], $(this).val(), $(this).val());
             });
 
             //Values
@@ -115,11 +94,33 @@
                     ($(this).attr('type') != 'radio' && $(this).attr('type') != 'checkbox') )
                 {
                     var match = this.name.match(/^ParamValue\[(\d+)]\[(\d+)]$/);
-                    addBasketList = addOrderParamValue(addBasketList, match[1], match[2], $(this).val());
+                    articleWithParams = addOrderParamValue(articleWithParams, match[1], match[2], $(this).val());
                 }
             });
 
-            addBasketItem( addBasketList, true );
+            addArticle( articleWithParams );
+        }
+
+        function addArticle( article ) {
+            API.post( '/rest/checkout/basketitemslist/', article, true)
+                .done(function() {
+                    // Item has no OrderParams -> Refresh Checkout & BasketPreview
+                    Checkout.loadCheckout()
+                        .done(function() {
+                            refreshBasketPreview();
+                            // Show confirmation popup
+                            CMS.getContainer('ItemViewItemToBasketConfirmationOverlay', { ArticleID : article[0].BasketItemItemID }).from('ItemView')
+                                .done(function(response) {
+                                    Modal.prepare()
+                                        .setContent(response.data[0])
+                                        .setTimeout(5000)
+                                        .show();
+                                });
+                        });
+                }).fail(function(jqXHR) {
+                    // some other error occured
+                    UI.printErrors(JSON.parse(jqXHR.responseText).error.error_stack);
+                });
         }
 
         /**

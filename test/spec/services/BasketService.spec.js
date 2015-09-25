@@ -17,7 +17,7 @@ describe( "BasketService", function() {
         spyOn( window.location, 'assign' );
     });
 
-    describe( "addBasketItem()", function() {
+    xdescribe( "addBasketItem()", function() {
 
         it("should add a list of items to the basket", function() {
 
