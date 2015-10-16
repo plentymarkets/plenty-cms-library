@@ -29,7 +29,7 @@
 
 		return {
 			addItem: addBasketItem,
-            removeBasketItem: removeBasketItem,
+            removeItem: removeBasketItem,
             setItemQuantity: setItemQuantity,
             addCoupon: addCoupon,
             removeCoupon: removeCoupon
