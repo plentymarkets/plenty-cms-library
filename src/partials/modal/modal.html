@@ -1,0 +1,30 @@
+<div class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            {{#title}}
+            <div class="modal-header">
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">{{{title}}}</h4>
+            </div>
+            {{/title}}
+
+            <div class="modal-body">{{{content}}}</div>
+
+            <div class="modal-footer">
+
+                {{#labelDismiss}}
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{labelDismiss}}
+                </button>
+                {{/labelDismiss}}
+
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-plenty-modal="confirm">
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>{{labelConfirm}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

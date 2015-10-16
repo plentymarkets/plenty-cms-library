@@ -27,6 +27,17 @@ module.exports = function(grunt) {
             }
         },
 
+        htmlConvert: {
+            options: {
+                base: 'src/partials/',
+                module: 'TemplateCache'
+            },
+            templates: {
+                src: ['src/partials/**/*.html'],
+                dest: 'tmp/templates.js'
+            }
+        },
+
         concat: {
             debug: {
                 options: {
@@ -37,7 +48,7 @@ module.exports = function(grunt) {
                     //        src.replace(/(^|\n)[ \t]*('use strict'|"use strict");?\s*/g, '$1');
                     //},
                 },
-                src: ['src/plentyFramework.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
+                src: [ 'libs/mustache.min.js', 'tmp/templates.js', 'src/plentyFramework.js', 'src/partials/**/*.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
                 dest: 'debug/<%= pkg.name %>-<%= pkg.version %>.js'
             }
         },
@@ -75,8 +86,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-yuidoc');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-html-convert');
 
-    grunt.registerTask('debug', ['clean:debug', 'concat:debug']);
+    grunt.registerTask('debug', ['clean:debug', 'htmlConvert', 'concat:debug']);
     grunt.registerTask('doc', ['clean:doc', 'yuidoc:doc']);
     grunt.registerTask('build', ['debug', 'doc', 'karma', 'clean:build', 'uglify:build', 'copy:build']);
     grunt.registerTask('default', ['debug']);

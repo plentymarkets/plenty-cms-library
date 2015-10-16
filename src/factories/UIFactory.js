@@ -27,6 +27,8 @@
          * @default 0
          */
         var waitScreenCount = 0;
+        var waitScreen;
+        var errorPopup;
 
         return {
             throwError: throwError,
@@ -52,43 +54,23 @@
          * @function printErrors
          * @param {Array} errorMessages A list of errors to display
          */
-
         function printErrors(errorMessages) {
-            var popup = $('#CheckoutErrorPane');
-            var errorHtml = '';
 
             // create error-popup if not exist
-            if( popup.length <= 0 ) {
-                popup = $('<div class="plentyErrorBox" id="CheckoutErrorPane" style="display: none;"><button class="close" type="button"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button><div class="plentyErrorBoxInner"></div></div>');
-
-                $('body').append(popup);
-                // bind popups 'close'-button
-                popup.find('.close').click(function() {
-                    popup.hide();
-                });
+            if( !errorPopup ) {
+                errorPopup = $( pm.compileTemplate('error/errorPopup.html') );
+                $('body').append( errorPopup );
+                pm.partials.Error.init( errorPopup );
             }
 
             $.each(errorMessages, function(key, error) {
                 // add additional error, if not exist.
-                if( !popup.is(':visible') || popup.find('[data-plenty-error-code="'+error.code+'"]').length <= 0 ) {
-                    errorHtml += '\
-					<div class="plentyErrorBoxContent" data-plenty-error-code="'+error.code+'">\
-						<span class="PlentyErrorCode">Code '+error.code+':</span>\
-						<span class="PlentyErrorMsg">'+error.message+'</span>\
-					</div>';
-                }
+                pm.partials.Error.addError( errorPopup, $(pm.compileTemplate('error/errorMessage.html', error)) );
             });
 
-            if( popup.is(':visible') ) {
-                // append new error to existing errors, if popup is already visible
-                popup.find('.plentyErrorBoxInner').append(errorHtml);
-            } else {
-                // replace generated error-HTML and show popup
-                popup.find('.plentyErrorBoxInner').html(errorHtml);
-                popup.show();
-            }
+            pm.partials.Error.show( errorPopup );
 
-            hideWaitScreen("printErrors", true);
+            hideWaitScreen(true);
         }
 
 
@@ -100,15 +82,13 @@
         function showWaitScreen() {
             waitScreenCount = waitScreenCount || 0;
 
-            var waitScreen = $('#PlentyWaitScreen');
             // create wait-overlay if not exist
-            if( waitScreen.length <= 0 ) {
-                waitScreen = $('<div id="PlentyWaitScreen" class="overlay overlay-wait in"></div>');
-                $('body').append(waitScreen);
-            } else {
-                // show wait screen if not already visible
-                waitScreen.addClass('in');
+            if( !waitScreen ) {
+                waitScreen = $( pm.compileTemplate('waitscreen/waitscreen.html') );
+                pm.partials.WaitScreen.init( waitScreen );
             }
+
+            pm.partials.WaitScreen.show( waitScreen );
 
             // increase instance counter to avoid showing multiple overlays
             waitScreenCount++;
@@ -130,7 +110,7 @@
             // or if closing is forced by user
             if( waitScreenCount <= 0 || !!forceClose ) {
                 waitScreenCount = 0;
-                $('#PlentyWaitScreen').removeClass('in');
+                pm.partials.WaitScreen.hide( waitScreen );
             }
             return waitScreenCount;
         }

@@ -25,6 +25,8 @@
         return instance;
     };
 
+    PlentyFramework.partials = {};
+
     /**
      * Collection of registered global variables
      * @attribute
@@ -281,6 +283,10 @@
         });
 
         return compiledFactories;
+    };
+
+    PlentyFramework.compileTemplate = function( template, data ) {
+        return Mustache.render( TemplateCache[template], data );
     };
 
     /**
