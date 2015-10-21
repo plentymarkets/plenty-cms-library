@@ -197,15 +197,15 @@
             if( !forceDelete ) {
                 // show confirmation popup
                 Modal.prepare()
-                    .setTitle('Bitte bestätigen')
-                    .setContent('<p>Möchten Sie den Artikel "' + itemName + '" wirklich aus dem Warenkorb entfernen?</p>')
+                    .setTitle( pm.translate('Please confirm') )
+                    .setContent('<p>' + pm.translate( "Do you really want to remove \"{{item}}\" from your basket?", {item: itemName}) + '</p>')
                     .onDismiss(function () {
                         $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty="quantityInput"]').val(originalItemQuantity);
                     })
                     .onConfirm(function () {
                         doDelete();
                     })
-                    .setLabelConfirm('Löschen')
+                    .setLabelConfirm( pm.translate("Delete") )
                     .show();
             } else {
                 doDelete();

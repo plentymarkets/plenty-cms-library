@@ -19,6 +19,7 @@
      */
     pm.service('SocialShareService', function() {
 
+        //TODO: move to global variables
         if ( typeof(socialLangLocale) == 'undefined' ) socialLangLocale = 'en_US';
         if ( typeof(socialLang) == 'undefined' ) socialLang = 'en';
 

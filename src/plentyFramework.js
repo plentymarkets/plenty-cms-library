@@ -25,6 +25,13 @@
         return instance;
     };
 
+    /**
+     * Customizable controls for partials will be injected here.
+     * (e.g. Modal)
+     * @attribute
+     * @static
+     * @type {object}
+     */
     PlentyFramework.partials = {};
 
     /**
@@ -285,8 +292,78 @@
         return compiledFactories;
     };
 
+    /**
+     * Renders html template. Will provide given data to templates scope.
+     * Uses <a href="https://github.com/janl/mustache.js/" target="_blank">Mustache syntax</a> for data-binding.
+     * @function compileTemplate
+     * @static
+     * @param {String} template relative path to partials template to load. Base path = '/src/partials/'
+     * @param {Object} data     data to privide to templates scope.
+     * @returns {String}        The rendered html string
+     */
     PlentyFramework.compileTemplate = function( template, data ) {
+        data = data || {};
+        data.translate = function() {
+            return function( text, render ) {
+                return render( PlentyFramework.translate(text) );
+            };
+        };
         return Mustache.render( TemplateCache[template], data );
+    };
+
+    /**
+     * The path on the server where the script is located in.
+     * @attribute
+     * @static
+     * @type {String}
+     */
+    PlentyFramework.scriptPath = '';
+
+    /**
+     * Collection of locale strings will be injected here after reading language file.
+     * @attribute
+     * @static
+     * @type {Object}
+     */
+    PlentyFramework.Strings = {};
+
+    /**
+     * Load language file containing translations of locale strings.
+     * @function loadLanguageFile
+     * @static
+     * @param fileName  relative path to language file.
+     */
+    PlentyFramework.loadLanguageFile = function( fileName ) {
+        $.get( PlentyFramework.scriptPath + fileName ).done(function(response) {
+            PlentyFramework.Strings = response;
+        });
+    };
+
+    /**
+     * Try to get locale translation of given string.
+     * Render translated string using <a href="https://github.com/janl/mustache.js/" target="_blank">Mustache syntax</a>
+     * if additional parameters are given.
+     * @function translate
+     * @static
+     * @param {String} string   The string to translate
+     * @param {Object} [params] additional data for rendering
+     * @returns {String}        The translation of the given string if found. Otherwise returns the original string.
+     */
+    PlentyFramework.translate = function( string, params ) {
+        var localeString;
+        if( PlentyFramework.Strings.hasOwnProperty(string) ) {
+            localeString = PlentyFramework.Strings[string];
+        } else {
+            localeString = string;
+            console.warn('No translation found for "' + localeString + '".');
+        }
+
+        if( !!params ) {
+            localeString = Mustache.render( localeString, params );
+        }
+
+        return localeString;
+
     };
 
     /**
@@ -306,6 +383,11 @@
             if( !PlentyFramework.prototype.hasOwnProperty(service) ) {
                 PlentyFramework.components.services[service].compile();
             }
+        }
+
+        var scripts = document.getElementsByTagName( 'SCRIPT' );
+        if( PlentyFramework.scriptPath.length > 0 ) {
+            PlentyFramework.scriptPath = scripts[ scripts.length - 1 ].src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[ 1 ];
         }
 
     };

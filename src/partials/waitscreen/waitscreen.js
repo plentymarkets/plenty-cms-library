@@ -2,14 +2,18 @@
 
     pm.partials.WaitScreen = {
 
-        init: function( element ) {
-            $('body').append( element );
-        },
-
+        /**
+         * Will be called if the wait screen should be shown
+         * @param {HTMLElement} element The wait screen element
+         */
         show: function( element ) {
             element.addClass('in');
         },
 
+        /**
+         * Will be called if the wait screen should be hidden
+         * @param {HTMLElement} element The wait screen element
+         */
         hide: function( element ) {
             element.removeClass('in');
         }

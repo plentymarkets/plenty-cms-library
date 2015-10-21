@@ -78,7 +78,7 @@
              * @private
              * @default "Abbrechen"
              */
-            modal.labelDismiss = 'Abbrechen';
+            modal.labelDismiss = pm.translate("Cancel");
 
             /**
              * the label of the confirmation button
@@ -87,7 +87,7 @@
              * @private
              * @default "Bestätigen"
              */
-            modal.labelConfirm = 'Bestätigen';
+            modal.labelConfirm = pm.translate("Confirm");
 
             /**
              * Callback when modal is confirmed by clicking confirmation button.

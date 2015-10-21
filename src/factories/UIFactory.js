@@ -29,7 +29,7 @@
         var waitScreenCount = 0;
         var waitScreen;
         var errorPopup = null;
-        console.log( !!errorPopup );
+
         return {
             throwError: throwError,
             printErrors: printErrors,
@@ -85,7 +85,7 @@
             // create wait-overlay if not exist
             if( !waitScreen || $('body').has(waitScreen ).length <= 0 ) {
                 waitScreen = $( pm.compileTemplate('waitscreen/waitscreen.html') );
-                pm.partials.WaitScreen.init( waitScreen );
+                $('body').append(waitScreen);
             }
 
             pm.partials.WaitScreen.show( waitScreen );
