@@ -7,6 +7,7 @@
       "libs/owl.carousel.min.js",
       "libs/jquery.lazyload.js",
       "libs/jquery.touchSwipe.min.js",
+      "libs/jquery-ui.min.js",
       "libs/jquery.ui.touch-punch.min.js",
       "plenty/plenty-2.js",
       "plenty/plentymarketsCMStools-0.9.0.js"

@@ -1,3 +1,55 @@
+(function defineMustache(global,factory){if(typeof exports==="object"&&exports&&typeof exports.nodeName!=="string"){factory(exports)}else if(typeof define==="function"&&define.amd){define(["exports"],factory)}else{global.Mustache={};factory(Mustache)}})(this,function mustacheFactory(mustache){var objectToString=Object.prototype.toString;var isArray=Array.isArray||function isArrayPolyfill(object){return objectToString.call(object)==="[object Array]"};function isFunction(object){return typeof object==="function"}function typeStr(obj){return isArray(obj)?"array":typeof obj}function escapeRegExp(string){return string.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g,"\\$&")}function hasProperty(obj,propName){return obj!=null&&typeof obj==="object"&&propName in obj}var regExpTest=RegExp.prototype.test;function testRegExp(re,string){return regExpTest.call(re,string)}var nonSpaceRe=/\S/;function isWhitespace(string){return!testRegExp(nonSpaceRe,string)}var entityMap={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"};function escapeHtml(string){return String(string).replace(/[&<>"'\/]/g,function fromEntityMap(s){return entityMap[s]})}var whiteRe=/\s*/;var spaceRe=/\s+/;var equalsRe=/\s*=/;var curlyRe=/\s*\}/;var tagRe=/#|\^|\/|>|\{|&|=|!/;function parseTemplate(template,tags){if(!template)return[];var sections=[];var tokens=[];var spaces=[];var hasTag=false;var nonSpace=false;function stripSpace(){if(hasTag&&!nonSpace){while(spaces.length)delete tokens[spaces.pop()]}else{spaces=[]}hasTag=false;nonSpace=false}var openingTagRe,closingTagRe,closingCurlyRe;function compileTags(tagsToCompile){if(typeof tagsToCompile==="string")tagsToCompile=tagsToCompile.split(spaceRe,2);if(!isArray(tagsToCompile)||tagsToCompile.length!==2)throw new Error("Invalid tags: "+tagsToCompile);openingTagRe=new RegExp(escapeRegExp(tagsToCompile[0])+"\\s*");closingTagRe=new RegExp("\\s*"+escapeRegExp(tagsToCompile[1]));closingCurlyRe=new RegExp("\\s*"+escapeRegExp("}"+tagsToCompile[1]))}compileTags(tags||mustache.tags);var scanner=new Scanner(template);var start,type,value,chr,token,openSection;while(!scanner.eos()){start=scanner.pos;value=scanner.scanUntil(openingTagRe);if(value){for(var i=0,valueLength=value.length;i<valueLength;++i){chr=value.charAt(i);if(isWhitespace(chr)){spaces.push(tokens.length)}else{nonSpace=true}tokens.push(["text",chr,start,start+1]);start+=1;if(chr==="\n")stripSpace()}}if(!scanner.scan(openingTagRe))break;hasTag=true;type=scanner.scan(tagRe)||"name";scanner.scan(whiteRe);if(type==="="){value=scanner.scanUntil(equalsRe);scanner.scan(equalsRe);scanner.scanUntil(closingTagRe)}else if(type==="{"){value=scanner.scanUntil(closingCurlyRe);scanner.scan(curlyRe);scanner.scanUntil(closingTagRe);type="&"}else{value=scanner.scanUntil(closingTagRe)}if(!scanner.scan(closingTagRe))throw new Error("Unclosed tag at "+scanner.pos);token=[type,value,start,scanner.pos];tokens.push(token);if(type==="#"||type==="^"){sections.push(token)}else if(type==="/"){openSection=sections.pop();if(!openSection)throw new Error('Unopened section "'+value+'" at '+start);if(openSection[1]!==value)throw new Error('Unclosed section "'+openSection[1]+'" at '+start)}else if(type==="name"||type==="{"||type==="&"){nonSpace=true}else if(type==="="){compileTags(value)}}openSection=sections.pop();if(openSection)throw new Error('Unclosed section "'+openSection[1]+'" at '+scanner.pos);return nestTokens(squashTokens(tokens))}function squashTokens(tokens){var squashedTokens=[];var token,lastToken;for(var i=0,numTokens=tokens.length;i<numTokens;++i){token=tokens[i];if(token){if(token[0]==="text"&&lastToken&&lastToken[0]==="text"){lastToken[1]+=token[1];lastToken[3]=token[3]}else{squashedTokens.push(token);lastToken=token}}}return squashedTokens}function nestTokens(tokens){var nestedTokens=[];var collector=nestedTokens;var sections=[];var token,section;for(var i=0,numTokens=tokens.length;i<numTokens;++i){token=tokens[i];switch(token[0]){case"#":case"^":collector.push(token);sections.push(token);collector=token[4]=[];break;case"/":section=sections.pop();section[5]=token[2];collector=sections.length>0?sections[sections.length-1][4]:nestedTokens;break;default:collector.push(token)}}return nestedTokens}function Scanner(string){this.string=string;this.tail=string;this.pos=0}Scanner.prototype.eos=function eos(){return this.tail===""};Scanner.prototype.scan=function scan(re){var match=this.tail.match(re);if(!match||match.index!==0)return"";var string=match[0];this.tail=this.tail.substring(string.length);this.pos+=string.length;return string};Scanner.prototype.scanUntil=function scanUntil(re){var index=this.tail.search(re),match;switch(index){case-1:match=this.tail;this.tail="";break;case 0:match="";break;default:match=this.tail.substring(0,index);this.tail=this.tail.substring(index)}this.pos+=match.length;return match};function Context(view,parentContext){this.view=view;this.cache={".":this.view};this.parent=parentContext}Context.prototype.push=function push(view){return new Context(view,this)};Context.prototype.lookup=function lookup(name){var cache=this.cache;var value;if(cache.hasOwnProperty(name)){value=cache[name]}else{var context=this,names,index,lookupHit=false;while(context){if(name.indexOf(".")>0){value=context.view;names=name.split(".");index=0;while(value!=null&&index<names.length){if(index===names.length-1)lookupHit=hasProperty(value,names[index]);value=value[names[index++]]}}else{value=context.view[name];lookupHit=hasProperty(context.view,name)}if(lookupHit)break;context=context.parent}cache[name]=value}if(isFunction(value))value=value.call(this.view);return value};function Writer(){this.cache={}}Writer.prototype.clearCache=function clearCache(){this.cache={}};Writer.prototype.parse=function parse(template,tags){var cache=this.cache;var tokens=cache[template];if(tokens==null)tokens=cache[template]=parseTemplate(template,tags);return tokens};Writer.prototype.render=function render(template,view,partials){var tokens=this.parse(template);var context=view instanceof Context?view:new Context(view);return this.renderTokens(tokens,context,partials,template)};Writer.prototype.renderTokens=function renderTokens(tokens,context,partials,originalTemplate){var buffer="";var token,symbol,value;for(var i=0,numTokens=tokens.length;i<numTokens;++i){value=undefined;token=tokens[i];symbol=token[0];if(symbol==="#")value=this.renderSection(token,context,partials,originalTemplate);else if(symbol==="^")value=this.renderInverted(token,context,partials,originalTemplate);else if(symbol===">")value=this.renderPartial(token,context,partials,originalTemplate);else if(symbol==="&")value=this.unescapedValue(token,context);else if(symbol==="name")value=this.escapedValue(token,context);else if(symbol==="text")value=this.rawValue(token);if(value!==undefined)buffer+=value}return buffer};Writer.prototype.renderSection=function renderSection(token,context,partials,originalTemplate){var self=this;var buffer="";var value=context.lookup(token[1]);function subRender(template){return self.render(template,context,partials)}if(!value)return;if(isArray(value)){for(var j=0,valueLength=value.length;j<valueLength;++j){buffer+=this.renderTokens(token[4],context.push(value[j]),partials,originalTemplate)}}else if(typeof value==="object"||typeof value==="string"||typeof value==="number"){buffer+=this.renderTokens(token[4],context.push(value),partials,originalTemplate)}else if(isFunction(value)){if(typeof originalTemplate!=="string")throw new Error("Cannot use higher-order sections without the original template");value=value.call(context.view,originalTemplate.slice(token[3],token[5]),subRender);if(value!=null)buffer+=value}else{buffer+=this.renderTokens(token[4],context,partials,originalTemplate)}return buffer};Writer.prototype.renderInverted=function renderInverted(token,context,partials,originalTemplate){var value=context.lookup(token[1]);if(!value||isArray(value)&&value.length===0)return this.renderTokens(token[4],context,partials,originalTemplate)};Writer.prototype.renderPartial=function renderPartial(token,context,partials){if(!partials)return;var value=isFunction(partials)?partials(token[1]):partials[token[1]];if(value!=null)return this.renderTokens(this.parse(value),context,partials,value)};Writer.prototype.unescapedValue=function unescapedValue(token,context){var value=context.lookup(token[1]);if(value!=null)return value};Writer.prototype.escapedValue=function escapedValue(token,context){var value=context.lookup(token[1]);if(value!=null)return mustache.escape(value)};Writer.prototype.rawValue=function rawValue(token){return token[1]};mustache.name="mustache.js";mustache.version="2.1.3";mustache.tags=["{{","}}"];var defaultWriter=new Writer;mustache.clearCache=function clearCache(){return defaultWriter.clearCache()};mustache.parse=function parse(template,tags){return defaultWriter.parse(template,tags)};mustache.render=function render(template,view,partials){if(typeof template!=="string"){throw new TypeError('Invalid template! Template should be a "string" '+'but "'+typeStr(template)+'" was given as the first '+"argument for mustache#render(template, view, partials)")}return defaultWriter.render(template,view,partials)};mustache.to_html=function to_html(template,view,partials,send){var result=mustache.render(template,view,partials);if(isFunction(send)){send(result)}else{return result}};mustache.escape=escapeHtml;mustache.Scanner=Scanner;mustache.Context=Context;mustache.Writer=Writer});
+
+var TemplateCache = {};
+
+TemplateCache["error/errorMessage.html"] = "<div class=\"plentyErrorBoxContent\" data-plenty-error-code=\"{{code}}\">\n" +
+   "    <span class=\"PlentyErrorCode\">Code {{code}}:</span>\n" +
+   "    <span class=\"PlentyErrorMsg\">{{{message}}}</span>\n" +
+   "</div>\n" +
+   "";
+
+TemplateCache["error/errorPopup.html"] = "<div class=\"plentyErrorBox\" id=\"CheckoutErrorPane\">\n" +
+   "    <button class=\"close\" type=\"button\"><span aria-hidden=\"true\">×</span>\n" +
+   "        <span class=\"sr-only\">{{#translate}}Close{{/translate}}</span>\n" +
+   "    </button>\n" +
+   "    <div class=\"plentyErrorBoxInner\">\n" +
+   "    </div>\n" +
+   "</div>\n" +
+   "";
+
+TemplateCache["modal/modal.html"] = "<div class=\"modal fade\">\n" +
+   "    <div class=\"modal-dialog\">\n" +
+   "        <div class=\"modal-content\">\n" +
+   "\n" +
+   "            {{#title}}\n" +
+   "            <div class=\"modal-header\">\n" +
+   "                <button class=\"close\" type=\"button\" data-dismiss=\"modal\" aria-label=\"{{#translate}}Close{{/translate}}\">\n" +
+   "                    <span aria-hidden=\"true\">&times;</span>\n" +
+   "                </button>\n" +
+   "                <h4 class=\"modal-title\">{{{title}}}</h4>\n" +
+   "            </div>\n" +
+   "            {{/title}}\n" +
+   "\n" +
+   "            <div class=\"modal-body\">{{{content}}}</div>\n" +
+   "\n" +
+   "            <div class=\"modal-footer\">\n" +
+   "\n" +
+   "                {{#labelDismiss}}\n" +
+   "                <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">\n" +
+   "                    <span class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></span>{{labelDismiss}}\n" +
+   "                </button>\n" +
+   "                {{/labelDismiss}}\n" +
+   "\n" +
+   "                <button type=\"button\" class=\"btn btn-primary\" data-dismiss=\"modal\" data-plenty-modal=\"confirm\">\n" +
+   "                    <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span>{{labelConfirm}}\n" +
+   "                </button>\n" +
+   "            </div>\n" +
+   "        </div>\n" +
+   "    </div>\n" +
+   "</div>";
+
+TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" class=\"overlay overlay-wait\"></div>";
+
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
@@ -24,6 +76,15 @@
         instance = instance || new PlentyFramework();
         return instance;
     };
+
+    /**
+     * Customizable controls for partials will be injected here.
+     * (e.g. Modal)
+     * @attribute
+     * @static
+     * @type {object}
+     */
+    PlentyFramework.partials = {};
 
     /**
      * Collection of registered global variables
@@ -284,6 +345,80 @@
     };
 
     /**
+     * Renders html template. Will provide given data to templates scope.
+     * Uses <a href="https://github.com/janl/mustache.js/" target="_blank">Mustache syntax</a> for data-binding.
+     * @function compileTemplate
+     * @static
+     * @param {String} template relative path to partials template to load. Base path = '/src/partials/'
+     * @param {Object} data     data to privide to templates scope.
+     * @returns {String}        The rendered html string
+     */
+    PlentyFramework.compileTemplate = function( template, data ) {
+        data = data || {};
+        data.translate = function() {
+            return function( text, render ) {
+                return render( PlentyFramework.translate(text) );
+            };
+        };
+        return Mustache.render( TemplateCache[template], data );
+    };
+
+    /**
+     * The path on the server where the script is located in.
+     * @attribute
+     * @static
+     * @type {String}
+     */
+    PlentyFramework.scriptPath = '';
+
+    /**
+     * Collection of locale strings will be injected here after reading language file.
+     * @attribute
+     * @static
+     * @type {Object}
+     */
+    PlentyFramework.Strings = {};
+
+    /**
+     * Load language file containing translations of locale strings.
+     * @function loadLanguageFile
+     * @static
+     * @param fileName  relative path to language file.
+     */
+    PlentyFramework.loadLanguageFile = function( fileName ) {
+        $.get( PlentyFramework.scriptPath + fileName ).done(function(response) {
+            PlentyFramework.Strings = response;
+        });
+    };
+
+    /**
+     * Try to get locale translation of given string.
+     * Render translated string using <a href="https://github.com/janl/mustache.js/" target="_blank">Mustache syntax</a>
+     * if additional parameters are given.
+     * @function translate
+     * @static
+     * @param {String} string   The string to translate
+     * @param {Object} [params] additional data for rendering
+     * @returns {String}        The translation of the given string if found. Otherwise returns the original string.
+     */
+    PlentyFramework.translate = function( string, params ) {
+        var localeString;
+        if( PlentyFramework.Strings.hasOwnProperty(string) ) {
+            localeString = PlentyFramework.Strings[string];
+        } else {
+            localeString = string;
+            console.warn('No translation found for "' + localeString + '".');
+        }
+
+        if( !!params ) {
+            localeString = Mustache.render( localeString, params );
+        }
+
+        return localeString;
+
+    };
+
+    /**
      * Compile registered factories & services
      * @function compile
      * @static
@@ -302,6 +437,11 @@
             }
         }
 
+        var scripts = document.getElementsByTagName( 'SCRIPT' );
+        if( PlentyFramework.scriptPath.length > 0 ) {
+            PlentyFramework.scriptPath = scripts[ scripts.length - 1 ].src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[ 1 ];
+        }
+
     };
 
 }(jQuery));
@@ -309,6 +449,136 @@
 
 
 
+(function($, pm) {
+
+    pm.partials.Error = {
+
+        /**
+         * Will be called, after the error popup was created and injected in DOM.
+         * @param {HTMLElement} popup   The injected element of the popup
+         */
+        init: function( popup ) {
+            $(popup).find('.close').click(function() {
+                popup.hide();
+                popup.find('.plentyErrorBoxInner').html('');
+            });
+        },
+
+        /**
+         * Will be called for each thrown error. Has to be injected in DOM manually.
+         * @param {HTMLElement} popup   The error popup element
+         * @param {HTMLElement} error   The error message element
+         */
+        addError: function( popup, error ) {
+            var errorCode = $(error).attr('data-plenty-error-code');
+
+            if( $(popup).find('[data-plenty-error-code="'+errorCode+'"]').length <= 0 ) {
+                $(popup ).find('.plentyErrorBoxInner').append( error );
+            }
+        },
+
+        /**
+         * Will be called, after initialization and injection of all errors
+         * @param {HTMLElement} popup The error popup element
+         */
+        show: function( popup ) {
+            $(popup).show();
+        }
+
+    }
+
+})(jQuery, PlentyFramework);
+(function($, pm) {
+
+    pm.partials.Modal = {
+
+        /**
+         * Will be called after a new modal was created and injected into DOM
+         * @param {HTMLElement} element The injected modal element
+         * @param {Modal} modal         The instance of the current modal
+         */
+        init: function ( element, modal ) {
+            element.on( 'hidden.bs.modal', function () {
+                modal.hide();
+                element.remove();
+            });
+
+            if ( modal.timeout > 0 ) {
+                element.on( 'hide.bs.modal', modal.stopTimeout );
+                element.find( '.modal-content' ).hover( function() {
+                    modal.pauseTimeout();
+                }, function () {
+                    if ( element.is( '.in' ) ) {
+                        modal.continueTimeout();
+                    }
+                });
+            }
+        },
+
+        /**
+         * Will be called if a Modal requests to show.
+         * @param {HTMLElement} element The injected modal element
+         */
+        show: function ( element ) {
+            element.modal( 'show' );
+        },
+
+        /**
+         * Will be called if a Modal requests to hide.
+         * @param {HTMLElement} element The injected modal element
+         */
+        hide: function ( element ) {
+            element.modal( 'hide' );
+        },
+
+        /**
+         * Detect if a given HTML string contains a modal
+         * @param {HTMLElement} html the element to search a modal in.
+         * @returns {boolean}   true if a modal was found
+         */
+        isModal: function ( html ) {
+            return $( html ).filter( '.modal' ).length + $( html ).find( '.modal' ).length > 0;
+        },
+
+        /**
+         * Filter a modal from a given HTML string
+         * @param {HTMLElement}     html the element to get a modal from.
+         * @returns {HTMLElement}   the filtered modal element
+         */
+        getModal: function ( html ) {
+            var modal = $( html );
+            if ( modal.length > 1 ) {
+                modal = $( html ).filter( '.modal' ) || $( html ).find( '.modal' );
+            }
+
+            return modal;
+        }
+    };
+
+}(jQuery, PlentyFramework));
+(function($, pm) {
+
+    pm.partials.WaitScreen = {
+
+        /**
+         * Will be called if the wait screen should be shown
+         * @param {HTMLElement} element The wait screen element
+         */
+        show: function( element ) {
+            element.addClass('in');
+        },
+
+        /**
+         * Will be called if the wait screen should be hidden
+         * @param {HTMLElement} element The wait screen element
+         */
+        hide: function( element ) {
+            element.removeClass('in');
+        }
+
+    };
+
+})(jQuery, PlentyFramework);
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
@@ -405,17 +675,26 @@
          */
         function _post( url, data, ignoreErrors, runInBackground ) {
 
+            var params = {
+                type:       'POST',
+                dataType:   'json',
+                error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
+            };
+
+            if (data.isFile){
+                    params.cache= data.cache;
+                    params.processData= data.processData;
+                    params.data = data.data;
+                    params.contentType= false;
+            }else{
+                    params.data = JSON.stringify(data);
+                    params.contentType ='application/json';
+            }
+
             if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
-                url,
-                {
-                    type:       'POST',
-                    data:       JSON.stringify(data),
-                    dataType:   'json',
-                    contentType:'application/json',
-                    error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
-                }
+                url, params
             ).always( function() {
                     if( !runInBackground ) UI.hideWaitScreen();
                 });
@@ -777,7 +1056,7 @@
          * @returns {boolean}
          */
         function isModal( html ) {
-            return $(html).filter('.modal' ).length + $(html).find('.modal' ).length > 0;
+            return PlentyFramework.partials.Modal.isModal( html );
         }
 
         /**
@@ -824,7 +1103,7 @@
              * @private
              * @default "Abbrechen"
              */
-            modal.labelDismiss = 'Abbrechen';
+            modal.labelDismiss = pm.translate("Cancel");
 
             /**
              * the label of the confirmation button
@@ -833,7 +1112,7 @@
              * @private
              * @default "Bestätigen"
              */
-            modal.labelConfirm = 'Bestätigen';
+            modal.labelConfirm = pm.translate("Confirm");
 
             /**
              * Callback when modal is confirmed by clicking confirmation button.
@@ -871,6 +1150,12 @@
              * @default -1
              */
             modal.timeout = -1;
+
+            modal.hide = hide;
+            modal.startTimeout = startTimeout;
+            modal.stopTimeout = stopTimeout;
+            modal.pauseTimeout = pauseTimeout;
+            modal.continueTimeout = continueTimeout;
 
             var bsModal;
             var timeout, interval;
@@ -988,12 +1273,9 @@
              */
             function show() {
                 if( isModal( modal.content ) ) {
-                    bsModal = $(modal.content);
-                    if( bsModal.length > 1 || !bsModal.is('.modal') ) {
-                        bsModal = $(modal.content).filter('.modal') || $(modal.content).find('.modal');
-                    }
+                    bsModal = PlentyFramework.partials.Modal.getModal( modal.content );
                 } else {
-                    bsModal = $( buildTemplate() );
+                    bsModal = $( PlentyFramework.compileTemplate('modal/modal.html', modal) );
                 }
 
                 $(modal.container).append( bsModal );
@@ -1010,70 +1292,18 @@
                 }
 
                 // bind callback functions
-                bsModal.on('hidden.bs.modal', function() {
-                    hide();
-                });
+                PlentyFramework.partials.Modal.init( bsModal, modal );
                 bsModal.find('[data-plenty-modal="confirm"]').click( function() {
                     var close = modal.onConfirm();
                     if( close ) hide(true);
                 });
 
-                bsModal.modal('show');
-
-                bsModal.on('hidden.bs.modal', function() {
-                    bsModal.remove();
-                });
+                PlentyFramework.partials.Modal.show( bsModal );
 
                 if( modal.timeout > 0 ) {
                     startTimeout();
-                    bsModal.on('hide.bs.modal', stopTimeout);
-                    bsModal.find('.modal-content').hover(pauseTimeout, function() {
-                        if( bsModal.is('.in') )
-                        {
-                            continueTimeout();
-                        }
-                    });
                 }
 
-            }
-
-            /**
-             * Wrap html content in bootstrap styled modal.
-             * @function buildTemplate
-             * @private
-             * @returns {string}
-             */
-            function buildTemplate() {
-
-                var template = '<div class="modal fade"> \
-                                    <div class="modal-dialog"> \
-                                        <div class="modal-content">';
-
-                if( !!modal.title && modal.title.length > 0 ) {
-                    template +=             '<div class="modal-header"> \
-                                                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
-                                                <h4 class="modal-title">' + modal.title + '</h4> \
-                                            </div>';
-                }
-
-                template +=                 '<div class="modal-body">' + modal.content + '</div> \
-                                             <div class="modal-footer">';
-
-                if( !!modal.labelDismiss && modal.labelDismiss.length > 0 ) {
-                    template +=                '<button type="button" class="btn btn-default" data-dismiss="modal"> \
-                                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' + modal.labelDismiss + '  \
-                                                </button>';
-                }
-
-                template +=                    '<button type="button" class="btn btn-primary" data-dismiss="modal" data-plenty-modal="confirm"> \
-                                                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> ' + modal.labelConfirm + ' \
-                                                </button> \
-                                            </div> \
-                                        </div> \
-                                    </div> \
-                                </div>';
-
-                return template;
             }
 
             /**
@@ -1082,7 +1312,7 @@
              * @param {boolean} confirmed Flag indicating of modal is closed by confirmation button or dismissed
              */
             function hide( confirmed ) {
-                bsModal.modal('hide');
+                PlentyFramework.partials.Modal.hide( bsModal );
 
                 if( !confirmed ) {
                     modal.onDismiss();
@@ -1184,6 +1414,8 @@
          * @default 0
          */
         var waitScreenCount = 0;
+        var waitScreen;
+        var errorPopup = null;
 
         return {
             throwError: throwError,
@@ -1209,43 +1441,23 @@
          * @function printErrors
          * @param {Array} errorMessages A list of errors to display
          */
-
         function printErrors(errorMessages) {
-            var popup = $('#CheckoutErrorPane');
-            var errorHtml = '';
 
             // create error-popup if not exist
-            if( popup.length <= 0 ) {
-                popup = $('<div class="plentyErrorBox" id="CheckoutErrorPane" style="display: none;"><button class="close" type="button"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button><div class="plentyErrorBoxInner"></div></div>');
-
-                $('body').append(popup);
-                // bind popups 'close'-button
-                popup.find('.close').click(function() {
-                    popup.hide();
-                });
+            if( !errorPopup || $('body').has(errorPopup ).length <= 0 ) {
+                errorPopup = $( pm.compileTemplate('error/errorPopup.html') );
+                $('body').append( errorPopup );
+                pm.partials.Error.init( errorPopup );
             }
 
             $.each(errorMessages, function(key, error) {
                 // add additional error, if not exist.
-                if( !popup.is(':visible') || popup.find('[data-plenty-error-code="'+error.code+'"]').length <= 0 ) {
-                    errorHtml += '\
-					<div class="plentyErrorBoxContent" data-plenty-error-code="'+error.code+'">\
-						<span class="PlentyErrorCode">Code '+error.code+':</span>\
-						<span class="PlentyErrorMsg">'+error.message+'</span>\
-					</div>';
-                }
+                pm.partials.Error.addError( errorPopup, $(pm.compileTemplate('error/errorMessage.html', error)) );
             });
 
-            if( popup.is(':visible') ) {
-                // append new error to existing errors, if popup is already visible
-                popup.find('.plentyErrorBoxInner').append(errorHtml);
-            } else {
-                // replace generated error-HTML and show popup
-                popup.find('.plentyErrorBoxInner').html(errorHtml);
-                popup.show();
-            }
+            pm.partials.Error.show( errorPopup );
 
-            hideWaitScreen("printErrors", true);
+            hideWaitScreen(true);
         }
 
 
@@ -1257,15 +1469,13 @@
         function showWaitScreen() {
             waitScreenCount = waitScreenCount || 0;
 
-            var waitScreen = $('#PlentyWaitScreen');
             // create wait-overlay if not exist
-            if( waitScreen.length <= 0 ) {
-                waitScreen = $('<div id="PlentyWaitScreen" class="overlay overlay-wait in"></div>');
+            if( !waitScreen || $('body').has(waitScreen ).length <= 0 ) {
+                waitScreen = $( pm.compileTemplate('waitscreen/waitscreen.html') );
                 $('body').append(waitScreen);
-            } else {
-                // show wait screen if not already visible
-                waitScreen.addClass('in');
             }
+
+            pm.partials.WaitScreen.show( waitScreen );
 
             // increase instance counter to avoid showing multiple overlays
             waitScreenCount++;
@@ -1287,7 +1497,7 @@
             // or if closing is forced by user
             if( waitScreenCount <= 0 || !!forceClose ) {
                 waitScreenCount = 0;
-                $('#PlentyWaitScreen').removeClass('in');
+                pm.partials.WaitScreen.hide( waitScreen );
             }
             return waitScreenCount;
         }
@@ -1488,7 +1698,7 @@
 
 		return {
 			addItem: addBasketItem,
-            removeBasketItem: removeBasketItem,
+            removeItem: removeBasketItem,
             setItemQuantity: setItemQuantity,
             addCoupon: addCoupon,
             removeCoupon: removeCoupon
@@ -1498,6 +1708,7 @@
          * Add item to basket. Will fail and show a popup if item has order params
          * @function addBasketItem
          * @param   {Array}     article         Array containing the item to add
+         * @param   {boolean}   [isUpdate=false]      Indicating if item's OrderParams are updated
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
          *     Object</a>
          */
@@ -1535,9 +1746,11 @@
          * @param {Array} articleWithParams Containing the current item to add. Read OrderParams will be injected
          */
         function saveOrderParams( articleWithParams ) {
+            //TODO use $("[data-plenty-checkout-form='OrderParamsForm']").serializeArray() to get order params
             var orderParamsForm = $('[data-plenty-checkout-form="OrderParamsForm"]');
+            var wrappedThis = {};
+            var attrType = "";
 
-            //TODO use $("[data-plenty-checkout-form='OrderParamsForm']").serializeArray(); to get order params
             //Groups
             orderParamsForm.find('[name^="ParamGroup"]').each(function(){
                 var match = this.name.match(/^ParamGroup\[(\d+)]\[(\d+)]$/);
@@ -1546,13 +1759,20 @@
 
             //Values
             orderParamsForm.find('[name^="ParamValue"]').each(function(){
+                wrappedThis = $(this);
+                attrType = wrappedThis.attr('type');
 
-                if( ($(this).attr('type') == 'checkbox' && $(this).is(':checked')) ||
-                    ($(this).attr('type') == 'radio' && $(this).is(':checked')) ||
-                    ($(this).attr('type') != 'radio' && $(this).attr('type') != 'checkbox') )
+                if( ((attrType == 'checkbox' && wrappedThis.is(':checked')) ||
+                    (attrType == 'radio' && wrappedThis.is(':checked')) ||
+                    (attrType != 'radio' && attrType != 'checkbox')) &&
+                    attrType != 'file')
                 {
                     var match = this.name.match(/^ParamValue\[(\d+)]\[(\d+)]$/);
-                    articleWithParams = addOrderParamValue(articleWithParams, match[1], match[2], $(this).val());
+
+                    articleWithParams = addOrderParamValue(articleWithParams, match[1], match[2], wrappedThis.val());
+
+                } else if (attrType == 'file') {
+                    articleWithParams = orderParamFileUpload(this, articleWithParams);
                 }
             });
 
@@ -1581,6 +1801,43 @@
                 });
         }
 
+        function orderParamFileUpload(input , articleWithParams ) {
+            var key = input.id;
+            var orderParamUploadFiles = {};
+            var orderParamFileIdStack = [];
+            var formData;
+            var fileData;
+            var params = {
+                type: 'POST',
+                data: {},
+                isFile: true,
+                cache: false,
+                dataType: 'json',
+                processData: false,
+                contentType: false
+            };
+
+            orderParamUploadFiles[key] = $(input)[0].files;
+
+            if (orderParamFileIdStack.indexOf(key) == -1) {
+                orderParamFileIdStack.push(key);
+            }
+
+            for(var i= 0, length = orderParamFileIdStack.length; i < length; ++i){
+                formData = new FormData();
+                fileData = orderParamUploadFiles[orderParamFileIdStack[i]];
+                formData.append("0", fileData[0], fileData[0].name);
+
+                params.data = formData;
+
+                API.post("/rest/checkout/orderparamfile/", params);
+            }
+
+            var match = input.name.match(/^ParamValueFile\[(\d+)]\[(\d+)]$/);
+
+            return addOrderParamValue(articleWithParams, match[1], match[2], $(input).val());
+        }
+
         /**
          * Inject an OrderParam.
          * @function addOrderParamValue
@@ -1605,11 +1862,12 @@
                 {
                     basketList[position].BasketItemOrderParamsList = [];
                 }
-
-                basketList[position].BasketItemOrderParamsList.push({
-                    BasketItemOrderParamID : paramId,
-                    BasketItemOrderParamValue : paramValue
-                });
+                if(paramValue){
+                    basketList[position].BasketItemOrderParamsList.push({
+                        BasketItemOrderParamID : paramId,
+                        BasketItemOrderParamValue : paramValue
+                    });
+                }
             }
 
             return basketList;
@@ -1627,6 +1885,7 @@
             // get item name
             var itemName, originalItemQuantity;
             var params = Checkout.getCheckout().BasketItemsList;
+
             for ( var i = 0; i < params.length; i++ ) {
                 if ( params[i].BasketItemID == BasketItemID ) {
                     originalItemQuantity = params[i].BasketItemQuantity;
@@ -1655,15 +1914,15 @@
             if( !forceDelete ) {
                 // show confirmation popup
                 Modal.prepare()
-                    .setTitle('Bitte bestätigen')
-                    .setContent('<p>Möchten Sie den Artikel "' + itemName + '" wirklich aus dem Warenkorb entfernen?</p>')
+                    .setTitle( pm.translate('Please confirm') )
+                    .setContent('<p>' + pm.translate( "Do you really want to remove \"{{item}}\" from your basket?", {item: itemName}) + '</p>')
                     .onDismiss(function () {
                         $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty="quantityInput"]').val(originalItemQuantity);
                     })
                     .onConfirm(function () {
                         doDelete();
                     })
-                    .setLabelConfirm('Löschen')
+                    .setLabelConfirm( pm.translate("Delete") )
                     .show();
             } else {
                 doDelete();
@@ -1686,6 +1945,7 @@
             var params = Checkout.getCheckout().BasketItemsList;
             var basketItem;
             var basketItemIndex;
+
             for ( var i = 0; i < params.length; i++ ) {
                 if ( params[i].BasketItemID == BasketItemID ) {
                     basketItemIndex = i;
@@ -2820,6 +3080,7 @@
      */
     pm.service('SocialShareService', function() {
 
+        //TODO: move to global variables
         if ( typeof(socialLangLocale) == 'undefined' ) socialLangLocale = 'en_US';
         if ( typeof(socialLang) == 'undefined' ) socialLang = 'en';
 
@@ -2959,19 +3220,20 @@
          * @return {object} a valid form element (input, select, textarea)
          */
         function getFormControl( element ) {
-            if( $(element).is('input') || $(element).is('select') || $(element).is('textarea') ) {
-                return $(element);
+            element = $(element);
+            if( element.is('input') || element.is('select') || element.is('textarea') ) {
+                return element;
             } else {
-                if( $(element).find('input').length > 0 ) {
-                    return $(element).find('input');
+                if( element.find('input').length > 0 ) {
+                    return element.find('input');
                 }
 
-                else if ( $(element).find('select').length > 0 ) {
-                    return $(element).find('select');
+                else if ( element.find('select').length > 0 ) {
+                    return element.find('select');
                 }
 
-                else if ( $(element).find('textarea').length > 0 ) {
-                    return $(element).find('textarea');
+                else if ( element.find('textarea').length > 0 ) {
+                    return element.find('textarea');
                 }
 
                 else {
@@ -2990,12 +3252,12 @@
          */
         function validateText( formControl ) {
             // check if formControl is no checkbox or radio
-            if ( $(formControl).is('input') || $(formControl).is('select') || $(formControl).is('textarea') ) {
+            if ( formControl.is('input') || formControl.is('select') || formControl.is('textarea') ) {
                 // check if length of trimmed value is greater then zero
-                return $.trim( $(formControl).val() ).length > 0;
+                return $.trim( formControl.val() ).length > 0;
 
             } else {
-                console.error('Validation Error: Cannot validate Text for <' + $(formControl).prop("tagName") + '>');
+                console.error('Validation Error: Cannot validate Text for <' + formControl.prop("tagName") + '>');
                 return false;
             }
         }
@@ -3010,7 +3272,7 @@
         function validateMail( formControl ) {
             var mailRegExp = /[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
             if ( validateText(formControl) ) {
-                return mailRegExp.test( $.trim( $(formControl).val() ) );
+                return mailRegExp.test( $.trim( formControl.val() ) );
             } else {
                 return false;
             }
@@ -3025,7 +3287,7 @@
          */
         function validateNumber( formControl ) {
             if ( validateText(formControl) ) {
-                return $.isNumeric( $.trim( $(formControl).val() ) );
+                return $.isNumeric( $.trim( formControl.val() ) );
             } else {
                 return false;
             }
@@ -3041,10 +3303,18 @@
          */
         function validateValue( formControl, reference ) {
             if( $(reference).length > 0 ) {
-                return $.trim( $(formControl).val() ) == $.trim( $(reference).val() );
+                return $.trim( formControl.val() ) == $.trim( $(reference).val() );
             } else {
-                return $.trim( $(formControl).val() ) == reference;
+                return $.trim( formControl.val() ) == reference;
             }
+        }
+
+        function visibility( formControl ) {
+            return formControl.is(':visible');
+        }
+
+        function isEnabled( formControl ) {
+            return formControl.is(':enabled');
         }
 
         /**
@@ -3097,31 +3367,36 @@
          *      });
          */
         function validate( form ) {
-            var errorClass = !!$(form).attr('data-plenty-checkform') ? $(form).attr('data-plenty-checkform') : 'has-error';
+            var formControl, formControls, validationKey, currentHasError, group, checked, checkedMin, checkedMax, attrValidate, validationKeys, formControlAttrType;
+            var wrappedForm = $(form);
+            var errorClass = !!wrappedForm.attr('data-plenty-checkform') ? wrappedForm.attr('data-plenty-checkform') : 'has-error';
             var missingFields = [];
-
             var hasError = false;
 
             // check every required input inside form
-            $(form).find('[data-plenty-validate], input.Required').each(function(i, elem) {
+            wrappedForm.find('[data-plenty-validate], input.Required').each(function(i, elem) {
+                attrValidate = $(elem).attr('data-plenty-validate');
+                formControls = getFormControl(elem)
                 // validate text inputs
-                var validationKeys = !!$(elem).attr('data-plenty-validate') ? $(elem).attr('data-plenty-validate') : 'text';
+                validationKeys = !!attrValidate ? attrValidate : 'text';
                 validationKeys = validationKeys.split(',');
 
-                var formControls = getFormControl(elem);
-                for(i = 0; i < formControls.length; i++) {
-                    var formControl = formControls[i];
-                    var validationKey = validationKeys[i].trim() || validationKeys[0].trim();
+                for(var i = 0, length = formControls.length; i < length; i++) {
+                    formControl = $(formControls[i]);
+                    formControlAttrType = formControl.attr('type');
 
-                    if (!$(formControl).is(':visible') || !$(formControl).is(':enabled')) {
+                    if (!visibility(formControl) || !isEnabled(formControl)) {
                         return;
                     }
-                    var currentHasError = false;
 
+                    validationKey = validationKeys[i].trim() || validationKeys[0].trim();
+                    currentHasError = false;
 
                     // formControl is textfield (text, mail, password) or textarea
-                    if (($(formControl).is('input') && $(formControl).attr('type') != 'radio' && $(formControl).attr('type') != 'checkbox') || $(formControl).is('textarea')) {
-
+                    if ((formControl.is('input')
+                        && formControlAttrType != 'radio'
+                        && formControlAttrType != 'checkbox')
+                        || formControl.is('textarea')) {
                         switch (validationKey) {
 
                             case 'text':
@@ -3139,33 +3414,36 @@
                             case 'value':
                                 currentHasError = !validateValue(formControl, $(elem).attr('data-plenty-validation-value'));
                                 break;
+
                             case 'none':
                                 // do not validate
                                 break;
+
                             default:
-                                console.error('Form validation error: unknown validate property: "' + $(elem).attr('data-plenty-validate') + '"');
+                                console.error('Form validation error: unknown validate property: "' + attrValidate + '"');
                                 break;
                         }
-                    } else if ($(formControl).is('input') && ($(formControl).attr('type') == 'radio' || $(formControl).attr('type') == 'checkbox')) {
+                    } else if (formControl.is('input')
+                        && (formControlAttrType == 'radio'
+                        || formControlAttrType == 'checkbox')) {
                         // validate radio buttons
-                        var group = $(formControl).attr('name');
-                        var checked, checkedMin, checkedMax;
-                        checked = $(form).find('input[name="' + group + '"]:checked').length;
+                        group = formControl.attr('name');
+                        checked = wrappedForm.find('input[name="' + group + '"]:checked').length;
 
-                        if ($(formControl).attr('type') == 'radio') {
+                        if (formControlAttrType == 'radio') {
                             checkedMin = 1;
                             checkedMax = 1;
                         } else {
-                            eval("var minMax = " + $(elem).attr('data-plenty-validate'));
+                            eval("var minMax = " + attrValidate);
                             checkedMin = !!minMax ? minMax.min : 1;
                             checkedMax = !!minMax ? minMax.max : 1;
                         }
 
                         currentHasError = ( checked < checkedMin || checked > checkedMax );
 
-                    } else if ($(formControl).is('select')) {
+                    } else if (formControl.is('select')) {
                         // validate selects
-                        currentHasError = ( $(formControl).val() == '' || $(formControl).val() == '-1' );
+                        currentHasError = ( formControl.val() == '' || formControl.val() == '-1' );
                     } else {
                         console.error('Form validation error: ' + $(elem).prop("tagName") + ' does not contain an form element');
                         return;
@@ -3176,26 +3454,27 @@
                         missingFields.push(formControl);
 
                         if(formControls.length > 1 ) {
-                            $(formControl).addClass(errorClass);
-                            $(form).find('label[for="'+$(formControl).attr('id')+'"]').addClass(errorClass);
+                            formControl.addClass(errorClass);
+                            wrappedForm.find('label[for="'+formControl.attr('id')+'"]').addClass(errorClass);
                         } else {
                             $(elem).addClass(errorClass);
                         }
                     }
                 }
+
             });
 
             // scroll to element on 'validationFailed'
-            $(form).on('validationFailed', function() {
+            wrappedForm.on('validationFailed', function() {
                 var distanceTop = 50;
-                var errorOffset = $(form).find('.has-error').first().offset().top;
+                var errorOffset = wrappedForm.find('.has-error').first().offset().top;
                 var scrollTarget = $('html, body');
 
                 // if form is inside of modal, scroll modal instead of body
-                if( $(form).parents('.modal').length > 0 ) {
-                    scrollTarget = $(form).parents('.modal');
-                } else if( $(form).is('.modal') ) {
-                    scrollTarget = $(form);
+                if( wrappedForm.parents('.modal').length > 0 ) {
+                    scrollTarget = wrappedForm.parents('.modal');
+                } else if( wrappedForm.is('.modal') ) {
+                    scrollTarget = wrappedForm;
                 }
 
                 // only scroll if error is outside of viewport
@@ -3208,23 +3487,24 @@
 
             if ( hasError ) {
                 // remove error class on focus
-                $(form).find('.has-error').each(function(i, elem) {
-                    var formControl = getFormControl(elem);
-                    $(formControl).on('focus click', function() {
-                        $(formControl).removeClass( errorClass );
-                        $(form).find('label[for="'+$(formControl).attr('id')+'"]').removeClass(errorClass);
+                wrappedForm.find('.has-error').each(function(i, elem) {
+                    formControl = $(getFormControl(elem));
+                    formControl.on('focus click', function() {
+                        formControl.removeClass( errorClass );
+                        wrappedForm.find('label[for="'+formControl.attr('id')+'"]').removeClass(errorClass);
                         $(elem).removeClass( errorClass );
                     });
                 });
 
-                $(form).trigger('validationFailed', [missingFields]);
+                wrappedForm.trigger('validationFailed', [missingFields]);
             }
 
-            var callback = $(form).attr('data-plenty-callback');
+            var callback = wrappedForm.attr('data-plenty-callback');
+
             if( !hasError && !!callback && callback != "submit" && typeof window[callback] == "function") {
 
                 var fields = {};
-                $(form).find('input, textarea, select').each(function (){
+                wrappedForm.find('input, textarea, select').each(function (){
                     if( $(this).attr('type') == 'checkbox' ) {
                         fields[$(this).attr('name')] = $(this).is(':checked');
                     } else {
@@ -3685,63 +3965,6 @@
             });
         });
 
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      mlauterbach <maximilian.lauterbach@plentymarkets.com>
- * =====================================================================================
- */
-
-/**
- * Directive to slide threw producer images.
- * Uses placeholder $ProducerImageList to load producer images and add slider identifier class to it.
- *
- * $ProducerImageList removes markup like this:
- *    <div class="PlentyItemProducerContainer">
- *        <ul class="PlentyItemProducerList">
- *          <li class="PlentyItemProducerListItem Producer_2">
- *              <a href="http://master.plentymarkets.com/?ActionCall=WebActionArticleSearch&amp;Params%5Bproducer%5D=2"
- * title="A &amp; C Design">
- *                  <img
- * src="https://owncloud.org/wp-content/themes/owncloudorgnew/assets/img/providers/datacenter.png"
- * class="PlentyItemProducerListItemImage Producer_2" title="A &amp; C Design" alt="A &amp; C Design">
- *              </a>
- *          </li>
- *          <li class="PlentyItemProducerListItem Producer_1">
- *              <a href="http://master.plentymarkets.com/?ActionCall=WebActionArticleSearch&amp;Params%5Bproducer%5D=1"
- * title="Exclusive Leather">
- *                  <img src="https://owncloud.org/wp-content/themes/owncloudorgnew/assets/img/providers/enavn.png"
- * class="PlentyItemProducerListItemImage Producer_1" title="Exclusive Leather" alt="Exclusive Leather">
- *              </a>
- *          </li>
- *        </ul>
- *    </div>
- */
-
-(function($, pm) {
-    pm.directive('[data-plenty="producerImageSlider"]', function(i, elem) {
-        // Um korrekt durch die Herstellerlogos zu navigieren, muss das Listenelement (ul) selektiert werden.
-        var imageList = $(elem).find(".PlentyItemProducerList");
-        imageList.addClass("list-unstyled");
-
-        /*
-         *  Die Einstellungen für den owlCarousel-Slider wurden zum Großteil aus dem schon im plentymarketsCMSTools
-         *  vorhandenen contentPage-Slider übernommen und können individuell angepasst werden.
-         */
-        imageList.owlCarousel({
-                navigation: true,       // Anzeige der Navigationspfeile
-                navigationText: false,  // Anzeige der Titel der Navigationspfeile
-                slideSpeed: 1000,       // Geschwindigkeit der Wischbewegung
-                paginationSpeed: 1000,  // Geschwindigkeit der
-                singleItem: false,
-                autoPlay: 6000,
-                stopOnHover: true
-            });
     });
 
 }(jQuery, PlentyFramework));
