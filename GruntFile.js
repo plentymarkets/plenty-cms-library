@@ -73,6 +73,10 @@ module.exports = function(grunt) {
         },
 
         copy: {
+            debug: {
+                src: 'lang/*',
+                dest: 'debug/'
+            },
             build: {
                 src: 'debug/<%= pkg.name %>-<%= pkg.version %>.js',
                 dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
@@ -88,7 +92,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-html-convert');
 
-    grunt.registerTask('debug', ['clean:debug', 'htmlConvert', 'concat:debug']);
+    grunt.registerTask('debug', ['clean:debug', 'copy:debug', 'htmlConvert', 'concat:debug']);
     grunt.registerTask('doc', ['clean:doc', 'yuidoc:doc']);
     grunt.registerTask('build', ['debug', 'doc', 'karma', 'clean:build', 'uglify:build', 'copy:build']);
     grunt.registerTask('default', ['debug']);

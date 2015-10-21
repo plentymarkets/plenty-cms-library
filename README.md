@@ -138,6 +138,19 @@ PlentyFramework.factory('MyFactory', function( AnotherFactory ) {
 	}
 }, ['AnotherFactory']);
 ```
+#### Registering global variables
+
+Global variables can be used to pass server-side variables to the client-side framework:
+```html
+<script>
+	PlentyFramework.setGlobal( 'URL_HOME', {% Link_Home() %} );
+</script>
+````
+Use `PlentyFramework.getGlobal( variable_name )` to get the value of a registered global variable.
+```js
+	// in your service, factory or directive
+	console.log( PlentyFramework.getGlobal( 'URL_HOME' );
+```
 
 ## Copyright and license
 Copyright 2015 [plentymarkets GmbH](https://www.plentymarkets.com/).

@@ -9,6 +9,7 @@ module.exports = function (config) {
         files: [
             'src/*.js',
             'src/**/*.js',
+            'tmp/*.js',
             'test/helpers/*.js',
             'test/helpers/responses/*.js',
             'test/**/*.js',
