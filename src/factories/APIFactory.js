@@ -94,17 +94,26 @@
          */
         function _post( url, data, ignoreErrors, runInBackground ) {
 
+            var params = {
+                type:       'POST',
+                dataType:   'json',
+                error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
+            };
+
+            if (data.isFile){
+                    params.cache= data.cache;
+                    params.processData= data.processData;
+                    params.data = data.data;
+                    params.contentType= false;
+            }else{
+                    params.data = JSON.stringify(data);
+                    params.contentType ='application/json';
+            }
+
             if( !runInBackground ) UI.showWaitScreen();
 
             return $.ajax(
-                url,
-                {
-                    type:       'POST',
-                    data:       JSON.stringify(data),
-                    dataType:   'json',
-                    contentType:'application/json',
-                    error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
-                }
+                url, params
             ).always( function() {
                     if( !runInBackground ) UI.hideWaitScreen();
                 });

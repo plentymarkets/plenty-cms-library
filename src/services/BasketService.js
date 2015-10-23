@@ -77,9 +77,11 @@
          * @param {Array} articleWithParams Containing the current item to add. Read OrderParams will be injected
          */
         function saveOrderParams( articleWithParams ) {
-            var orderParamsForm = $('[data-plenty-checkout-form="OrderParamsForm"]');
-
             //TODO use $("[data-plenty-checkout-form='OrderParamsForm']").serializeArray() to get order params
+            var orderParamsForm = $('[data-plenty-checkout-form="OrderParamsForm"]');
+            var wrappedThis = {};
+            var attrType = "";
+
             //Groups
             orderParamsForm.find('[name^="ParamGroup"]').each(function(){
                 var match = this.name.match(/^ParamGroup\[(\d+)]\[(\d+)]$/);
@@ -88,13 +90,20 @@
 
             //Values
             orderParamsForm.find('[name^="ParamValue"]').each(function(){
+                wrappedThis = $(this);
+                attrType = wrappedThis.attr('type');
 
-                if( ($(this).attr('type') == 'checkbox' && $(this).is(':checked')) ||
-                    ($(this).attr('type') == 'radio' && $(this).is(':checked')) ||
-                    ($(this).attr('type') != 'radio' && $(this).attr('type') != 'checkbox') )
+                if( ((attrType == 'checkbox' && wrappedThis.is(':checked')) ||
+                    (attrType == 'radio' && wrappedThis.is(':checked')) ||
+                    (attrType != 'radio' && attrType != 'checkbox')) &&
+                    attrType != 'file')
                 {
                     var match = this.name.match(/^ParamValue\[(\d+)]\[(\d+)]$/);
-                    articleWithParams = addOrderParamValue(articleWithParams, match[1], match[2], $(this).val());
+
+                    articleWithParams = addOrderParamValue(articleWithParams, match[1], match[2], wrappedThis.val());
+
+                } else if (attrType == 'file') {
+                    articleWithParams = orderParamFileUpload(this, articleWithParams);
                 }
             });
 
@@ -123,6 +132,43 @@
                 });
         }
 
+        function orderParamFileUpload(input , articleWithParams ) {
+            var key = input.id;
+            var orderParamUploadFiles = {};
+            var orderParamFileIdStack = [];
+            var formData;
+            var fileData;
+            var params = {
+                type: 'POST',
+                data: {},
+                isFile: true,
+                cache: false,
+                dataType: 'json',
+                processData: false,
+                contentType: false
+            };
+
+            orderParamUploadFiles[key] = $(input)[0].files;
+
+            if (orderParamFileIdStack.indexOf(key) == -1) {
+                orderParamFileIdStack.push(key);
+            }
+
+            for(var i= 0, length = orderParamFileIdStack.length; i < length; ++i){
+                formData = new FormData();
+                fileData = orderParamUploadFiles[orderParamFileIdStack[i]];
+                formData.append("0", fileData[0], fileData[0].name);
+
+                params.data = formData;
+
+                API.post("/rest/checkout/orderparamfile/", params);
+            }
+
+            var match = input.name.match(/^ParamValueFile\[(\d+)]\[(\d+)]$/);
+
+            return addOrderParamValue(articleWithParams, match[1], match[2], $(input).val());
+        }
+
         /**
          * Inject an OrderParam.
          * @function addOrderParamValue
@@ -147,11 +193,12 @@
                 {
                     basketList[position].BasketItemOrderParamsList = [];
                 }
-
-                basketList[position].BasketItemOrderParamsList.push({
-                    BasketItemOrderParamID : paramId,
-                    BasketItemOrderParamValue : paramValue
-                });
+                if(paramValue){
+                    basketList[position].BasketItemOrderParamsList.push({
+                        BasketItemOrderParamID : paramId,
+                        BasketItemOrderParamValue : paramValue
+                    });
+                }
             }
 
             return basketList;
@@ -169,6 +216,7 @@
             // get item name
             var itemName, originalItemQuantity;
             var params = Checkout.getCheckout().BasketItemsList;
+
             for ( var i = 0; i < params.length; i++ ) {
                 if ( params[i].BasketItemID == BasketItemID ) {
                     originalItemQuantity = params[i].BasketItemQuantity;
@@ -228,6 +276,7 @@
             var params = Checkout.getCheckout().BasketItemsList;
             var basketItem;
             var basketItemIndex;
+
             for ( var i = 0; i < params.length; i++ ) {
                 if ( params[i].BasketItemID == BasketItemID ) {
                     basketItemIndex = i;
