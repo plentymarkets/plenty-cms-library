@@ -17,6 +17,8 @@ but can be easily adapted to other templates by using the provided JavaScript AP
 - [Usage](#usage)
     - [Usage in store templates](#using-the-library-in-your-store-templates)
     - [Using the JavaScript API](#using-the-javascript-api)
+    - [Customizing and Theming](#customizing-and-theming)
+    - [Internationalization and Translation](#internationalization-and-translation)
 - [Copyright and License](#copyright-and-license)
 
 ## Installation
@@ -149,7 +151,110 @@ Global variables can be used to pass server-side variables to the client-side fr
 Use `PlentyFramework.getGlobal( variable_name )` to get the value of a registered global variable.
 ```js
 	// in your service, factory or directive
-	console.log( PlentyFramework.getGlobal( 'URL_HOME' );
+	console.log( PlentyFramework.getGlobal( 'URL_HOME' ) );
+```
+
+### Customizing and Theming
+
+This library was built in addition to the [**Callisto Light**](http://standardtemplate.plenty-showcase.de/) store template
+and uses [Twitter Bootstrap](http://getbootstrap.com/) for UI functions and styling.
+
+The behaviour and layout of all affected elements are defined in `src/partials`. For rendering .html-templates this library
+uses the [Mustache Syntax](https://github.com/janl/mustache.js/).
+
+#### Customizing the behaviour of partials
+
+Each partial provides a simple JavaScript interface describing its basic behaviour.
+
+**Example:** `src/partials/waitscreen/waitscreen.js`
+```js
+PlentyFramework.partials.WaitScreen = {
+
+        show: function( element ) {
+        	// define, how your waitScreen should appear
+            element.addClass('in');
+        },
+
+        hide: function( element ) {
+            element.removeClass('in');
+        }
+
+    };
+```
+You can edit these functions to make your loading screen act as you like.
+
+#### Changing the layout of partials
+
+All generated html structures (e.g. Modals or Error-Messages) are sourced in separate .html-files and can be edited
+without affecting the functionality. You can use the [Mustache Syntax](https://github.com/janl/mustache.js/) to bind
+variables to the templates and the {{#translate}} function to make strings multilingual.
+
+### Internationalization and Translation
+
+Language dependent strings are sourced in .json-files and can be loaded separately. To support several languages you can
+add more language files containing your translations of the defined strings.
+
+#### Loading a language file
+
+Language files should be loaded immediately after loading the the JavaScript library.
+**Example:**
+```html
+<script src="plentymarketsCMStools-X.X.X.min.js"></script>
+<script>
+	{% if $Lang == "de" %}
+	PlentyFramework.loadLanguageFile('/lang/de_DE.json');
+	{% else $Lang == "en" %}
+	PlentyFramework.loadLanguageFile('/lang/en_EN.json');
+	{% endif %}
+</script>
+```
+**Hint:** The path referencing your language file has to be relative to the plentymarketsCMStools.js script path.
+```
+.
++-- path
+|   +-- to
+|       +-- plentymarketsCMStools.js
+|       +-- lang
+|           +-- de_DE.json
+|           +-- en_EN.json
++-- another
+    +-- path
+        +-- es_ES.json
+```
+in this case you can use: `PlentyFramework.loadLanguageFile('/lang/de_DE.json')` or `PlentyFramework.loadLanguageFile('/../../another/path/es_ES.json')`
+
+#### Using multilingual Strings in JavaScript
+
+You can use `PlentyFramework.translate()` to receive the translation of a String from the currently loaded language file.
+If the language file not contains a translation it returns the original String.
+`PlentyFramework.translate()` also renders the provided String with the [Mustache Syntax](https://github.com/janl/mustache.js/)
+so you can bind variables to your string.
+
+**Examples:**
+translations.json
+```json
+{
+	"Close": "Exit",
+	"Hello {{name}}": "Hi {{name}}!"
+}
+```
+
+script.js
+```js
+PlentyFramework.translate("Close"); // returns "Exit"
+PlentyFramework.translate("Hello {{name}}", {name: 'World'}); // returns "Hello World!"
+PlentyFramework.translate("Something"); // returns "Something"
+```
+
+#### Using multilingual Strings in HTML-Templates
+
+In addition to the basic Mustache Syntax the plentymarketsCMStools provide its `translate()` method to all templates:
+```html
+<button>{{#translate}}Close{{/translate}}</button>
+```
+This will be rendered to:
+```html
+<button>Exit</button>
 ```
 
 ## Copyright and license
