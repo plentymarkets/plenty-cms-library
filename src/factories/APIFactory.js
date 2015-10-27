@@ -100,14 +100,14 @@
                 error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
             };
 
-            if (data.isFile){
-                    params.cache= data.cache;
-                    params.processData= data.processData;
-                    params.data = data.data;
-                    params.contentType= false;
-            }else{
-                    params.data = JSON.stringify(data);
-                    params.contentType ='application/json';
+            if( !!data && data.isFile ) {
+                    params.cache        = data.cache;
+                    params.processData  = data.processData;
+                    params.data         = data.data;
+                    params.contentType  = false;
+            } else {
+                    params.data         = JSON.stringify(data);
+                    params.contentType  = 'application/json';
             }
 
             if( !runInBackground ) UI.showWaitScreen();
