@@ -242,8 +242,8 @@ translations.json
 script.js
 ```js
 PlentyFramework.translate("Close"); // returns "Exit"
-PlentyFramework.translate("Hello {{name}}", {name: 'World'}); // returns "Hello World!"
-PlentyFramework.translate("Something"); // returns "Something"
+PlentyFramework.translate("Hello {{name}}", {name: 'World'}); // returns "Hi World!"
+PlentyFramework.translate("Something"); // returns "Something" (as fallback value)
 ```
 
 #### Using multilingual Strings in HTML-Templates
