@@ -1869,7 +1869,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     });
                 }
             }
-
+            
             return basketList;
         }
 

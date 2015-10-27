@@ -11,17 +11,18 @@
 
     // Tree navigation toggle
     pm.directive('[data-plenty="openCloseToggle"]', function(i, elem) {
+        var cssList = pm.cssClasses;
         $(elem).click(function () {
-            $(elem).parent().addClass('animating');
+            $(elem).parent().addClass(cssList.animating);
             $(elem).siblings('ul').slideToggle(200, function () {
                 if ($(elem).parent().is('.open')) {
-                    $(elem).parent().removeClass('open');
+                    $(elem).parent().removeClass(cssList.open);
                 }
                 else {
-                    $(elem).parent().addClass('open');
+                    $(elem).parent().addClass(cssList.open);
                 }
                 $(elem).removeAttr('style');
-                $(elem).parent().removeClass('animating');
+                $(elem).parent().removeClass(cssList.animating);
             });
         });
 

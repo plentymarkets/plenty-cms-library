@@ -13,6 +13,8 @@
     // Can be bound on checked-/ unchecked-property of radio buttons
     pm.directive('[data-plenty-slidetoggle]', function(i, trigger) {
 
+        var cssList = pm.cssClasses;
+
         var target = $( $(trigger).attr('data-plenty-target') );
 
         if( $(trigger).is('input[type="radio"]') ) {
@@ -52,10 +54,10 @@
             $(trigger).click(function() {
                 $(target).parents('[data-plenty-equal-target]').css('height', 'auto');
 
-                $(trigger).addClass('animating');
+                $(trigger).addClass(cssList.animating);
                 $(target).slideToggle(400, function() {
-                    $(trigger).removeClass('animating');
-                    $(trigger).toggleClass('active');
+                    $(trigger).removeClass(pm.cssClasses.animating);
+                    $(trigger).toggleClass(pm.cssClasses.active);
                     pm.getInstance().bindDirectives('[data-plenty-equal]');
                 });
             });

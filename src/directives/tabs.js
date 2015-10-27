@@ -65,6 +65,8 @@
      */
     pm.directive('[data-plenty="remoteTabs"]', function(i, remoteTab) {
 
+        var cssList = pm.cssClasses;
+
         var tabsId = $(remoteTab).attr('data-plenty-remotetabs-id');
 
         // find tabs grouped by remotetabs-id
@@ -78,8 +80,8 @@
                 // listen to 'tabchange' event
                 $(singleTab).on('tabchange', function() {
                     // toggle class 'active'
-                    $(singleTab).closest('[data-plenty="remoteTabs"]').children('.active').removeClass('active');
-                    $(singleTab).closest('li').addClass('active');
+                    $(singleTab).closest('[data-plenty="remoteTabs"]').children('.active').removeClass(cssList.active);
+                    $(singleTab).closest('li').addClass(cssList.active);
 
                     // hide inactive tabs & show active tab
                     var tabpanelsInactive = $('[data-plenty-remotetabs-id="'+tabsId+'"][data-plenty-tabpanel-labelledby]').not('[data-plenty-tabpanel-labelledby="'+singleTabId+'"]');
@@ -94,8 +96,8 @@
                     }
 
                     // adjust z-index if neccessary
-                    $(tabpanelsInactive).hide().removeClass('in');
-                    $(tabpanelActive).show().addClass('in');
+                    $(tabpanelsInactive).hide().removeClass(cssList.in);
+                    $(tabpanelActive).show().addClass(cssList.in);
                     if ( zIndexTabpanelParents != 0 ) {
                         $(tabpanelsInactive).parent().css('zIndex', zIndexTabpanelParents);
                         $(tabpanelActive).parent().css('zIndex', zIndexTabpanelParents + 1);

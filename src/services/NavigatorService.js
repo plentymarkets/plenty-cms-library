@@ -78,7 +78,7 @@
 
                 // initialize navigation
                 navigation.each(function(i, elem) {
-                    $(elem).addClass('disabled');
+                    $(elem).addClass(pm.cssClasses.disabled);
                     // handle navigation click events
                     $(elem).click(function() {
                         if( !$(this).is('.disabled') ) {
@@ -244,22 +244,24 @@
 
             // refresh navigation elements
             $(navigation).each(function (i, elem) {
-                $(elem).removeClass('disabled active');
+                $(elem).removeClass(pm.cssClasses.disabled);
+                $(elem).removeClass(pm.cssClasses.active);
                 $(elem).find('[role="tab"]').attr('aria-selected', 'false');
 
                 if (i < current) {
                     // set current element as active
-                    $(elem).addClass('visited');
+                    $(elem).addClass(pm.cssClasses.visited);
                 }
                 else {
                     if (i == current) {
-                        $(elem).addClass('active visited');
+                        $(elem).addClass(pm.cssClasses.active);
+                        $(elem).addClass(pm.cssClasses.visited);
                         $(elem).find('[role="tab"]').attr('aria-selected', 'true');
                     }
                     else {
                         if (i > current && !$(elem).is('.visited')) {
                             // disable elements behind active
-                            $(elem).addClass('disabled');
+                            $(elem).addClass(pm.cssClasses.disabled);
                         }
                     }
                 }

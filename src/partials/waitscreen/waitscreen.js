@@ -7,7 +7,7 @@
          * @param {HTMLElement} element The wait screen element
          */
         show: function( element ) {
-            element.addClass('in');
+            element.addClass(pm.cssClasses.in);
         },
 
         /**
@@ -15,7 +15,7 @@
          * @param {HTMLElement} element The wait screen element
          */
         hide: function( element ) {
-            element.removeClass('in');
+            element.removeClass(pm.cssClasses.in);
         }
 
     };
