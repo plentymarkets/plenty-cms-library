@@ -197,6 +197,7 @@ add more language files containing your translations of the defined strings.
 #### Loading a language file
 
 Language files should be loaded immediately after loading the the JavaScript library.
+
 **Example:**
 ```html
 <script src="plentymarketsCMStools-X.X.X.min.js"></script>
@@ -231,7 +232,8 @@ If the language file not contains a translation it returns the original String.
 so you can bind variables to your string.
 
 **Examples:**
-translations.json
+
+`translations.json`
 ```json
 {
 	"Close": "Exit",
@@ -239,7 +241,7 @@ translations.json
 }
 ```
 
-script.js
+`script.js`
 ```js
 PlentyFramework.translate("Close"); // returns "Exit"
 PlentyFramework.translate("Hello {{name}}", {name: 'World'}); // returns "Hi World!"
