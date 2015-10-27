@@ -1,0 +1,5 @@
+PlentyFramework.cssClasses = {
+
+    active: "active"
+
+};
