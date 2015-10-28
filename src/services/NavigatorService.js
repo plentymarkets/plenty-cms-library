@@ -18,7 +18,7 @@
      * @static
      *
      */
-    pm.service('NavigatorService', function() {
+    pm.service('NavigatorService', function(CMS, Checkout) {
         var navigation  = [];		// contains navigation list elements
         var container   = [];		// content containers
         var current     = -1;		// index of currently shown content container
@@ -28,6 +28,7 @@
                 beforeChange: [],
                 afterChange: []
             };
+        var checkoutStates = [];
 
         return {
             init: init,
@@ -67,6 +68,7 @@
          * ```
          */
         function init() {
+
             // get elements from DOM
             navigation 	= 	$('[data-plenty-checkout="navigation"] > li');
             container 	= 	$('[data-plenty-checkout="container"] > div');
@@ -74,6 +76,8 @@
             buttonPrev 	=	$('[data-plenty-checkout="prev"]');
 
             if( navigation.length == container.length && container.length > 0 ) {
+                var checkout = Checkout.getCheckout();
+
                 container.hide();
 
                 // initialize navigation
@@ -173,7 +177,7 @@
          *      });
          */
         function beforeChange( interceptor ) {
-            interceptors.beforeChange.push(interceptor);
+            interceptors.beforeChange.push( interceptor );
             return pm.getInstance().NavigatorService;
         }
 
@@ -211,7 +215,7 @@
                 $.each(interceptors[identifier], function (i, interceptor) {
                     if (interceptor(currentContainer, targetContainer) === false) {
                         continueTabChange = false;
-                        return false
+                        return false;
                     }
                 });
             }
@@ -239,12 +243,33 @@
 
             current = index;
 
+            if( !Object.equals(checkoutStates[current], Checkout.getCheckout(true) ) && contentChanged && !!$(container[ current ]).attr( 'data-plenty-checkout-content' ) ) {
+                checkoutStates[current] = Checkout.getCheckout(true);
+                // reload tab content
+                CMS.getCategoryContent( $(container[ current ]).attr( 'data-plenty-checkout-content' ) )
+                    .done(function( response ) {
+                        $(container[current]).html( response.data[0] );
+                        // continue tab change
+                        proceedTabChange(contentChanged);
+                        pm.getInstance().bindDirectives();
+                    });
+            } else {
+                // continue tab change without reloading tab content
+                proceedTabChange(contentChanged);
+                pm.getInstance().bindDirectives();
+            }
+
+        }
+
+        function proceedTabChange( contentChanged ) {
+
             // hide content containers
             $(container).hide();
 
             // refresh navigation elements
             $(navigation).each(function (i, elem) {
                 $(elem).removeClass('disabled active');
+
                 $(elem).find('[role="tab"]').attr('aria-selected', 'false');
 
                 if (i < current) {
@@ -287,18 +312,18 @@
             // set location hash
             if (current > 0) {
                 window.location.hash = $(container[current]).attr('data-plenty-checkout-id');
-            }
-            else {
+            } else {
                 if (window.location.hash.length > 0) {
                     window.location.hash = '';
                 }
             }
 
             if( contentChanged ) {
-                resolveInterceptors("afterChange", index);
+                resolveInterceptors("afterChange", current);
             }
-
         }
+
+
 
         /**
          * Continue interrupted tabchange. Shorthand for: <code>goTo(targetContainer.index, true)</code>
@@ -436,6 +461,6 @@
             //$(navigation).parent().css('marginRight', 0);
         }
 
-    });
+    }, ['CMSFactory', 'CheckoutFactory']);
 
 }(jQuery, PlentyFramework));

@@ -40,7 +40,7 @@ module.exports = function(grunt) {
 
         concat: {
             debug: {
-                src: [ 'libs/mustache.min.js', 'tmp/templates.js', 'src/plentyFramework.js', 'src/partials/**/*.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
+                src: [ 'libs/mustache.min.js', 'src/helpers/*.js', 'tmp/templates.js', 'src/plentyFramework.js', 'src/partials/**/*.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
                 dest: 'debug/<%= pkg.name %>-<%= pkg.version %>.js'
             }
         },
@@ -71,12 +71,14 @@ module.exports = function(grunt) {
 
         copy: {
             debug: {
+                expand: true,
                 src: 'lang/*',
                 dest: 'debug/'
             },
             build: {
-                src: 'debug/<%= pkg.name %>-<%= pkg.version %>.js',
-                dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
+                expand: true,
+                src: 'debug/**',
+                dest: 'dist/**'
             }
         }
     });
