@@ -4,5 +4,8 @@
   "Confirm": "Confirm",
   "Delete": "Delete",
   "Please confirm": "Please confirm",
-  "Do you really want to remove \"{{item}}\" from your basket?": "Do you really want to remove \"{{item}}\" from your basket?"
+  "Save": "Save",
+  "Do you really want to remove \"{{item}}\" from your basket?": "Do you really want to remove \"{{item}}\" from your basket?",
+  "Select order parameters": "Select order parameters",
+  "Edit order parameters": "Edit order parameters"
 }

@@ -4,5 +4,8 @@
   "Confirm": "Bestätigen",
   "Delete": "Löschen",
   "Please confirm": "Bitte bestätigen",
-  "Do you really want to remove \"{{item}}\" from your basket?": "Möchten Sie den Artikel \"{{item}}\" wirklich aus dem Warenkorb entfernen?"
+  "Save": "Speichern",
+  "Do you really want to remove \"{{item}}\" from your basket?": "Möchten Sie den Artikel \"{{item}}\" wirklich aus dem Warenkorb entfernen?",
+  "Select order parameters": "Bestellmerkmale wählen",
+  "Edit order parameters": "Bestellmerkmale ändern"
 }
