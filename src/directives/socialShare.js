@@ -31,23 +31,21 @@
      */
     pm.directive('[data-plenty-social]', function(i, elem, SocialShareService) {
 
-        var cssList = pm.cssClasses;
-
         var toggle = $(elem).find('[data-plenty="switch"]');
 
         // append container to put / delete service.html
         $(elem).append('<div class="social-container"></div>');
 
         // add "off" class to switch, if neither "off" or "on" is set
-        if ( !toggle.hasClass(cssList.off) && !toggle.hasClass(cssList.on) ) {
-            toggle.addClass(cssList.off);
+        if ( !toggle.hasClass(pm.cssClasses.off) && !toggle.hasClass(pm.cssClasses.on) ) {
+            toggle.addClass(pm.cssClasses.off);
         }
 
         // toggle switch
         toggle.on('click', function() {
-            if ( toggle.hasClass(cssList.off) ) {
+            if ( toggle.hasClass(pm.cssClasses.off) ) {
                 if ( $(elem).attr("data-toggle") == "tooltip" ) { $(elem).tooltip('destroy') };
-                toggle.removeClass(cssList.off).addClass(cssList.on);
+                toggle.removeClass(pm.cssClasses.off).addClass(pm.cssClasses.on);
                 // hide dummy button
                 $(elem).find('[data-plenty="placeholder"]').hide();
                 // load HTML defined in 'api'

@@ -244,8 +244,7 @@
 
             // refresh navigation elements
             $(navigation).each(function (i, elem) {
-                $(elem).removeClass(pm.cssClasses.disabled);
-                $(elem).removeClass(pm.cssClasses.active);
+                $(elem).removeClass(pm.cssClasses.concat('disabled active'));
                 $(elem).find('[role="tab"]').attr('aria-selected', 'false');
 
                 if (i < current) {
@@ -254,8 +253,7 @@
                 }
                 else {
                     if (i == current) {
-                        $(elem).addClass(pm.cssClasses.active);
-                        $(elem).addClass(pm.cssClasses.visited);
+                        $(elem).addClass(pm.cssClasses.concat('active visited'));
                         $(elem).find('[role="tab"]').attr('aria-selected', 'true');
                     }
                     else {

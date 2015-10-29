@@ -24,13 +24,11 @@
     // TODO: handle external dependency to Modernizr
     pm.directive('.dropdown > a[data-plenty-enable]', function(i, elem, MediaSizeService) {
 
-       var cssList = pm.cssClasses;
-
        if( $(elem).attr('data-plenty-enable') == "toggle-xs-sm-or-touch" ) {
             $(elem).click(function(e) {
                 if ( MediaSizeService.interval() == 'xs' || MediaSizeService.interval() == 'sm' || ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch ) ) {
-                    $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').not( $(this) ).parent().removeClass(cssList.open);
-                    $(this).parent().toggleClass(cssList.open);
+                    $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').not( $(this) ).parent().removeClass(pm.cssClasses.open);
+                    $(this).parent().toggleClass(pm.cssClasses.open);
                     return false;
                 }
             });
@@ -40,9 +38,9 @@
         else if( $(elem).attr('data-plenty-enable') == "touch" ) {
             $(elem).click(function() {
                 if ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch ) { // otherwise already has mobile navigation
-                    $('.dropdown.open > a[data-plenty-enable="touch"]').not( $(this) ).parent().removeClass(cssList.open);
-                    if ( ! $(this).parent().hasClass(cssList.open) ) {
-                        $(this).parent().addClass(cssList.open);
+                    $('.dropdown.open > a[data-plenty-enable="touch"]').not( $(this) ).parent().removeClass(pm.cssClasses.open);
+                    if ( ! $(this).parent().hasClass(pm.cssClasses.open) ) {
+                        $(this).parent().addClass(pm.cssClasses.open);
                         return false;
                     }
                 }
@@ -51,44 +49,42 @@
     }, ['MediaSizeService']);
 
 
-    pm.directive('*', function(i, elem, MediaSizeService) {
+    pm.directive('*', function(i, elem, MediaSizeService, cc) {
 
-        var cssList = pm.cssClasses;
 
         $(elem).click(function (e) {
             if (MediaSizeService.interval() == 'xs' || MediaSizeService.interval() == 'sm' || ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch )) {
                 var dropdown = $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent();
                 if (dropdown.length > 0 && !dropdown.is(e.target) && dropdown.has(e.target).length <= 0) {
-                    dropdown.removeClass(cssList.open);
+                    dropdown.removeClass(pm.cssClasses.open);
                 }
             }
 
             if (MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch) {
                 var dropdown = $('.dropdown.open > a[data-plenty-enable="touch"]').parent();
                 if (dropdown.length > 0 && !dropdown.is(e.target) && dropdown.has(e.target).length <= 0) {
-                    dropdown.removeClass(cssList.open);
+                    dropdown.removeClass(pm.cssClasses.open);
                 }
             }
         });
     }, ['MediaSizeService']);
 
 
-    pm.directive(window, function(i, elem, MediaSizeService) {
+    pm.directive(window, function(i, elem, MediaSizeService, cc) {
 
-        var cssList = pm.cssClasses;
 
         $(window).on('orientationchange', function() {
             if ( MediaSizeService.interval() == 'xs' || MediaSizeService.interval() == 'sm' || ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch ) ) {
-                $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent().removeClass(cssList.open);
+                $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent().removeClass(pm.cssClasses.open);
             }
 
             if ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch ) {
-                $('.dropdown.open > a[data-plenty-enable="touch"]').parent().removeClass(cssList.open);
+                $('.dropdown.open > a[data-plenty-enable="touch"]').parent().removeClass(pm.cssClasses.open);
             }
         });
         $(window).on('sizeChange', function(newValue) {
             if ( newValue != 'xs' && newValue != 'sm' && ! Modernizr.touch ) {
-                $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent().removeClass(cssList.open);
+                $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent().removeClass(pm.cssClasses.open);
             }
         });
     }, ['MediaSizeService']);
