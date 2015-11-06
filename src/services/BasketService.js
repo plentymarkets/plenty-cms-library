@@ -251,6 +251,9 @@
         function editOrderParams( BasketItemID ) {
 
             var basketItem = getBasketItem( BasketItemID );
+            // FIX: unset old order params
+            basketItem.BasketItemOrderParamsList = [];
+
             API.get( '/rest/checkout/container_' + 'CheckoutOrderParamsList'.toLowerCase() + '/', {
                     itemID : basketItem.BasketItemItemID,
                     quantity : basketItem.BasketItemQuantity,
