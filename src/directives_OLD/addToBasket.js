@@ -9,7 +9,7 @@
 
 (function($, pm) {
 
-	pm.directive('[data-plenty="addBasketItemButton"]', function(i, button, BasketService)
+	pm.directive('[data-plenty="addBasketItemButton2"]', function(i, button, BasketService)
     {
 
         $(button).click( function(e)
