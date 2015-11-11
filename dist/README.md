@@ -18,7 +18,7 @@ Upload the following files to `LAYOUT_FOLDER/js/plenty/`:
 
 ### Step 3: Include new files in your template
 
-Download and open `LAYOUT_FOLDER/js/plenty/scripts.json` and change insert the new file to use:
+Download and open `LAYOUT_FOLDER/js/plenty/scripts.json` and change the file to use:
 ```js
 {
   "PageDesignGlobal": {
@@ -35,7 +35,7 @@ Download and open `LAYOUT_FOLDER/js/plenty/scripts.json` and change insert the n
   .
 }
 ```
-If this file doesn't exist see [Update your Callisto Light using dependecyInjector](#update-your-callisto-light-using-dependecyInjector).
+If the `scripts.json` doesn't exist see [Update your Callisto Light using dependecyInjector](#update-your-callisto-light-using-dependecyinjector).
 Upload the edited file back to your webspace (you will override the existing version).
 
 ### Step 4: Load language files in your PageDesign-templates
@@ -52,7 +52,7 @@ Open templates: `PageDesignContent`, `PageDesignCheckout`, `PageDesignMyAccount`
     });
 </script>
 ```
-If you cannot find this code see [Update your Callisto Light using dependecyInjector](#update-your-callisto-light-using-dependecyInjector).
+If you cannot find this code see [Update your Callisto Light using dependecyInjector](#update-your-callisto-light-using-dependecyinjector).
 **ATTENTION:** In each template you can find two similar occurrences of this snippet. Be sure that the value of the parameter `position` is `'body'`
 
 Add the following lines after each found occurrence:
@@ -140,6 +140,9 @@ and edit to:
 ```js
 if ( !response || (response.data.CheckoutMethodOfPaymentRedirectURL == '' && response.data.CheckoutMethodOfPaymentAdditionalContent == '' ) )
 ```
+
+
+
 
 ## Update your **Callisto Light** using `dependecyInjector`
 
