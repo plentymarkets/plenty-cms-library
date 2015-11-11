@@ -55,7 +55,7 @@ Open templates: `PageDesignContent`, `PageDesignCheckout`, `PageDesignMyAccount`
 If you cannot find this code see [Update your Callisto Light using dependecyInjector](#update-your-callisto-light-using-dependecyinjector).
 **ATTENTION:** In each template you will find two similar occurrences of this snippet. Make sure that the value of the parameter `position` is `'body'`
 
-Add the following lines after each found occurrence:
+Add the following lines after each occurrence:
 
 ```html
 <script>
