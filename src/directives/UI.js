@@ -1,3 +1,11 @@
+/**
+ * Add fancy ui modifications - the visual stuff - here.
+ * Respond functionality like 'event':UI.myFunctionality(currentElement)
+ *
+ * Example:
+ *      <button type="button" data-plenty="click:UI.addTooltip(this)">go to top</button>
+ *
+ */
 (function( $, pm )
 {
     pm.directive( 'UI', function( MediaSizeService, SocialShareService )
@@ -15,7 +23,7 @@
         } );
 
         return {
-            setTooltip          : setTooltip,
+            addTooltip          : addTooltip,
             addContentPageSlider: addContentPageSlider,
             equalHeight         : equalHeight,
             initToTop           : initToTop,
@@ -29,17 +37,24 @@
             setRemoteTab        : setRemoteTab
         };
 
-        function setTooltip( elem )
+        /**
+         * Adds bootstrap tool tip to element.
+         *
+         * Legacy directive selector: data-toggle="tooltip"
+         *
+         * @param elem
+         */
+        function addTooltip( elem )
         {
             $( elem ).tooltip( {
                 container: 'body'
             } );
         }
 
-        /*
-         * content page slider
+        /**
+         * Adds content page slider (owlCarousel)
          *
-         * usage (functionality requires only attribute data-plenty="contentpageSlider"):
+         * usage:
          * <div class="contentpageSlider" data-plenty="contentpageSlider">
          *     <div class="slide">
          *         ...
@@ -49,6 +64,10 @@
          *     </div>
          *     ...
          * </div>
+         *
+         * Legacy directive selector: data-plenty="contentpageSlider"
+         *
+         * @param elem
          */
         function addContentPageSlider( elem )
         {
@@ -68,7 +87,10 @@
         }
 
         /**
-         * Equal Box heights
+         * Equal Box height
+         * Calculates equal box height for chosen elements.
+         *
+         * Legacy directive selector: data-plenty-equal
          *
          * @param elem
          * @param elementExists - default false
@@ -76,11 +98,11 @@
         function equalHeight( elem, elementExists )
         {
             var cachedElement = $( elem );
-            var maxHeight = 0;
-            var cachedChild = {};
+            var maxHeight     = 0;
+            var cachedChild   = {};
 
             var equalTarget = cachedElement.find( '[data-plenty-equal-target]' ) || cachedElement.children();
-            var mediaSizes = cachedElement.data( 'plenty-equal' ).replace( /\s/g, '' ).split( ',' );
+            var mediaSizes  = cachedElement.data( 'plenty-equal' ).replace( /\s/g, '' ).split( ',' );
 
             // if element wasn't pushed before.
             if ( !elementExists )
@@ -88,7 +110,8 @@
                 equalHeightElements.push( elem );
             }
 
-            for (var i = equalTarget.length; i >= 0; i--) {
+            for ( var i = equalTarget.length; i >= 0; i-- )
+            {
                 cachedChild = $( equalTarget[i] );
                 cachedChild.css( 'height', '' );
 
@@ -105,8 +128,10 @@
         }
 
         /**
-         * Scroll page to top on click.
+         * Scroll page to top.
          * Just add without events.
+         *
+         * Legacy directive selector: data-plenty="toTop"
          *
          * @param elem
          */
@@ -136,6 +161,8 @@
         /**
          * lazy load on ready.
          *
+         * Legacy directive selector: img[data-plenty-lazyload]
+         *
          * @param elem
          */
         function initLazyload( elem )
@@ -149,6 +176,13 @@
             } );
         }
 
+        /**
+         * Toggle show and hide animation.
+         *
+         * Legacy directive selector: data-plenty="openCloseToggle"
+         *
+         * @param elem
+         */
         function toggleHideShow( elem )
         {
             $( elem ).parent().addClass( 'animating' );
@@ -167,6 +201,14 @@
             } );
         }
 
+        /**
+         * Toggle target content on click.
+         * Bind to checked-/ unchecked-property of radio buttons
+         *
+         * Legacy directive selector: data-plenty-slidetoggle
+         *
+         * @param elem
+         */
         function slideToggle( elem )
         {
             var target = $( $( elem ).attr( 'data-plenty-target' ) );
@@ -237,13 +279,14 @@
         }
 
         /**
+         * TODO check comment
          * Social Share Activation
          * Activate and load share-buttons manually by clicking a separate button
          * Usage / data-attributes:
          * <div data-plenty-social="twitter">
-         *    <span data-plenty="switch"></span>                Will be used to activate the service set in
+         *    <span data-plenty="switch"></span>        Will be used to activate the service set in
          * data-plenty-social=""
-         *        <span data-plenty="placeholder"></span>        Will be replaced with loaded share button
+         *    <span data-plenty="placeholder"></span>   Will be replaced with loaded share button
          * </div>
          *
          * possible values for data-plenty-social:
@@ -256,6 +299,8 @@
          * You can extend the parent element with a (bootstrap) tooltip by adding data-toggle="tooltip" and
          * title="TOOLTIP CONTENT" Tooltip will be destroyed after activating a social service
          * (!) Requires bootstrap.js
+         *
+         * Legacy directive selector: data-plenty-social
          *
          * @param elem
          */
@@ -299,6 +344,8 @@
          * <a data-plenty-opentab="TAB_SELECTOR">
          * (!) Requires bootstrap.js
          *
+         * Legacy directive selector: a[data-plenty-opentab]
+         *
          * @param elem
          */
         function openTab( elem )
@@ -312,6 +359,8 @@
          * Show remote tab with jQuery-selector 'TAB_1' in target container (below)
          * <span data-plenty-openremotetab="TAB_1">
          *
+         * Legacy directive selector: data-plenty-openremotetab
+         *
          * @param elem
          */
         function openRemoteTab( elem )
@@ -320,6 +369,36 @@
             $( tabSelector ).trigger( 'tabchange' );
         }
 
+        /**
+         * Remote tabs
+         * tab content can be placed anywhere in body
+         *
+         * Content of remote tab
+         * <div data-plenty-labelledby="TAB_1" data-plenty-remotetabs-id="REMOTE_TAB_GROUP">
+         *     <!-- Content of TAB_1 -->
+         * </div>
+         *
+         * Remote tab navigation
+         * [...]
+         * <div data-plenty="remoteTabs" data-plenty-remotetabs-id="REMOTE_TAB_GROUP">
+         *     <ul>
+         *         <li class="active">
+         *             <a data-plenty-tab-id="TAB_1">
+         *                 <!-- Title of TAB_1 -->
+         *             </a>
+         *         </li>
+         *         <li>
+         *             <a data-plenty-tab-id="TAB_2">
+         *                 <!-- Titel of TAB_2 -->
+         *             </a>
+         *         </li>
+         *     </ul>
+         * </div>
+         *
+         * Legacy directive selector: data-plenty="remoteTabs"
+         *
+         * @param elem
+         */
         function setRemoteTab( elem )
         {
             var tabsId = $( elem ).attr( 'data-plenty-remotetabs-id' );
@@ -387,6 +466,8 @@
          * media        :  only toggle class on given media sizes (optional)
          *
          * (!) using data-plenty-toggle on <a>-elements will prevent redirecting to href=""
+         *
+         * Legacy directive selector: data-plenty-toggle
          *
          * @param elem
          */
