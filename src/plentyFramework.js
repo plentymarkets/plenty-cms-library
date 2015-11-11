@@ -148,11 +148,15 @@
 
         rootElement = rootElement || 'body';
 
-        $( rootElement ).find( '[data-py]' ).each( function( i, element )
+        $( rootElement ).find( '[data-plenty]' ).each( function( i, element )
         {
 
-            var directive = parseDirective( $( element ).attr( 'data-py' ), $( element ) );
+            var directive = parseDirective( $( element ).attr( 'data-plenty' ), $( element ) );
 
+            if( !directive ) {
+                // continue
+                return;
+            }
             if ( !!PlentyFramework.directives[directive.class] && PlentyFramework.directives.hasOwnProperty( directive.class ) )
             {
 
@@ -189,7 +193,15 @@
 
     function parseDirective( expression, element )
     {
-        var match = expression.match( /(^([\w]+):)?([\w]+).([\w]+)(\((.*)\))?$/ );
+        var directivePattern = /^(([\w]+):)?([\w]+)\.([\w]+)(\((.*)\))?$/;
+
+        if( !directivePattern.test(expression) )
+        {
+            console.warn("Invalid directive: " + expression );
+            return;
+        }
+
+        var match = expression.match( directivePattern );
 
         if ( !match[3] || match[3].length <= 0 )
         {
@@ -212,7 +224,7 @@
 
         if ( !!match[6] && match[6].length > 0 )
         {
-            var params = match[6].match( /([\w'"]+)/g );
+            var params = match[6].match( /([\w'"-]+)/g );
             for ( var i = 0; i < params.length; i++ )
             {
                 if ( !isNaN( parseFloat( params[i] ) ) )
