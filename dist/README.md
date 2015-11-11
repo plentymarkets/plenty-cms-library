@@ -53,6 +53,7 @@ Open templates: `PageDesignContent`, `PageDesignCheckout`, `PageDesignMyAccount`
 </script>
 ```
 If you cannot find this code see [Update your Callisto Light using dependecyInjector](#update-your-callisto-light-using-dependecyinjector).
+
 **ATTENTION:** In each template you will find two similar occurrences of this snippet. Make sure that the value of the parameter `position` is `'body'`
 
 Add the following lines after each occurrence:
@@ -66,6 +67,7 @@ Add the following lines after each occurrence:
     {% endif %}
 </script>
 ```
+
 **ATTENTION:** Do not wrap these calls in the same &lt;script&gt; tag. Be sure to have separate &lt;script&gt; tags for each call.
 
 ### Step 5: Edit Category for Checkout-Step 3
@@ -180,6 +182,7 @@ Open templates: `PageDesignContent`, `PageDesignCheckout`, `PageDesignMyAccount`
     requireScripts( 'PageDesign$PageDesign', 'body', '{% GetGlobal('LayoutFolder'); %}/js/' );
 </script>
 ```
+
 **ATTENTION:** In each template you will find two similar occurrences of this snippet. Make sure that the value of the second parameter is `'body'`.
 
 Add the following lines after each occurrence:
@@ -193,6 +196,7 @@ Add the following lines after each occurrence:
     {% endif %}
 </script>
 ```
+
 **ATTENTION:** Do not wrap these calls in the same &lt;script&gt; tag. Be sure to have separate &lt;script&gt; tags for each call.
 
 
