@@ -77,8 +77,9 @@ module.exports = function(grunt) {
             },
             build: {
                 expand: true,
-                src: 'debug/**',
-                dest: 'dist/**'
+                cwd: 'debug/',
+                src: '**',
+                dest: 'dist/'
             }
         }
     });

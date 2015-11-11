@@ -47,7 +47,8 @@
          * @function init
          */
         function init() {
-            Checkout.loadCheckout();
+            Checkout.loadCheckout(true);
+            checkoutState = Checkout.getCheckout(true);
         }
 
 
@@ -113,7 +114,11 @@
                             delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                            Checkout.setCheckout();
+                            Checkout.setCheckout().done(function () {
+                                if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
+                                    Checkout.reloadContainer('CustomerShippingAddress');
+                                }
+                            });
                         });
                 } else {
                     // no changes detected
@@ -127,7 +132,11 @@
                     delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                     delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                    return Checkout.setCheckout();
+                    return Checkout.setCheckout().done(function () {
+                        if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
+                            Checkout.reloadContainer('CustomerShippingAddress');
+                        }
+                    });
                 } else {
                     return API.idle();
                 }
@@ -207,7 +216,6 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function preparePayment() {
-            console.log('prepare payment');
             if( Object.equals(checkoutState, Checkout.getCheckout(true)) ) {
                 return API.idle();
             } else {

@@ -1,0 +1,11 @@
+{
+  "Close": "Schließen",
+  "Cancel": "Abbrechen",
+  "Confirm": "Bestätigen",
+  "Delete": "Löschen",
+  "Please confirm": "Bitte bestätigen",
+  "Save": "Speichern",
+  "Do you really want to remove \"{{item}}\" from your basket?": "Möchten Sie den Artikel \"{{item}}\" wirklich aus dem Warenkorb entfernen?",
+  "Select order parameters": "Bestellmerkmale wählen",
+  "Edit order parameters": "Bestellmerkmale ändern"
+}
