@@ -5,6 +5,7 @@ debug
 tmp
 doc
 callisto_2_3
+callisto_2_3_fix
 test/*.xml
 *.xml
 test/coverage/*
