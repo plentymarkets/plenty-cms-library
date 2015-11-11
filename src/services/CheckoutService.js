@@ -111,6 +111,7 @@
                         .done(function (response) {
 
                             Checkout.getCheckout().CheckoutCustomerShippingAddressID = response.data.ID;
+                            Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
                             delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
