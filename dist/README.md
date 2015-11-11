@@ -73,6 +73,7 @@ Add the following lines after each occurrence:
 Open the category which is set for Checkout-Step 3. By default this category is named "Kasse".
 Search for
 ```html
+{% if GetGlobal("ShowTabDetails") %}
 <!-- STEP 1: Order details -->
 <div class="container" data-plenty-checkout-id="details" id="checkoutPanelOrderDetails" aria-labelledby="checkoutTabOrderDetails" role="tabpanel">
     {% $_id = CheckoutStepPageID(4) %}
@@ -101,6 +102,7 @@ Search for
 and edit to:
 
 ```html
+{% if GetGlobal("ShowTabDetails") %}
 <!-- STEP 1: Order details -->
 {% $_id = CheckoutStepPageID(4) %}
 <div class="container" data-plenty-checkout-id="details" id="checkoutPanelOrderDetails" aria-labelledby="checkoutTabOrderDetails" role="tabpanel" data-plenty-checkout-content="$_id">
