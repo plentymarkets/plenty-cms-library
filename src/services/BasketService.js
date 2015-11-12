@@ -292,16 +292,7 @@
                 API.post("/rest/checkout/basketitemslist/", params)
                     .done(function () {
                         Checkout.setCheckout().done(function () {
-                            Checkout.reloadContainer('Totals');
-
-                            var basketItemsPriceTotal = 0;
-                            var params2 = Checkout.getCheckout().BasketItemsList;
-                            for (var i = 0; i < params2.length; i++) {
-                                if (params2[i].BasketItemID == BasketItemID) {
-                                    basketItemsPriceTotal = params2[i].BasketItemPriceTotal;
-                                }
-                            }
-                            $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty-checkout="basket-item-price-total"]').html(basketItemsPriceTotal);
+                            Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
                             refreshBasketPreview();
                         });
                     });
