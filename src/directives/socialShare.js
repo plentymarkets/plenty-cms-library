@@ -37,15 +37,15 @@
         $(elem).append('<div class="social-container"></div>');
 
         // add "off" class to switch, if neither "off" or "on" is set
-        if ( !toggle.hasClass(pm.cssClasses.off) && !toggle.hasClass(pm.cssClasses.on) ) {
-            toggle.addClass(pm.cssClasses.off);
+        if ( !toggle.hasClass('off') && !toggle.hasClass('on') ) {
+            toggle.addClass('off');
         }
 
         // toggle switch
         toggle.on('click', function() {
-            if ( toggle.hasClass(pm.cssClasses.off) ) {
+            if ( toggle.hasClass('off') ) {
                 if ( $(elem).attr("data-toggle") == "tooltip" ) { $(elem).tooltip('destroy') };
-                toggle.removeClass(pm.cssClasses.off).addClass(pm.cssClasses.on);
+                toggle.removeClass('off').addClass('on');
                 // hide dummy button
                 $(elem).find('[data-plenty="placeholder"]').hide();
                 // load HTML defined in 'api'

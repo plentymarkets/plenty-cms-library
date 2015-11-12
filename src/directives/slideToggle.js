@@ -52,10 +52,10 @@
             $(trigger).click(function() {
                 $(target).parents('[data-plenty-equal-target]').css('height', 'auto');
 
-                $(trigger).addClass(pm.cssClasses.animating);
+                $(trigger).addClass('animating');
                 $(target).slideToggle(400, function() {
-                    $(trigger).removeClass(pm.cssClasses.animating);
-                    $(trigger).toggleClass(pm.cssClasses.active);
+                    $(trigger).removeClass('animating');
+                    $(trigger).toggleClass('active');
                     pm.getInstance().bindDirectives('[data-plenty-equal]');
                 });
             });

@@ -31,6 +31,8 @@
 			addItem: addBasketItem,
             removeItem: removeBasketItem,
             setItemQuantity: setItemQuantity,
+            editItemAttributes: editItemAttributes,
+            editOrderParams: editOrderParams,
             addCoupon: addCoupon,
             removeCoupon: removeCoupon
 		};
@@ -54,9 +56,11 @@
                             if (resp.data[0].indexOf("form-group") > 0) {
                                 Modal.prepare()
                                     .setContent(resp.data[0])
+                                    .setTitle( pm.translate("Select order parameters") )
+                                    .setLabelConfirm( pm.translate("Save") )
                                     .onConfirm(function() {
                                         // save order params
-                                        saveOrderParams(article);
+                                        addArticle( saveOrderParams(article) );
 
                                         // close modal after saving order params
                                         return true;
@@ -107,7 +111,7 @@
                 }
             });
 
-            addArticle( articleWithParams );
+            return articleWithParams;
         }
 
         function addArticle( article ) {
@@ -132,7 +136,19 @@
                 });
         }
 
-        function orderParamFileUpload(input , articleWithParams ) {
+        function updateArticle( article ) {
+            API.put( '/rest/checkout/basketitemslist/', article )
+                .done(function() {
+                    // Item has no OrderParams -> Refresh Checkout & BasketPreview
+                    Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
+                    Checkout.loadCheckout()
+                        .done(function() {
+                            refreshBasketPreview();
+                        });
+                })
+        }
+
+        function orderParamFileUpload(input, articleWithParams ) {
             var key = input.id;
             var orderParamUploadFiles = {};
             var orderParamFileIdStack = [];
@@ -154,7 +170,7 @@
                 orderParamFileIdStack.push(key);
             }
 
-            for(var i= 0, length = orderParamFileIdStack.length; i < length; ++i){
+            for(var i= 0, length = orderParamFileIdStack.length; i < length; ++i) {
                 formData = new FormData();
                 fileData = orderParamUploadFiles[orderParamFileIdStack[i]];
                 formData.append("0", fileData[0], fileData[0].name);
@@ -202,6 +218,72 @@
             }
 
             return basketList;
+        }
+
+        function editItemAttributes( BasketItemID ) {
+            var modal = $('[data-plenty-basket-item="' + BasketItemID + '"' );
+            modal.modal('show');
+            modal.find('[data-plenty-modal="confirm"]').on('click', function() {
+                var basketItem = getBasketItem(BasketItemID);
+                var attributesList = [];
+                modal.find('select').each(function(i, attributeSelect) {
+                    var match = attributeSelect.name.match(/^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/);
+                    if(match && match[1])
+                    {
+                        attributesList.push({
+                            BasketItemAttributeID 		: match[1],
+                            BasketItemAttributeValueID	: $(attributeSelect).val()
+                        });
+                    }
+
+                    if(attributesList.length != 0)
+                    {
+                        basketItem.BasketItemAttributesList = attributesList;
+                    }
+
+                });
+                //update basketItem and refresh previewLists
+                updateArticle([basketItem]);
+
+            });
+        }
+
+        function editOrderParams( BasketItemID ) {
+
+            var basketItem = getBasketItem( BasketItemID );
+            // FIX: unset old order params
+            basketItem.BasketItemOrderParamsList = [];
+
+            API.get( '/rest/checkout/container_' + 'CheckoutOrderParamsList'.toLowerCase() + '/', {
+                    itemID : basketItem.BasketItemItemID,
+                    quantity : basketItem.BasketItemQuantity,
+                    basketItemID: BasketItemID
+                }).done(function (resp) {
+                    // checking for order params!
+                    Modal.prepare()
+                        .setContent( resp.data[0] )
+                        .setTitle( pm.translate("Edit order parameters") )
+                        .setLabelConfirm( pm.translate("Save") )
+                        .onConfirm(function() {
+                            // save order params
+                            updateArticle( saveOrderParams([basketItem]) );
+
+                            // close modal after saving order params
+                            return true;
+                        })
+                        .show();
+                });
+        }
+
+        function getBasketItem( BasketItemID ) {
+            var basketItems = Checkout.getCheckout().BasketItemsList;
+            for( var i = 0; i < basketItems.length; i++ ) {
+                if( basketItems[i].BasketItemID == BasketItemID ) {
+                    return basketItems[i];
+                }
+            }
+
+            return null;
         }
 
         /**
@@ -377,13 +459,8 @@
         // update container
         function updateContainer() {
             Checkout.reloadContainer('Coupon');
-            // reload category, if we are at checkout
-            if ( $('[data-plenty-checkout-catcontent="' + pm.getGlobal('checkoutConfirmCatID') + '"]').length > 0 ) {
-                Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-            }
-            else
-                // reload totals, if we are at basket
-                if ( $('[data-plenty-checkout-template="Totals"]').length > 0 ) {
+            // reload totals, if we are at basket
+            if ( $('[data-plenty-checkout-template="Totals"]').length > 0 ) {
                 Checkout.reloadContainer('Totals');
             }
         }

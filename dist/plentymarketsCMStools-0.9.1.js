@@ -1,5 +1,25 @@
 (function defineMustache(global,factory){if(typeof exports==="object"&&exports&&typeof exports.nodeName!=="string"){factory(exports)}else if(typeof define==="function"&&define.amd){define(["exports"],factory)}else{global.Mustache={};factory(Mustache)}})(this,function mustacheFactory(mustache){var objectToString=Object.prototype.toString;var isArray=Array.isArray||function isArrayPolyfill(object){return objectToString.call(object)==="[object Array]"};function isFunction(object){return typeof object==="function"}function typeStr(obj){return isArray(obj)?"array":typeof obj}function escapeRegExp(string){return string.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g,"\\$&")}function hasProperty(obj,propName){return obj!=null&&typeof obj==="object"&&propName in obj}var regExpTest=RegExp.prototype.test;function testRegExp(re,string){return regExpTest.call(re,string)}var nonSpaceRe=/\S/;function isWhitespace(string){return!testRegExp(nonSpaceRe,string)}var entityMap={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"};function escapeHtml(string){return String(string).replace(/[&<>"'\/]/g,function fromEntityMap(s){return entityMap[s]})}var whiteRe=/\s*/;var spaceRe=/\s+/;var equalsRe=/\s*=/;var curlyRe=/\s*\}/;var tagRe=/#|\^|\/|>|\{|&|=|!/;function parseTemplate(template,tags){if(!template)return[];var sections=[];var tokens=[];var spaces=[];var hasTag=false;var nonSpace=false;function stripSpace(){if(hasTag&&!nonSpace){while(spaces.length)delete tokens[spaces.pop()]}else{spaces=[]}hasTag=false;nonSpace=false}var openingTagRe,closingTagRe,closingCurlyRe;function compileTags(tagsToCompile){if(typeof tagsToCompile==="string")tagsToCompile=tagsToCompile.split(spaceRe,2);if(!isArray(tagsToCompile)||tagsToCompile.length!==2)throw new Error("Invalid tags: "+tagsToCompile);openingTagRe=new RegExp(escapeRegExp(tagsToCompile[0])+"\\s*");closingTagRe=new RegExp("\\s*"+escapeRegExp(tagsToCompile[1]));closingCurlyRe=new RegExp("\\s*"+escapeRegExp("}"+tagsToCompile[1]))}compileTags(tags||mustache.tags);var scanner=new Scanner(template);var start,type,value,chr,token,openSection;while(!scanner.eos()){start=scanner.pos;value=scanner.scanUntil(openingTagRe);if(value){for(var i=0,valueLength=value.length;i<valueLength;++i){chr=value.charAt(i);if(isWhitespace(chr)){spaces.push(tokens.length)}else{nonSpace=true}tokens.push(["text",chr,start,start+1]);start+=1;if(chr==="\n")stripSpace()}}if(!scanner.scan(openingTagRe))break;hasTag=true;type=scanner.scan(tagRe)||"name";scanner.scan(whiteRe);if(type==="="){value=scanner.scanUntil(equalsRe);scanner.scan(equalsRe);scanner.scanUntil(closingTagRe)}else if(type==="{"){value=scanner.scanUntil(closingCurlyRe);scanner.scan(curlyRe);scanner.scanUntil(closingTagRe);type="&"}else{value=scanner.scanUntil(closingTagRe)}if(!scanner.scan(closingTagRe))throw new Error("Unclosed tag at "+scanner.pos);token=[type,value,start,scanner.pos];tokens.push(token);if(type==="#"||type==="^"){sections.push(token)}else if(type==="/"){openSection=sections.pop();if(!openSection)throw new Error('Unopened section "'+value+'" at '+start);if(openSection[1]!==value)throw new Error('Unclosed section "'+openSection[1]+'" at '+start)}else if(type==="name"||type==="{"||type==="&"){nonSpace=true}else if(type==="="){compileTags(value)}}openSection=sections.pop();if(openSection)throw new Error('Unclosed section "'+openSection[1]+'" at '+scanner.pos);return nestTokens(squashTokens(tokens))}function squashTokens(tokens){var squashedTokens=[];var token,lastToken;for(var i=0,numTokens=tokens.length;i<numTokens;++i){token=tokens[i];if(token){if(token[0]==="text"&&lastToken&&lastToken[0]==="text"){lastToken[1]+=token[1];lastToken[3]=token[3]}else{squashedTokens.push(token);lastToken=token}}}return squashedTokens}function nestTokens(tokens){var nestedTokens=[];var collector=nestedTokens;var sections=[];var token,section;for(var i=0,numTokens=tokens.length;i<numTokens;++i){token=tokens[i];switch(token[0]){case"#":case"^":collector.push(token);sections.push(token);collector=token[4]=[];break;case"/":section=sections.pop();section[5]=token[2];collector=sections.length>0?sections[sections.length-1][4]:nestedTokens;break;default:collector.push(token)}}return nestedTokens}function Scanner(string){this.string=string;this.tail=string;this.pos=0}Scanner.prototype.eos=function eos(){return this.tail===""};Scanner.prototype.scan=function scan(re){var match=this.tail.match(re);if(!match||match.index!==0)return"";var string=match[0];this.tail=this.tail.substring(string.length);this.pos+=string.length;return string};Scanner.prototype.scanUntil=function scanUntil(re){var index=this.tail.search(re),match;switch(index){case-1:match=this.tail;this.tail="";break;case 0:match="";break;default:match=this.tail.substring(0,index);this.tail=this.tail.substring(index)}this.pos+=match.length;return match};function Context(view,parentContext){this.view=view;this.cache={".":this.view};this.parent=parentContext}Context.prototype.push=function push(view){return new Context(view,this)};Context.prototype.lookup=function lookup(name){var cache=this.cache;var value;if(cache.hasOwnProperty(name)){value=cache[name]}else{var context=this,names,index,lookupHit=false;while(context){if(name.indexOf(".")>0){value=context.view;names=name.split(".");index=0;while(value!=null&&index<names.length){if(index===names.length-1)lookupHit=hasProperty(value,names[index]);value=value[names[index++]]}}else{value=context.view[name];lookupHit=hasProperty(context.view,name)}if(lookupHit)break;context=context.parent}cache[name]=value}if(isFunction(value))value=value.call(this.view);return value};function Writer(){this.cache={}}Writer.prototype.clearCache=function clearCache(){this.cache={}};Writer.prototype.parse=function parse(template,tags){var cache=this.cache;var tokens=cache[template];if(tokens==null)tokens=cache[template]=parseTemplate(template,tags);return tokens};Writer.prototype.render=function render(template,view,partials){var tokens=this.parse(template);var context=view instanceof Context?view:new Context(view);return this.renderTokens(tokens,context,partials,template)};Writer.prototype.renderTokens=function renderTokens(tokens,context,partials,originalTemplate){var buffer="";var token,symbol,value;for(var i=0,numTokens=tokens.length;i<numTokens;++i){value=undefined;token=tokens[i];symbol=token[0];if(symbol==="#")value=this.renderSection(token,context,partials,originalTemplate);else if(symbol==="^")value=this.renderInverted(token,context,partials,originalTemplate);else if(symbol===">")value=this.renderPartial(token,context,partials,originalTemplate);else if(symbol==="&")value=this.unescapedValue(token,context);else if(symbol==="name")value=this.escapedValue(token,context);else if(symbol==="text")value=this.rawValue(token);if(value!==undefined)buffer+=value}return buffer};Writer.prototype.renderSection=function renderSection(token,context,partials,originalTemplate){var self=this;var buffer="";var value=context.lookup(token[1]);function subRender(template){return self.render(template,context,partials)}if(!value)return;if(isArray(value)){for(var j=0,valueLength=value.length;j<valueLength;++j){buffer+=this.renderTokens(token[4],context.push(value[j]),partials,originalTemplate)}}else if(typeof value==="object"||typeof value==="string"||typeof value==="number"){buffer+=this.renderTokens(token[4],context.push(value),partials,originalTemplate)}else if(isFunction(value)){if(typeof originalTemplate!=="string")throw new Error("Cannot use higher-order sections without the original template");value=value.call(context.view,originalTemplate.slice(token[3],token[5]),subRender);if(value!=null)buffer+=value}else{buffer+=this.renderTokens(token[4],context,partials,originalTemplate)}return buffer};Writer.prototype.renderInverted=function renderInverted(token,context,partials,originalTemplate){var value=context.lookup(token[1]);if(!value||isArray(value)&&value.length===0)return this.renderTokens(token[4],context,partials,originalTemplate)};Writer.prototype.renderPartial=function renderPartial(token,context,partials){if(!partials)return;var value=isFunction(partials)?partials(token[1]):partials[token[1]];if(value!=null)return this.renderTokens(this.parse(value),context,partials,value)};Writer.prototype.unescapedValue=function unescapedValue(token,context){var value=context.lookup(token[1]);if(value!=null)return value};Writer.prototype.escapedValue=function escapedValue(token,context){var value=context.lookup(token[1]);if(value!=null)return mustache.escape(value)};Writer.prototype.rawValue=function rawValue(token){return token[1]};mustache.name="mustache.js";mustache.version="2.1.3";mustache.tags=["{{","}}"];var defaultWriter=new Writer;mustache.clearCache=function clearCache(){return defaultWriter.clearCache()};mustache.parse=function parse(template,tags){return defaultWriter.parse(template,tags)};mustache.render=function render(template,view,partials){if(typeof template!=="string"){throw new TypeError('Invalid template! Template should be a "string" '+'but "'+typeStr(template)+'" was given as the first '+"argument for mustache#render(template, view, partials)")}return defaultWriter.render(template,view,partials)};mustache.to_html=function to_html(template,view,partials,send){var result=mustache.render(template,view,partials);if(isFunction(send)){send(result)}else{return result}};mustache.escape=escapeHtml;mustache.Scanner=Scanner;mustache.Context=Context;mustache.Writer=Writer});
 
+Object.equals = function( a, b ) {
+    if( a === b ) return true;
+    if( !(a instanceof Object) || !(b instanceof Object) ) return false;
+    if( a.constructor !== b.constructor ) return false;
+
+    for( var key in a ) {
+        if( !a.hasOwnProperty(key) ) continue;
+        if( !b.hasOwnProperty(key) ) return false;
+        if( a[key] === b[key] ) continue;
+        if( typeof( a[key] ) !== "object" ) return false;
+        if( !Object.equals(a[key], b[key]) ) return false;
+    }
+
+    for( var key in b ) {
+        if( b.hasOwnProperty(key) && !a.hasOwnProperty(key) ) return false;
+    }
+
+    return true;
+
+};
 var TemplateCache = {};
 
 TemplateCache["error/errorMessage.html"] = "<div class=\"plentyErrorBoxContent\" data-plenty-error-code=\"{{code}}\">\n" +
@@ -438,7 +458,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         }
 
         var scripts = document.getElementsByTagName( 'SCRIPT' );
-        if( PlentyFramework.scriptPath.length > 0 ) {
+        if( scripts.length > 0 ) {
             PlentyFramework.scriptPath = scripts[ scripts.length - 1 ].src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[ 1 ];
         }
 
@@ -449,6 +469,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
 
 
+PlentyFramework.cssClasses = {
+
+    active: "active"
+
+};
 (function($, pm) {
 
     pm.partials.Error = {
@@ -681,14 +706,14 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 error:      function( jqXHR ) { if( !ignoreErrors ) handleError( jqXHR ) }
             };
 
-            if (data.isFile){
-                    params.cache= data.cache;
-                    params.processData= data.processData;
-                    params.data = data.data;
-                    params.contentType= false;
-            }else{
-                    params.data = JSON.stringify(data);
-                    params.contentType ='application/json';
+            if( !!data && data.isFile ) {
+                    params.cache        = data.cache;
+                    params.processData  = data.processData;
+                    params.data         = data.data;
+                    params.contentType  = false;
+            } else {
+                    params.data         = JSON.stringify(data);
+                    params.contentType  = 'application/json';
             }
 
             if( !runInBackground ) UI.showWaitScreen();
@@ -919,14 +944,16 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          * @function getCheckout
          * @returns {Checkout} Instance of checkout object
          */
-        function getCheckout() {
+        function getCheckout( copy ) {
             if(!checkout || !checkoutData) {
                 loadCheckout(true);
             }
 
+            if( !!copy ) {
+                return $.extend(true, {}, checkoutData);
+            }
             return checkout;
         }
-
         /**
          * Receive global checkout data from ReST-API
          * @function loadCheckout
@@ -950,6 +977,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function setCheckout() {
+
 
             return API.put('/rest/checkout', checkout)
                 .done(function(response) {
@@ -987,6 +1015,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          * @function reloadCatContent
          * @param	{number} catId	ID of the category to load content (description 1) from server
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @deprecated
          */
         function reloadCatContent( catId ) {
 
@@ -1700,6 +1729,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 			addItem: addBasketItem,
             removeItem: removeBasketItem,
             setItemQuantity: setItemQuantity,
+            editItemAttributes: editItemAttributes,
+            editOrderParams: editOrderParams,
             addCoupon: addCoupon,
             removeCoupon: removeCoupon
 		};
@@ -1723,9 +1754,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                             if (resp.data[0].indexOf("form-group") > 0) {
                                 Modal.prepare()
                                     .setContent(resp.data[0])
+                                    .setTitle( pm.translate("Select order parameters") )
+                                    .setLabelConfirm( pm.translate("Save") )
                                     .onConfirm(function() {
                                         // save order params
-                                        saveOrderParams(article);
+                                        addArticle( saveOrderParams(article) );
 
                                         // close modal after saving order params
                                         return true;
@@ -1776,7 +1809,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 }
             });
 
-            addArticle( articleWithParams );
+            return articleWithParams;
         }
 
         function addArticle( article ) {
@@ -1801,7 +1834,19 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 });
         }
 
-        function orderParamFileUpload(input , articleWithParams ) {
+        function updateArticle( article ) {
+            API.put( '/rest/checkout/basketitemslist/', article )
+                .done(function() {
+                    // Item has no OrderParams -> Refresh Checkout & BasketPreview
+                    Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
+                    Checkout.loadCheckout()
+                        .done(function() {
+                            refreshBasketPreview();
+                        });
+                })
+        }
+
+        function orderParamFileUpload(input, articleWithParams ) {
             var key = input.id;
             var orderParamUploadFiles = {};
             var orderParamFileIdStack = [];
@@ -1823,7 +1868,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 orderParamFileIdStack.push(key);
             }
 
-            for(var i= 0, length = orderParamFileIdStack.length; i < length; ++i){
+            for(var i= 0, length = orderParamFileIdStack.length; i < length; ++i) {
                 formData = new FormData();
                 fileData = orderParamUploadFiles[orderParamFileIdStack[i]];
                 formData.append("0", fileData[0], fileData[0].name);
@@ -1871,6 +1916,72 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             }
 
             return basketList;
+        }
+
+        function editItemAttributes( BasketItemID ) {
+            var modal = $('[data-plenty-basket-item="' + BasketItemID + '"' );
+            modal.modal('show');
+            modal.find('[data-plenty-modal="confirm"]').on('click', function() {
+                var basketItem = getBasketItem(BasketItemID);
+                var attributesList = [];
+                modal.find('select').each(function(i, attributeSelect) {
+                    var match = attributeSelect.name.match(/^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/);
+                    if(match && match[1])
+                    {
+                        attributesList.push({
+                            BasketItemAttributeID 		: match[1],
+                            BasketItemAttributeValueID	: $(attributeSelect).val()
+                        });
+                    }
+
+                    if(attributesList.length != 0)
+                    {
+                        basketItem.BasketItemAttributesList = attributesList;
+                    }
+
+                });
+                //update basketItem and refresh previewLists
+                updateArticle([basketItem]);
+
+            });
+        }
+
+        function editOrderParams( BasketItemID ) {
+
+            var basketItem = getBasketItem( BasketItemID );
+            // FIX: unset old order params
+            basketItem.BasketItemOrderParamsList = [];
+
+            API.get( '/rest/checkout/container_' + 'CheckoutOrderParamsList'.toLowerCase() + '/', {
+                    itemID : basketItem.BasketItemItemID,
+                    quantity : basketItem.BasketItemQuantity,
+                    basketItemID: BasketItemID
+                }).done(function (resp) {
+                    // checking for order params!
+                    Modal.prepare()
+                        .setContent( resp.data[0] )
+                        .setTitle( pm.translate("Edit order parameters") )
+                        .setLabelConfirm( pm.translate("Save") )
+                        .onConfirm(function() {
+                            // save order params
+                            updateArticle( saveOrderParams([basketItem]) );
+
+                            // close modal after saving order params
+                            return true;
+                        })
+                        .show();
+                });
+        }
+
+        function getBasketItem( BasketItemID ) {
+            var basketItems = Checkout.getCheckout().BasketItemsList;
+            for( var i = 0; i < basketItems.length; i++ ) {
+                if( basketItems[i].BasketItemID == BasketItemID ) {
+                    return basketItems[i];
+                }
+            }
+
+            return null;
         }
 
         /**
@@ -2055,13 +2166,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         // update container
         function updateContainer() {
             Checkout.reloadContainer('Coupon');
-            // reload category, if we are at checkout
-            if ( $('[data-plenty-checkout-catcontent="' + pm.getGlobal('checkoutConfirmCatID') + '"]').length > 0 ) {
-                Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-            }
-            else
-                // reload totals, if we are at basket
-                if ( $('[data-plenty-checkout-template="Totals"]').length > 0 ) {
+            // reload totals, if we are at basket
+            if ( $('[data-plenty-checkout-template="Totals"]').length > 0 ) {
                 Checkout.reloadContainer('Totals');
             }
         }
@@ -2096,6 +2202,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      */
 	pm.service('CheckoutService', function(API, CMS, Checkout, Modal) {
 
+        var checkoutState;
+
 		return {
             init: init,
             setCustomerSignAndInfo: setCustomerSignAndInfo,
@@ -2115,7 +2223,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          * @function init
          */
         function init() {
-            Checkout.loadCheckout();
+            Checkout.loadCheckout(true);
+            checkoutState = Checkout.getCheckout(true);
         }
 
 
@@ -2139,10 +2248,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 Checkout.getCheckout().CheckoutCustomerSign = values.CustomerSign;
                 Checkout.getCheckout().CheckoutOrderInfoText = values.OrderInfoText;
 
-                return Checkout.setCheckout()
-                    .done(function () {
-                        Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                    });
+                return Checkout.setCheckout();
 
             } else {
                 // No changes detected -> Do nothing
@@ -2181,17 +2287,14 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                         .done(function (response) {
 
                             Checkout.getCheckout().CheckoutCustomerShippingAddressID = response.data.ID;
+                            Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
                             delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
                             Checkout.setCheckout().done(function () {
-                                Checkout.reloadContainer('MethodsOfPaymentList');
-                                // TODO: the following container may not be reloaded if guest registration
                                 if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
                                     Checkout.reloadContainer('CustomerShippingAddress');
                                 }
-                                Checkout.reloadContainer('ShippingProfilesList');
-                                Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                             });
                         });
                 } else {
@@ -2206,13 +2309,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                     delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                    return Checkout.setCheckout()
-                        .done(function () {
-                            Checkout.reloadContainer('MethodsOfPaymentList');
+                    return Checkout.setCheckout().done(function () {
+                        if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
                             Checkout.reloadContainer('CustomerShippingAddress');
-                            Checkout.reloadContainer('ShippingProfilesList');
-                            Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
-                        });
+                        }
+                    });
                 } else {
                     return API.idle();
                 }
@@ -2238,7 +2339,6 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     .done(function (response) {
                         saveShippingAddress().done(function(){
                             Checkout.getCheckout().CustomerInvoiceAddress = response.data;
-                            Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
                         });
                     });
 
@@ -2283,7 +2383,6 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('MethodsOfPaymentList');
-                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                 });
 
         }
@@ -2294,28 +2393,32 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function preparePayment() {
+            if( Object.equals(checkoutState, Checkout.getCheckout(true)) ) {
+                return API.idle();
+            } else {
+                checkoutState = Checkout.getCheckout(true);
+                return API.post( "/rest/checkout/preparepayment/", null )
+                    .done( function ( response ) {
+                        if ( response.data.CheckoutMethodOfPaymentRedirectURL != '' ) {
 
-            return API.post("/rest/checkout/preparepayment/", null)
-                .done(function(response) {
-                    if( response.data.CheckoutMethodOfPaymentRedirectURL != '') {
+                            document.location.assign( response.data.CheckoutMethodOfPaymentRedirectURL );
 
-                        document.location.assign( response.data.CheckoutMethodOfPaymentRedirectURL );
+                        } else if ( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
-                    } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
-
-                        var isBankDetails = $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('[data-plenty-checkout-form="bankDetails"]').length > 0;
-                        Modal.prepare()
-                            .setContent( response.data.CheckoutMethodOfPaymentAdditionalContent )
-                            .onConfirm(function() {
-                                if( isBankDetails ) {
-                                    return saveBankDetails();
-                                } else {
-                                    return saveCreditCard();
-                                }
-                            })
-                            .show();
-                    }
-                });
+                            var isBankDetails = $( response.data.CheckoutMethodOfPaymentAdditionalContent ).find( '[data-plenty-checkout-form="bankDetails"]' ).length > 0;
+                            Modal.prepare()
+                                .setContent( response.data.CheckoutMethodOfPaymentAdditionalContent )
+                                .onConfirm( function () {
+                                    if ( isBankDetails ) {
+                                        return saveBankDetails();
+                                    } else {
+                                        return saveCreditCard();
+                                    }
+                                } )
+                                .show();
+                        }
+                    } );
+            }
         }
 
         /**
@@ -2336,7 +2439,6 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('ShippingProfilesList');
-                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                 });
         }
 
@@ -2553,6 +2655,133 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 /**
  * @module Services
  */
+(function($, pm) {
+
+    pm.service('FeedbackService', function( API ) {
+
+        return {
+            getFeedbacks: getFeedbacks,
+            addFeedback: addFeedback,
+            ArticleTypes: articleTypes(),
+            FeedbackTypes: feedbackTypes()
+        };
+
+        /*
+        FeedbackService
+            .getFeedbacks().between('2014-12-03', '2015-07-01')
+            .for( FeedbackService.ArticleTypes.ITEM, 2732, FeedbackService.FeedbackTypes.COMMENTS_ONLY );
+        */
+        function getFeedbacks() {
+            var feedbackInterval = {
+                dateStart: null,
+                dateEnd: null
+            };
+
+            return {
+                between: setFeedbackInterval,
+                for: listFeedbacks
+            };
+
+            function setFeedbackInterval( start, end ) {
+                feedbackInterval.dateStart = start;
+                feedbackInterval.dateEnd = end;
+                return this;
+            }
+
+            function listFeedbacks( articleType, referenceId, feedbackType ) {
+
+                var params = {
+                    ReferenceId: referenceId,
+                    FromDate: feedbackInterval.dateStart,
+                    ToDate: feedbackInterval.dateEnd,
+                    FeedbackType: feedbackType || feedbackTypes().COMMENTS_AND_RATINGS
+                };
+                return API.get( '/rest/feedback/'+articleType+'/', params );
+
+            }
+        }
+
+        /*
+        FeedbackService
+            .addFeedback()
+            .withRating( 5 )
+            .withComment( 'Hallo' )
+            .withAuthor( 'Felix', 'felix.dausch@plentymarkets.com', 123456 )
+            .to( FeedbackService.ArticleTypes.ITEM, 2732 );
+        */
+        function addFeedback() {
+
+            var params = {
+                Rating: 1.0,
+                Text: '',
+                Author: '',
+                Email: '',
+                CustomerId: 0
+            };
+
+            return {
+                withRating: withRating,
+                withComment: withComment,
+                withAuthor: withAuthor,
+                to: sendFeedback
+            };
+
+            function withRating( rating ) {
+                params.Rating = rating;
+                return this;
+            }
+
+            function withComment( comment ) {
+                params.Text = comment;
+                return this;
+            }
+
+            function withAuthor( author, mail, customerID ) {
+                params.Author = author;
+                if( !!mail ) params.Email = mail;
+                if( !!customerID ) params.CustomerId = customerID;
+                return this;
+            }
+
+            function sendFeedback( articleType, referenceId ) {
+                return API.post( '/rest/feedback/'+articleType+'/', params );
+
+            }
+
+        }
+
+        function feedbackTypes() {
+            return {
+                COMMENTS_ONLY:          'comments_only',
+                RATINGS_ONLY:           'ratings_only',
+                COMMENTS_AND_RATINGS:   'comments_with_ratings'
+            }
+        }
+
+        function articleTypes() {
+            return {
+                ITEM:       'item',
+                CATEGORY:   'category',
+                BLOG:       'blog'
+            }
+        }
+
+
+
+    }, ['APIFactory']);
+}(jQuery, PlentyFramework));
+/**
+ * Licensed under AGPL v3
+ * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
+ * =====================================================================================
+ * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
+ * @author      Felix Dausch <felix.dausch@plentymarkets.com>
+ * =====================================================================================
+ */
+
+/**
+ * @module Services
+ */
 (function($, pm){
 
     /**
@@ -2638,7 +2867,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @static
      *
      */
-    pm.service('NavigatorService', function() {
+    pm.service('NavigatorService', function(CMS, Checkout) {
         var navigation  = [];		// contains navigation list elements
         var container   = [];		// content containers
         var current     = -1;		// index of currently shown content container
@@ -2648,6 +2877,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 beforeChange: [],
                 afterChange: []
             };
+        var checkoutStates = [];
 
         return {
             init: init,
@@ -2687,6 +2917,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          * ```
          */
         function init() {
+
             // get elements from DOM
             navigation 	= 	$('[data-plenty-checkout="navigation"] > li');
             container 	= 	$('[data-plenty-checkout="container"] > div');
@@ -2694,6 +2925,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             buttonPrev 	=	$('[data-plenty-checkout="prev"]');
 
             if( navigation.length == container.length && container.length > 0 ) {
+                var checkout = Checkout.getCheckout();
+
                 container.hide();
 
                 // initialize navigation
@@ -2793,7 +3026,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          *      });
          */
         function beforeChange( interceptor ) {
-            interceptors.beforeChange.push(interceptor);
+            interceptors.beforeChange.push( interceptor );
             return pm.getInstance().NavigatorService;
         }
 
@@ -2831,7 +3064,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 $.each(interceptors[identifier], function (i, interceptor) {
                     if (interceptor(currentContainer, targetContainer) === false) {
                         continueTabChange = false;
-                        return false
+                        return false;
                     }
                 });
             }
@@ -2859,12 +3092,33 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
             current = index;
 
+            if( !Object.equals(checkoutStates[current], Checkout.getCheckout(true) ) && contentChanged && !!$(container[ current ]).attr( 'data-plenty-checkout-content' ) ) {
+                checkoutStates[current] = Checkout.getCheckout(true);
+                // reload tab content
+                CMS.getCategoryContent( $(container[ current ]).attr( 'data-plenty-checkout-content' ) )
+                    .done(function( response ) {
+                        $(container[current]).html( response.data[0] );
+                        // continue tab change
+                        proceedTabChange(contentChanged);
+                        pm.getInstance().bindDirectives();
+                    });
+            } else {
+                // continue tab change without reloading tab content
+                proceedTabChange(contentChanged);
+                pm.getInstance().bindDirectives();
+            }
+
+        }
+
+        function proceedTabChange( contentChanged ) {
+
             // hide content containers
             $(container).hide();
 
             // refresh navigation elements
             $(navigation).each(function (i, elem) {
                 $(elem).removeClass('disabled active');
+
                 $(elem).find('[role="tab"]').attr('aria-selected', 'false');
 
                 if (i < current) {
@@ -2907,18 +3161,18 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             // set location hash
             if (current > 0) {
                 window.location.hash = $(container[current]).attr('data-plenty-checkout-id');
-            }
-            else {
+            } else {
                 if (window.location.hash.length > 0) {
                     window.location.hash = '';
                 }
             }
 
             if( contentChanged ) {
-                resolveInterceptors("afterChange", index);
+                resolveInterceptors("afterChange", current);
             }
-
         }
+
+
 
         /**
          * Continue interrupted tabchange. Shorthand for: <code>goTo(targetContainer.index, true)</code>
@@ -3056,7 +3310,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             //$(navigation).parent().css('marginRight', 0);
         }
 
-    });
+    }, ['CMSFactory', 'CheckoutFactory']);
 
 }(jQuery, PlentyFramework));
 /**

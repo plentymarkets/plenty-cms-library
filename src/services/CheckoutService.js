@@ -26,6 +26,8 @@
      */
 	pm.service('CheckoutService', function(API, CMS, Checkout, Modal) {
 
+        var checkoutState;
+
 		return {
             init: init,
             setCustomerSignAndInfo: setCustomerSignAndInfo,
@@ -45,7 +47,8 @@
          * @function init
          */
         function init() {
-            Checkout.loadCheckout();
+            Checkout.loadCheckout(true);
+            checkoutState = Checkout.getCheckout(true);
         }
 
 
@@ -69,10 +72,7 @@
                 Checkout.getCheckout().CheckoutCustomerSign = values.CustomerSign;
                 Checkout.getCheckout().CheckoutOrderInfoText = values.OrderInfoText;
 
-                return Checkout.setCheckout()
-                    .done(function () {
-                        Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
-                    });
+                return Checkout.setCheckout();
 
             } else {
                 // No changes detected -> Do nothing
@@ -111,17 +111,14 @@
                         .done(function (response) {
 
                             Checkout.getCheckout().CheckoutCustomerShippingAddressID = response.data.ID;
+                            Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
                             delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
                             Checkout.setCheckout().done(function () {
-                                Checkout.reloadContainer('MethodsOfPaymentList');
-                                // TODO: the following container may not be reloaded if guest registration
                                 if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
                                     Checkout.reloadContainer('CustomerShippingAddress');
                                 }
-                                Checkout.reloadContainer('ShippingProfilesList');
-                                Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                             });
                         });
                 } else {
@@ -136,13 +133,11 @@
                     delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
                     delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                    return Checkout.setCheckout()
-                        .done(function () {
-                            Checkout.reloadContainer('MethodsOfPaymentList');
+                    return Checkout.setCheckout().done(function () {
+                        if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
                             Checkout.reloadContainer('CustomerShippingAddress');
-                            Checkout.reloadContainer('ShippingProfilesList');
-                            Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
-                        });
+                        }
+                    });
                 } else {
                     return API.idle();
                 }
@@ -168,7 +163,6 @@
                     .done(function (response) {
                         saveShippingAddress().done(function(){
                             Checkout.getCheckout().CustomerInvoiceAddress = response.data;
-                            Checkout.reloadCatContent(pm.getGlobal('checkoutConfirmCatID'));
                         });
                     });
 
@@ -213,7 +207,6 @@
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('MethodsOfPaymentList');
-                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                 });
 
         }
@@ -224,28 +217,32 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function preparePayment() {
+            if( Object.equals(checkoutState, Checkout.getCheckout(true)) ) {
+                return API.idle();
+            } else {
+                checkoutState = Checkout.getCheckout(true);
+                return API.post( "/rest/checkout/preparepayment/", null )
+                    .done( function ( response ) {
+                        if ( response.data.CheckoutMethodOfPaymentRedirectURL != '' ) {
 
-            return API.post("/rest/checkout/preparepayment/", null)
-                .done(function(response) {
-                    if( response.data.CheckoutMethodOfPaymentRedirectURL != '') {
+                            document.location.assign( response.data.CheckoutMethodOfPaymentRedirectURL );
 
-                        document.location.assign( response.data.CheckoutMethodOfPaymentRedirectURL );
+                        } else if ( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
 
-                    } else if( !!response.data.CheckoutMethodOfPaymentAdditionalContent ) {
-
-                        var isBankDetails = $(response.data.CheckoutMethodOfPaymentAdditionalContent).find('[data-plenty-checkout-form="bankDetails"]').length > 0;
-                        Modal.prepare()
-                            .setContent( response.data.CheckoutMethodOfPaymentAdditionalContent )
-                            .onConfirm(function() {
-                                if( isBankDetails ) {
-                                    return saveBankDetails();
-                                } else {
-                                    return saveCreditCard();
-                                }
-                            })
-                            .show();
-                    }
-                });
+                            var isBankDetails = $( response.data.CheckoutMethodOfPaymentAdditionalContent ).find( '[data-plenty-checkout-form="bankDetails"]' ).length > 0;
+                            Modal.prepare()
+                                .setContent( response.data.CheckoutMethodOfPaymentAdditionalContent )
+                                .onConfirm( function () {
+                                    if ( isBankDetails ) {
+                                        return saveBankDetails();
+                                    } else {
+                                        return saveCreditCard();
+                                    }
+                                } )
+                                .show();
+                        }
+                    } );
+            }
         }
 
         /**
@@ -266,7 +263,6 @@
             return Checkout.setCheckout()
                 .done(function() {
                     Checkout.reloadContainer('ShippingProfilesList');
-                    Checkout.reloadCatContent( pm.getGlobal('checkoutConfirmCatID') );
                 });
         }
 

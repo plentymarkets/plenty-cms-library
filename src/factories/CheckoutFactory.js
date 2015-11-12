@@ -51,14 +51,16 @@
          * @function getCheckout
          * @returns {Checkout} Instance of checkout object
          */
-        function getCheckout() {
+        function getCheckout( copy ) {
             if(!checkout || !checkoutData) {
                 loadCheckout(true);
             }
 
+            if( !!copy ) {
+                return $.extend(true, {}, checkoutData);
+            }
             return checkout;
         }
-
         /**
          * Receive global checkout data from ReST-API
          * @function loadCheckout
@@ -82,6 +84,7 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
          */
         function setCheckout() {
+
 
             return API.put('/rest/checkout', checkout)
                 .done(function(response) {
@@ -119,6 +122,7 @@
          * @function reloadCatContent
          * @param	{number} catId	ID of the category to load content (description 1) from server
          * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @deprecated
          */
         function reloadCatContent( catId ) {
 
