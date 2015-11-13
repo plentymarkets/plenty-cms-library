@@ -1,9 +1,12 @@
-(function($, pm) {
-	pm.directive('Basket', function( BasketService )
+(function( $, pm )
+{
+    pm.directive( 'Basket', function( BasketService )
     {
 
         return {
-            addBasketItem: addBasketItem
+            addBasketItem     : addBasketItem,
+            changeItemQuantity: changeItemQuantity,
+            setItemQuantity   : setItemQuantity
         };
 
         function addBasketItem( button )
@@ -43,5 +46,49 @@
             BasketService.addItem( [basketItemsList] );
 
         }
-    }, ['BasketService']);
-} (jQuery, PlentyFramework));
+
+        function changeItemQuantity( elem, increment )
+        {
+            var $elem         = $( elem );
+            var quantityInput = $elem.parent().find( 'input' );
+            var maxLength     = parseInt( quantityInput.attr( 'maxlength' ) ) || 5;
+            var value         = parseInt( quantityInput.val() ) + increment;
+
+            if ( (value + '').length <= maxLength && value > 1 )
+            {
+                quantityInput.val( value );
+
+                var isBasketView = elem.parents( '[data-basket-item-id]' ).length > 0;
+                if ( isBasketView )
+                {
+                    var timeout = elem.data( 'timeout' );
+
+                    if ( !!timeout )
+                    {
+                        window.clearTimeout( timeout );
+                    }
+
+                    timeout = window.setTimeout( function()
+                    {
+                        quantityInput.trigger( 'change' );
+                    }, 1000 );
+
+                    elem.data( 'timeout', timeout );
+                }
+            }
+        }
+
+        function setItemQuantity( basketItemID, input )
+        {
+            BasketService.setItemQuantity(
+                basketItemID,
+                parseInt( $( input ).val() )
+            ).fail(function() {
+                // reset input's value on cancel
+                var basketItem = BasketService.getItem( basketItemID );
+                $( input ).val( basketItem.BasketItemQuantity );
+            });
+        }
+
+    }, ['BasketService'] );
+}( jQuery, PlentyFramework ));

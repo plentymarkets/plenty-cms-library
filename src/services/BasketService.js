@@ -30,6 +30,7 @@
 		return {
 			addItem: addBasketItem,
             removeItem: removeBasketItem,
+            getItem: getBasketItem,
             setItemQuantity: setItemQuantity,
             editItemAttributes: editItemAttributes,
             editOrderParams: editOrderParams,
@@ -295,16 +296,10 @@
          */
         function removeBasketItem( BasketItemID, forceDelete ) {
 
-            // get item name
-            var itemName, originalItemQuantity;
-            var params = Checkout.getCheckout().BasketItemsList;
+            var deferred = $.Deferred();
 
-            for ( var i = 0; i < params.length; i++ ) {
-                if ( params[i].BasketItemID == BasketItemID ) {
-                    originalItemQuantity = params[i].BasketItemQuantity;
-                    itemName = params[i].BasketItemNameMap[1];
-                }
-            }
+            // get item name
+            var itemName = getBasketItem(BasketItemID).BasketItemNameMap[1];
 
             // calling the delete request
             function doDelete() {
@@ -320,6 +315,8 @@
                             }
 
                             refreshBasketPreview();
+
+                            deferred.resolve();
                         });
                     });
             }
@@ -330,7 +327,8 @@
                     .setTitle( pm.translate('Please confirm') )
                     .setContent('<p>' + pm.translate( "Do you really want to remove \"{{item}}\" from your basket?", {item: itemName}) + '</p>')
                     .onDismiss(function () {
-                        $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty="quantityInput"]').val(originalItemQuantity);
+                        //$('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty="quantityInput"]').val(originalItemQuantity);
+                        deferred.reject();
                     })
                     .onConfirm(function () {
                         doDelete();
@@ -340,6 +338,8 @@
             } else {
                 doDelete();
             }
+
+            return deferred;
         }
 
         /**
@@ -352,9 +352,10 @@
         function setItemQuantity( BasketItemID, BasketItemQuantity ) {
             // delete item if quantity is 0
             if( BasketItemQuantity <= 0 ) {
-                removeBasketItem( BasketItemID );
+                return removeBasketItem( BasketItemID );
             }
 
+            var deferred = $.Deferred();
             var params = Checkout.getCheckout().BasketItemsList;
             var basketItem;
             var basketItemIndex;
@@ -385,9 +386,12 @@
                             }
                             $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty-checkout="basket-item-price-total"]').html(basketItemsPriceTotal);
                             refreshBasketPreview();
+                            deferred.resolve();
                         });
                     });
             }
+
+            return deferred;
         }
 
         /**
