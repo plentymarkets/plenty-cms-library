@@ -177,15 +177,15 @@
          *          // handle missing fields
          *      });
          */
-        function validate( form ) {
+        function validate( form, errorClass ) {
             var formControl, formControls, validationKey, currentHasError, group, checked, checkedMin, checkedMax, attrValidate, validationKeys, formControlAttrType;
-            var wrappedForm = $(form);
-            var errorClass = !!wrappedForm.attr('data-plenty-checkform') ? wrappedForm.attr('data-plenty-checkform') : 'has-error';
+            var $form = $(form);
+            errorClass = errorClass || 'has-error';
             var missingFields = [];
             var hasError = false;
 
             // check every required input inside form
-            wrappedForm.find('[data-plenty-validate], input.Required').each(function(i, elem) {
+            $form.find('[data-plenty-validate], input.Required').each(function(i, elem) {
                 attrValidate = $(elem).attr('data-plenty-validate');
                 formControls = getFormControl(elem)
                 // validate text inputs
@@ -239,7 +239,7 @@
                         || formControlAttrType == 'checkbox')) {
                         // validate radio buttons
                         group = formControl.attr('name');
-                        checked = wrappedForm.find('input[name="' + group + '"]:checked').length;
+                        checked = $form.find('input[name="' + group + '"]:checked').length;
 
                         if (formControlAttrType == 'radio') {
                             checkedMin = 1;
@@ -266,7 +266,7 @@
 
                         if(formControls.length > 1 ) {
                             formControl.addClass(errorClass);
-                            wrappedForm.find('label[for="'+formControl.attr('id')+'"]').addClass(errorClass);
+                            $form.find('label[for="'+formControl.attr('id')+'"]').addClass(errorClass);
                         } else {
                             $(elem).addClass(errorClass);
                         }
@@ -276,16 +276,16 @@
             });
 
             // scroll to element on 'validationFailed'
-            wrappedForm.on('validationFailed', function() {
+            $form.on('validationFailed', function() {
                 var distanceTop = 50;
-                var errorOffset = wrappedForm.find('.has-error').first().offset().top;
+                var errorOffset = $form.find('.has-error').first().offset().top;
                 var scrollTarget = $('html, body');
 
                 // if form is inside of modal, scroll modal instead of body
-                if( wrappedForm.parents('.modal').length > 0 ) {
-                    scrollTarget = wrappedForm.parents('.modal');
-                } else if( wrappedForm.is('.modal') ) {
-                    scrollTarget = wrappedForm;
+                if( $form.parents('.modal').length > 0 ) {
+                    scrollTarget = $form.parents('.modal');
+                } else if( $form.is('.modal') ) {
+                    scrollTarget = $form;
                 }
 
                 // only scroll if error is outside of viewport
@@ -298,24 +298,24 @@
 
             if ( hasError ) {
                 // remove error class on focus
-                wrappedForm.find('.has-error').each(function(i, elem) {
+                $form.find('.has-error').each(function(i, elem) {
                     formControl = $(getFormControl(elem));
                     formControl.on('focus click', function() {
                         formControl.removeClass( errorClass );
-                        wrappedForm.find('label[for="'+formControl.attr('id')+'"]').removeClass(errorClass);
+                        $form.find('label[for="'+formControl.attr('id')+'"]').removeClass(errorClass);
                         $(elem).removeClass( errorClass );
                     });
                 });
 
-                wrappedForm.trigger('validationFailed', [missingFields]);
+                $form.trigger('validationFailed', [missingFields]);
             }
 
-            var callback = wrappedForm.attr('data-plenty-callback');
+            var callback = $form.attr('data-plenty-callback');
 
             if( !hasError && !!callback && callback != "submit" && typeof window[callback] == "function") {
 
                 var fields = {};
-                wrappedForm.find('input, textarea, select').each(function (){
+                $form.find('input, textarea, select').each(function (){
                     if( $(this).attr('type') == 'checkbox' ) {
                         fields[$(this).attr('name')] = $(this).is(':checked');
                     } else {

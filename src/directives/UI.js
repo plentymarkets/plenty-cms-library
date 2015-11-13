@@ -16,7 +16,7 @@
         // resize elements on window size change.
         $( window ).on( 'sizeChange', function()
         {
-            for ( var i = equalHeightElements.length; i >= 0; i-- )
+            for ( var i = 0; i < equalHeightElements.length; i++ )
             {
                 equalHeight( equalHeightElements[i], true );
             }

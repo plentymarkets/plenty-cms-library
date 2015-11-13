@@ -166,15 +166,16 @@
 
                     if ( directive.event == "ready" )
                     {
+                        directive = injectEvent( directive, undefined );
                         callback.apply( null, directive.params );
                     }
                     else
                     {
                         $( element ).on( directive.event, function(e)
                         {
-                            e.preventDefault();
-                            callback.apply( null, directive.params );
-                        } );
+                            directive = injectEvent( directive, e );
+                            return callback.apply( null, directive.params );
+                        });
                     }
 
                 }
@@ -189,7 +190,22 @@
                 console.error( "Directive not found: " + directive.class );
             }
         } );
+
+        $(document).trigger('initPartials', rootElement );
     };
+
+    function injectEvent( directive, event )
+    {
+        for( var i = 0; i < directive.params.length; i++ )
+        {
+            if( !!directive.params[i].toLowerCase && (directive.params[i].toLowerCase() == 'e' || directive.params[i].toLowerCase() == 'event') )
+            {
+                directive.params[i] = event;
+            }
+        }
+
+        return directive;
+    }
 
     function parseDirective( expression, element )
     {

@@ -38,6 +38,14 @@
 
         });
 
+        $rootElement.find( 'form[data-plenty-checkform], form.PlentySubmitForm' ).each( function(i, form) {
+
+            $( form ).submit(function() {
+               return pm.directives['Validator'].validate( form, $(form ).attr('[data-plenty-checkform]') || 'has-error' );
+            });
+
+        });
+
     };
 
 })(jQuery, PlentyFramework);
