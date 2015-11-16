@@ -151,43 +151,48 @@
         $( rootElement ).find( '[data-plenty]' ).each( function( i, element )
         {
 
-            var directive = parseDirective( $( element ).attr( 'data-plenty' ), $( element ) );
+            var directives = parseDirectives( $( element ).attr( 'data-plenty' ), $( element ) );
 
-            if( !directive ) {
+            if( directives.length <= 0 ) {
                 // continue
                 return;
             }
-            if ( !!PlentyFramework.directives[directive.class] && PlentyFramework.directives.hasOwnProperty( directive.class ) )
-            {
 
-                var callback = PlentyFramework.directives[directive.class][directive.method];
-                if ( !!callback && typeof callback == "function" )
+            for(var i = 0; i < directives.length; i++ )
+            {
+                var directive = directives[i];
+                if ( !!PlentyFramework.directives[directive.class] && PlentyFramework.directives.hasOwnProperty( directive.class ) )
                 {
 
-                    if ( directive.event == "ready" )
+                    var callback = PlentyFramework.directives[directive.class][directive.method];
+                    if ( !!callback && typeof callback == "function" )
                     {
-                        directive = injectEvent( directive, undefined );
-                        callback.apply( null, directive.params );
+
+                        if ( directive.event == "ready" )
+                        {
+                            directive = injectEvent( directive, undefined );
+                            callback.apply( null, directive.params );
+                        }
+                        else
+                        {
+                            $( element ).on( directive.event, function( e )
+                            {
+                                directive = injectEvent( directive, e );
+                                return callback.apply( null, directive.params );
+                            } );
+                        }
+
                     }
                     else
                     {
-                        $( element ).on( directive.event, function(e)
-                        {
-                            directive = injectEvent( directive, e );
-                            return callback.apply( null, directive.params );
-                        });
+                        console.error( "Method not found: " + directives.method + " in " + directives.class );
                     }
 
                 }
                 else
                 {
-                    console.error( "Method not found: " + directive.method + " in " + directive.class );
+                    console.error( "Directive not found: " + directives.class );
                 }
-
-            }
-            else
-            {
-                console.error( "Directive not found: " + directive.class );
             }
         } );
 
@@ -207,66 +212,79 @@
         return directive;
     }
 
-    function parseDirective( expression, element )
+    function parseDirectives( input, thisValue )
     {
         var directivePattern = /^(([\w]+):)?([\w]+)\.([\w]+)(\((.*)\))?$/;
+        var expressions = input.split(';');
+        var directives = [];
 
-        if( !directivePattern.test(expression) )
+        for( var i = 0; i < expressions.length; i++ )
         {
-            console.warn("Invalid directive: " + expression );
-            return;
-        }
+            var expression = expressions[i];
 
-        var match = expression.match( directivePattern );
+            if( !expression ) {
+                continue;
+            }
 
-        if ( !match[3] || match[3].length <= 0 )
-        {
-            console.error( "Cannot parse '" + expression + "': Class name not set." );
-            return;
-        }
-
-        if ( !match[4] || match[4].length <= 0 )
-        {
-            console.error( "Cannot parse '" + expression + "': Method not set." );
-            return
-        }
-
-        var directive = {
-            event : match[2] || 'ready',
-            class : match[3],
-            method: match[4],
-            params: []
-        };
-
-        if ( !!match[6] && match[6].length > 0 )
-        {
-            var params = match[6].match( /([\w'"-]+)/g );
-            for ( var i = 0; i < params.length; i++ )
+            if ( !directivePattern.test( expression ) )
             {
-                if ( !isNaN( parseFloat( params[i] ) ) )
+                console.warn( "Invalid directive: " + expression );
+                continue;
+            }
+
+            var match = expression.match( directivePattern );
+
+            if ( !match[3] || match[3].length <= 0 )
+            {
+                console.error( "Cannot parse '" + expression + "': Class name not set." );
+                continue;
+            }
+
+            if ( !match[4] || match[4].length <= 0 )
+            {
+                console.error( "Cannot parse '" + expression + "': Method not set." );
+                continue;
+            }
+
+            var directive = {
+                event : match[2] || 'ready',
+                class : match[3],
+                method: match[4],
+                params: []
+            };
+
+            if ( !!match[6] && match[6].length > 0 )
+            {
+                var params = match[6].match( /([\w'"-]+)/g );
+                for ( var j = 0; j < params.length; j++ )
                 {
-                    directive.params.push( parseFloat( params[i] ) );
-                }
-                else if ( params[i].toLowerCase() == 'true' )
-                {
-                    directive.params.push( true );
-                }
-                else if ( params[i].toLowerCase() == 'false' )
-                {
-                    directive.params.push( false );
-                }
-                else if ( params[i].toLowerCase() == 'this' )
-                {
-                    directive.params.push( element );
-                }
-                else
-                {
-                    directive.params.push( params[i].replace( /^['"]|['"]$/g, '' ) );
+                    if ( !isNaN( parseFloat( params[j] ) ) )
+                    {
+                        directive.params.push( parseFloat( params[j] ) );
+                    }
+                    else if ( params[j].toLowerCase() == 'true' )
+                    {
+                        directive.params.push( true );
+                    }
+                    else if ( params[j].toLowerCase() == 'false' )
+                    {
+                        directive.params.push( false );
+                    }
+                    else if ( params[j].toLowerCase() == 'this' )
+                    {
+                        directive.params.push( thisValue );
+                    }
+                    else
+                    {
+                        directive.params.push( params[j].replace( /^['"]|['"]$/g, '' ) );
+                    }
                 }
             }
-        }
 
-        return directive;
+            directives.push( directive );
+
+        }
+        return directives;
     }
 
     /**
