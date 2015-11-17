@@ -67,6 +67,7 @@
 
             function refreshView()
             {
+                $('.suggestion-list').remove();
 
                 for( var i = 0; i < requiredFields.length; i++ )
                 {
@@ -112,6 +113,7 @@
                     $inputs[key].addClass('has-error');
 
                     buildSuggestionList( $inputs[key], valueList );
+                    $inputs[key].focus();
                     return false;
 
                 }
