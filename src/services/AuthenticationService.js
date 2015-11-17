@@ -113,7 +113,7 @@
         function registerCustomer() {
             var form = $('[data-plenty-checkout-form="customerRegistration"]');
 
-            if( form.validateForm() ) {
+            if( form.validateForm() && pm.getInstance().AddressDoctorService.validateAddress() ) {
                 var values = form.getFormValues();
 
                 // create new invoice address
