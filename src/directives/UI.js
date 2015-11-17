@@ -30,7 +30,7 @@
             slideToggle         : slideToggle,
             toggleHideShow      : toggleHideShow,
             toggleSocialShare   : toggleSocialShare,
-            toggleCssClass      : toggleCssClass,
+            toggleClass         : toggleClass,
             openTab             : openTab,
             openRemoteTab       : openRemoteTab,
             setRemoteTab        : setRemoteTab
@@ -171,6 +171,7 @@
          *
          * @param elem
          */
+        // TODO: test
         function toggleHideShow( elem )
         {
             var $elem       = $( elem );
@@ -200,6 +201,7 @@
          *
          * @param elem
          */
+        // TODO: test
         function slideToggle( elem )
         {
             var $elem          = $( elem );
@@ -296,6 +298,7 @@
          *
          * @param elem
          */
+        // TODO: test
         function toggleSocialShare( elem )
         {
             var $elem   = $( elem );
@@ -341,6 +344,7 @@
          *
          * @param elem
          */
+        // TODO: test
         function openTab( elem )
         {
             var tabSelector = $( elem ).attr( 'data-plenty-opentab' );
@@ -356,6 +360,7 @@
          *
          * @param elem
          */
+        // TODO: test
         function openRemoteTab( elem )
         {
             var tabSelector = $( elem ).attr( 'data-plenty-openremotetab' );
@@ -392,6 +397,7 @@
          *
          * @param elem
          */
+        // TODO: test
         function setRemoteTab( elem )
         {
             var tabId = $( elem ).attr( 'data-plenty-remotetabs-id' );
@@ -462,49 +468,18 @@
          *
          * Legacy directive selector: data-plenty-toggle
          *
-         * @param elem
+         * @param cssClass
+         * @param target
+         * @param interval
          */
-        function toggleCssClass( elem )
+        // TODO: test
+        function toggleClass( cssClass, target, interval )
         {
-            if ( $( elem ).attr( 'data-plenty-toggle' ).search( ';' ) < 0 )
+            if( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval(interval) ) )
             {
-                eval( 'var data = ' + $( elem ).attr( 'data-plenty-toggle' ) );
-                if ( data.target && data.class )
-                {
-                    $( elem ).click( function()
-                    {
-                        var isMedia = false;
-                        if ( data.media )
-                        {
-                            if ( data.media.indexOf( ' ' ) != -1 )
-                            {
-                                var mediaArr = data.media.split( ' ' );
-                                for ( i = 0; i < mediaArr.length; i++ )
-                                {
-                                    if ( MediaSizeService.interval() == mediaArr[i] )
-                                    {
-                                        isMedia = true;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if ( MediaSizeService.interval() == data.media )
-                                {
-                                    isMedia = true;
-                                }
-                            }
-                        }
-                        if ( !data.media || isMedia == true )
-                        {
-                            $( data.target ).toggleClass( data.class );
-                            if ( $( elem ).is( 'a' ) )
-                            {
-                                return false;
-                            }
-                        }
-                    } );
-                }
+                var $elem = $( target );
+                $elem.toggleClass( cssClass );
+                return false;
             }
         }
 

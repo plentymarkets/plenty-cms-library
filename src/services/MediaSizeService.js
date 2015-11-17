@@ -32,7 +32,8 @@
         $(document).ready( calculateMediaSize );
 
         return {
-            interval: getInterval
+            interval: getInterval,
+            isInterval: isInterval
         };
 
         /**
@@ -71,6 +72,18 @@
             }
         }
 
+        function isInterval( interval )
+        {
+            var intervalList = interval.replace(/\s/g, '').split(',');
+            for( var i = 0; i < intervalList.length; i++ )
+            {
+                if( intervalList[i] == bsInterval )
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
     });
 
