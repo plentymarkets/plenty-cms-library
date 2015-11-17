@@ -156,6 +156,15 @@
             var invoiceAddress = form.getFormValues();
             invoiceAddress.LoginType = 1;
 
+            invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
+
+            form.find("[data-plenty-property-id]").each(function(i, propertyInput) {
+
+                invoiceAddress.CustomerPropertiesList.push({
+                    PropertyID: $(propertyInput).attr('data-plenty-property-id'),
+                    PropertyValue: $(propertyInput).val()
+                });
+            });
 
             if( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) ) {
 

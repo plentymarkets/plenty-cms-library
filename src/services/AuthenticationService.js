@@ -143,6 +143,16 @@
                     Postnummer: values.Postnummer
                 };
 
+                invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
+
+                form.find("[data-plenty-property-id]").each(function(i, propertyInput) {
+
+                    invoiceAddress.CustomerPropertiesList.push({
+                        PropertyID: $(propertyInput).attr('data-plenty-property-id'),
+                        PropertyValue: $(propertyInput).val()
+                    });
+                });
+
                 return setInvoiceAddress(invoiceAddress)
                     .done(function () {
                         window.location.assign( form.attr('action') );
