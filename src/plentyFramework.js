@@ -242,7 +242,6 @@
                 continue;
             }
 
-            console.log( input, expression );
             var match = expression.match( directivePattern );
 
             if ( !match[3] || match[3].length <= 0 )
@@ -266,28 +265,29 @@
 
             if ( !!match[6] && match[6].length > 0 )
             {
-                var params = match[6].match( /([\w'"-]+)/g );
+                var params = match[6].split(',');
                 for ( var j = 0; j < params.length; j++ )
                 {
-                    if ( !isNaN( parseFloat( params[j] ) ) )
+                    var param = params[j].trim();
+                    if ( !isNaN( parseFloat( param ) ) )
                     {
-                        directive.params.push( parseFloat( params[j] ) );
+                        directive.params.push( parseFloat( param ) );
                     }
-                    else if ( params[j].toLowerCase() == 'true' )
+                    else if ( param.toLowerCase() == 'true' )
                     {
                         directive.params.push( true );
                     }
-                    else if ( params[j].toLowerCase() == 'false' )
+                    else if ( param.toLowerCase() == 'false' )
                     {
                         directive.params.push( false );
                     }
-                    else if ( params[j].toLowerCase() == 'this' )
+                    else if ( param.toLowerCase() == 'this' )
                     {
                         directive.params.push( thisValue );
                     }
                     else
                     {
-                        directive.params.push( params[j].replace( /^['"]|['"]$/g, '' ) );
+                        directive.params.push( param.replace( /^['"]|['"]$/g, '' ) );
                     }
                 }
             }

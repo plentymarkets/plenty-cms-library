@@ -358,12 +358,12 @@
          *
          * Legacy directive selector: data-plenty-openremotetab
          *
-         * @param elem
+         * @param tabSelector
          */
         // TODO: test
-        function openRemoteTab( elem )
+        function openRemoteTab( tabSelector )
         {
-            var tabSelector = $( elem ).attr( 'data-plenty-openremotetab' );
+            console.log( tabSelector, $(tabSelector) );
             $( tabSelector ).trigger( 'tabchange' );
         }
 
@@ -472,7 +472,6 @@
          * @param target
          * @param interval
          */
-        // TODO: test
         function toggleClass( cssClass, target, interval )
         {
             if( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval(interval) ) )
