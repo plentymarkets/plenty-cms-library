@@ -170,8 +170,7 @@
 
                         if ( directive.event == "ready" )
                         {
-                            directive = injectEvent( directive.params, undefined );
-                            callback.apply( null, directive.params );
+                            callback.apply( null, injectEvent( directive.params, undefined ) );
                         }
                         else
                         {
