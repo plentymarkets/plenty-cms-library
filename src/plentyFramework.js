@@ -170,28 +170,31 @@
 
                         if ( directive.event == "ready" )
                         {
-                            directive = injectEvent( directive, undefined );
+                            directive = injectEvent( directive.params, undefined );
                             callback.apply( null, directive.params );
                         }
                         else
                         {
+                            bindEventCallback( $(element), directive.event, callback, directive.params );
+                            /*
                             $( element ).on( directive.event, function( e )
                             {
                                 directive = injectEvent( directive, e );
                                 return callback.apply( null, directive.params );
                             } );
+                            */
                         }
 
                     }
                     else
                     {
-                        console.error( "Method not found: " + directives.method + " in " + directives.class );
+                        console.error( "Method not found: " + directive.method + " in " + directive.class );
                     }
 
                 }
                 else
                 {
-                    console.error( "Directive not found: " + directives.class );
+                    console.error( "Directive not found: " + directive.class );
                 }
             }
         } );
@@ -199,17 +202,24 @@
         $(document).trigger('initPartials', rootElement );
     };
 
-    function injectEvent( directive, event )
+    function bindEventCallback( $elem, event, callback, params )
     {
-        for( var i = 0; i < directive.params.length; i++ )
+        $elem.on( event, function(e) {
+            return callback.apply( null, injectEvent(params, e) );
+        });
+    }
+
+    function injectEvent( paramList, event )
+    {
+        for( var i = 0; i < paramList.length; i++ )
         {
-            if( !!directive.params[i].toLowerCase && (directive.params[i].toLowerCase() == 'e' || directive.params[i].toLowerCase() == 'event') )
+            if( !!paramList[i].toLowerCase && (paramList[i].toLowerCase() == 'e' || paramList[i].toLowerCase() == 'event') )
             {
-                directive.params[i] = event;
+                paramList[i] = event;
             }
         }
 
-        return directive;
+        return paramList;
     }
 
     function parseDirectives( input, thisValue )
@@ -220,7 +230,7 @@
 
         for( var i = 0; i < expressions.length; i++ )
         {
-            var expression = expressions[i];
+            var expression = expressions[i].trim();
 
             if( !expression ) {
                 continue;
@@ -232,6 +242,7 @@
                 continue;
             }
 
+            console.log( input, expression );
             var match = expression.match( directivePattern );
 
             if ( !match[3] || match[3].length <= 0 )
