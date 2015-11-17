@@ -11,19 +11,18 @@
     pm.directive( 'UI', function( MediaSizeService, SocialShareService )
     {
         // elements to calculate height.
-        var equalHeightElements = [];
+        var equalHeightElementList = [];
 
         // resize elements on window size change.
         $( window ).on( 'sizeChange', function()
         {
-            for ( var i = 0; i < equalHeightElements.length; i++ )
+            for ( var i = equalHeightElementList.length - 1; i >= 0; i-- )
             {
-                equalHeight( equalHeightElements[i], true );
+                equalHeight( equalHeightElementList[i], '', true );
             }
         } );
 
         return {
-            addTooltip          : addTooltip,
             addContentPageSlider: addContentPageSlider,
             equalHeight         : equalHeight,
             initToTop           : initToTop,
@@ -36,20 +35,6 @@
             openRemoteTab       : openRemoteTab,
             setRemoteTab        : setRemoteTab
         };
-
-        /**
-         * Adds bootstrap tool tip to element.
-         *
-         * Legacy directive selector: data-toggle="tooltip"
-         *
-         * @param elem
-         */
-        function addTooltip( elem )
-        {
-            $( elem ).tooltip( {
-                container: 'body'
-            } );
-        }
 
         /**
          * Adds content page slider (owlCarousel)
@@ -81,7 +66,7 @@
                 stopOnHover    : true,
                 afterMove      : function( current )
                 {
-                    $( current ).find( 'img[data-plenty-lazyload]' ).trigger( 'appear' );
+                    $( current ).find( 'img[data-plenty-rel="lazyload"]' ).trigger( 'appear' );
                 }
             } );
         }
@@ -95,35 +80,34 @@
          * @param elem
          * @param elementExists - default false
          */
-        function equalHeight( elem, elementExists )
+        function equalHeight( elem, mediaSizes, elementExists )
         {
-            var cachedElement = $( elem );
-            var maxHeight     = 0;
-            var cachedChild   = {};
-
-            var equalTarget = cachedElement.find( '[data-plenty-equal-target]' ) || cachedElement.children();
-            var mediaSizes  = cachedElement.data( 'plenty-equal' ).replace( /\s/g, '' ).split( ',' );
+            var $elem            = $( elem );
+            var maxHeight        = 0;
+            var $equalTarget     = {};
+            var $equalTargetList = $elem.find('[data-plenty-rel="equal-target"]').length > 0 ? $elem.find('[data-plenty-rel="equal-target"]') : $elem.children();
+            var mediaSizeList    = mediaSizes.replace( /\s/g, '' ).split( ',' );
 
             // if element wasn't pushed before.
-            if ( !elementExists )
+            if ( elementExists !== true )
             {
-                equalHeightElements.push( elem );
+                equalHeightElementList.push( elem );
             }
 
-            for ( var i = equalTarget.length; i >= 0; i-- )
+            for ( var i = $equalTargetList.length; i >= 0; i-- )
             {
-                cachedChild = $( equalTarget[i] );
-                cachedChild.css( 'height', '' );
+                $equalTarget = $( $equalTargetList[i] );
+                $equalTarget.css( 'height', '' );
 
-                if ( cachedChild.outerHeight( true ) > maxHeight )
+                if ( $equalTarget.outerHeight( true ) > maxHeight )
                 {
-                    maxHeight = cachedChild.outerHeight( true );
+                    maxHeight = $equalTarget.outerHeight( true );
                 }
             }
 
-            if ( !mediaSizes || $.inArray( MediaSizeService.interval(), mediaSizes ) >= 0 )
+            if ( !mediaSizeList || $.inArray( MediaSizeService.interval(), mediaSizeList ) >= 0 )
             {
-                equalTarget.height( maxHeight );
+                $equalTargetList.height( maxHeight );
             }
         }
 
@@ -137,7 +121,9 @@
          */
         function initToTop( elem )
         {
-            $( elem ).click( function()
+            var $elem = $( elem );
+
+            $elem.click( function()
             {
                 $( 'html, body' ).animate( {
                     scrollTop: 0
@@ -149,11 +135,11 @@
             {
                 if ( $( document ).scrollTop() > 100 )
                 {
-                    $( elem ).addClass( 'visible' );
+                    $elem.addClass( 'visible' );
                 }
                 else
                 {
-                    $( elem ).removeClass( 'visible' );
+                    $elem.removeClass( 'visible' );
                 }
             } );
         }
@@ -165,14 +151,16 @@
          *
          * @param elem
          */
-        function initLazyload( elem )
+        function initLazyload( elem, effect )
         {
-            $( elem ).lazyload( {
-                effect: $( this ).attr( 'data-plenty-lazyload' )
+            var $elem = $( elem );
+
+            $elem.lazyload( {
+                effect: effect
             } );
-            $( elem ).on( "loaded", function()
+            $elem.on( "loaded", function()
             {
-                $( elem ).css( 'display', 'inline-block' );
+                $elem.css( 'display', 'inline-block' );
             } );
         }
 
@@ -185,19 +173,22 @@
          */
         function toggleHideShow( elem )
         {
-            $( elem ).parent().addClass( 'animating' );
-            $( elem ).siblings( 'ul' ).slideToggle( 200, function()
+            var $elem       = $( elem );
+            var $elemParent = $elem.parent();
+
+            $elemParent.addClass( 'animating' );
+            $elem.siblings( 'ul' ).slideToggle( 200, function()
             {
-                if ( $( elem ).parent().is( '.open' ) )
+                if ( $elemParent.is( '.open' ) )
                 {
-                    $( elem ).parent().removeClass( 'open' );
+                    $elemParent.removeClass( 'open' );
                 }
                 else
                 {
-                    $( elem ).parent().addClass( 'open' );
+                    $elemParent.addClass( 'open' );
                 }
-                $( elem ).removeAttr( 'style' );
-                $( elem ).parent().removeClass( 'animating' );
+                $elem.removeAttr( 'style' );
+                $elemParent.removeClass( 'animating' );
             } );
         }
 
@@ -211,30 +202,31 @@
          */
         function slideToggle( elem )
         {
-            var target = $( $( elem ).attr( 'data-plenty-target' ) );
+            var $elem          = $( elem );
+            var $targetElement = $( $elem.attr( 'data-plenty-target' ) );
 
-            if ( $( elem ).is( 'input[type="radio"]' ) )
+            if ( $elem.is( 'input[type="radio"]' ) )
             {
                 // is radio button
-                var radioList        = $( 'input[type="radio"][name="' + ( $( elem ).attr( 'name' ) ) + '"]' );
-                var visibleOnChecked = $( elem ).is( '[data-plenty-slidetoggle="checked"]' );
-                $( radioList ).change( function()
+                var $radio           = $( 'input[type="radio"][name="' + ( $elem.attr( 'name' ) ) + '"]' );
+                var visibleOnChecked = $elem.is( '[data-plenty-slidetoggle="checked"]' );
+                $radio.change( function()
                 {
-                    $( target ).parents( '[data-plenty-equal-target]' ).css( 'height', 'auto' );
+                    $targetElement.parents( '[data-plenty-equal-target]' ).css( 'height', 'auto' );
 
                     if ( $( this ).is( ':checked' ) && $( this )[0] === $( elem )[0] )
                     {
                         // checked
                         if ( visibleOnChecked == true )
                         {
-                            $( target ).slideDown( 400, function()
+                            $targetElement.slideDown( 400, function()
                             {
                                 pm.getInstance().bindDirectives( '[data-plenty-equal]' );
                             } );
                         }
                         else
                         {
-                            $( target ).slideUp( 400, function()
+                            $targetElement.slideUp( 400, function()
                             {
                                 pm.getInstance().bindDirectives( '[data-plenty-equal]' );
                             } );
@@ -245,14 +237,14 @@
                         // unchecked (since other radio button has been checked)
                         if ( visibleOnChecked == true )
                         {
-                            $( target ).slideUp( 400, function()
+                            $targetElement.slideUp( 400, function()
                             {
                                 pm.getInstance().bindDirectives( '[data-plenty-equal]' );
                             } );
                         }
                         else
                         {
-                            $( target ).slideDown( 400, function()
+                            $targetElement.slideDown( 400, function()
                             {
                                 pm.getInstance().bindDirectives( '[data-plenty-equal]' );
                             } );
@@ -263,15 +255,15 @@
             else
             {
                 // is not radio button
-                $( elem ).click( function()
+                $elem.click( function()
                 {
-                    $( target ).parents( '[data-plenty-equal-target]' ).css( 'height', 'auto' );
+                    $targetElement.parents( '[data-plenty-equal-target]' ).css( 'height', 'auto' );
 
-                    $( elem ).addClass( 'animating' );
-                    $( target ).slideToggle( 400, function()
+                    $elem.addClass( 'animating' );
+                    $( $targetElement ).slideToggle( 400, function()
                     {
-                        $( elem ).removeClass( 'animating' );
-                        $( elem ).toggleClass( 'active' );
+                        $elem.removeClass( 'animating' );
+                        $elem.toggleClass( 'active' );
                         pm.getInstance().bindDirectives( '[data-plenty-equal]' );
                     } );
                 } );
@@ -306,32 +298,33 @@
          */
         function toggleSocialShare( elem )
         {
-            var toggle = $( elem ).find( '[data-plenty="switch"]' );
+            var $elem   = $( elem );
+            var $toggle = $elem.find( '[data-plenty="switch"]' );
 
             // append container to put / delete service.html
-            $( elem ).append( '<div class="social-container"></div>' );
+            $elem.append( '<div class="social-container"></div>' );
 
             // add "off" class to switch, if neither "off" or "on" is set
-            if ( !toggle.hasClass( 'off' ) && !toggle.hasClass( 'on' ) )
+            // replaced hasClass() with is() benchmark: http://jsperf.com/hasclasstest
+            if ( !$toggle.is( 'off, on' ) )
             {
-                toggle.addClass( 'off' );
+                $toggle.addClass( 'off' );
             }
 
             // toggle switch
-            toggle.on( 'click', function()
+            $toggle.on( 'click', function()
             {
-                if ( toggle.hasClass( 'off' ) )
+                if ( $toggle.hasClass( 'off' ) )
                 {
-                    if ( $( elem ).attr( "data-toggle" ) == "tooltip" )
+                    if ( $elem.attr( "data-toggle" ) == "tooltip" )
                     {
-                        $( elem ).tooltip( 'destroy' )
+                        $elem.tooltip( 'destroy' )
                     }
-                    ;
-                    toggle.removeClass( 'off' ).addClass( 'on' );
+                    $toggle.removeClass( 'off' ).addClass( 'on' );
                     // hide dummy button
-                    $( elem ).find( '[data-plenty="placeholder"]' ).hide();
+                    $elem.find( '[data-plenty="placeholder"]' ).hide();
                     // load HTML defined in 'api'
-                    $( elem ).find( '.social-container' ).append( SocialShareService.getSocialService( $( elem ).attr( 'data-plenty-social' ) ) );
+                    $elem.find( '.social-container' ).append( SocialShareService.getSocialService( $elem.attr( 'data-plenty-social' ) ) );
                 }
                 // do not disable social medias after activation
             } );
@@ -401,10 +394,10 @@
          */
         function setRemoteTab( elem )
         {
-            var tabsId = $( elem ).attr( 'data-plenty-remotetabs-id' );
+            var tabId = $( elem ).attr( 'data-plenty-remotetabs-id' );
 
             // find tabs grouped by remotetabs-id
-            $( '[data-plenty="remoteTabs"][data-plenty-remotetabs-id="' + tabsId + '"]' ).each( function( i, tabs )
+            $( '[data-plenty="remoteTabs"][data-plenty-remotetabs-id="' + tabId + '"]' ).each( function( i, tabs )
             {
 
                 // bind each remote-tab
@@ -421,13 +414,13 @@
                         $( singleTab ).closest( 'li' ).addClass( 'active' );
 
                         // hide inactive tabs & show active tab
-                        var tabpanelsInactive     = $( '[data-plenty-remotetabs-id="' + tabsId + '"][data-plenty-tabpanel-labelledby]' ).not( '[data-plenty-tabpanel-labelledby="' + singleTabId + '"]' );
-                        var tabpanelActive        = $( '[data-plenty-remotetabs-id="' + tabsId + '"][data-plenty-tabpanel-labelledby="' + singleTabId + '"]' );
+                        var tabpanelsInactive     = $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby]' ).not( '[data-plenty-tabpanel-labelledby="' + singleTabId + '"]' );
+                        var tabpanelActive        = $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby="' + singleTabId + '"]' );
                         var zIndexTabpanelParents = 0;
                         if ( $( tabs ).attr( 'data-plenty-remotetabs-adapt' ) == 'tabpanel-parent' )
                         {
                             zIndexTabpanelParents = 2147483646;
-                            $( '[data-plenty-remotetabs-id="' + tabsId + '"][data-plenty-tabpanel-labelledby]' ).parent().each( function()
+                            $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby]' ).parent().each( function()
                             {
                                 var zIndexCurrent = parseInt( $( this ).css( 'zIndex' ) );
                                 if ( typeof zIndexCurrent == 'number' && zIndexCurrent < zIndexTabpanelParents )
