@@ -88,7 +88,6 @@
             var maxHeight        = 0;
             var $equalTarget     = {};
             var $equalTargetList = $elem.find( '[data-plenty-rel="equal-target"]' ).length > 0 ? $elem.find( '[data-plenty-rel="equal-target"]' ) : $elem.children();
-            var mediaSizeList    = mediaSizes.replace( /\s/g, '' ).split( ',' );
 
             // if element wasn't pushed before.
             if ( elementExists !== true )
@@ -107,7 +106,7 @@
                 }
             }
 
-            if ( !mediaSizeList || $.inArray( MediaSizeService.interval(), mediaSizeList ) >= 0 )
+            if ( !mediaSizes || MediaSizeService.isInterval(mediaSizes) )
             {
                 $equalTargetList.height( maxHeight );
             }
@@ -300,6 +299,7 @@
             {
                 if ( $toggle.hasClass( 'off' ) )
                 {
+                    // TODO remove bootstrap dependency
                     if ( $elem.attr( "data-toggle" ) == "tooltip" )
                     {
                         $elem.tooltip( 'destroy' )

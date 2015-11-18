@@ -146,7 +146,7 @@
     PlentyFramework.prototype.bindDirectives = function( rootElement )
     {
 
-        rootElement = rootElement || 'body';
+        rootElement = rootElement || 'html';
 
         $( rootElement ).find( '[data-plenty]' ).each( function( i, element )
         {
@@ -264,7 +264,7 @@
 
             if ( !!match[6] && match[6].length > 0 )
             {
-                var params = match[6].split(',');
+                var params = match[6].match(/(['][\w\s,"-]+['])|([\w-]+)|(["][\w\s,'-]+["])/g);
                 for ( var j = 0; j < params.length; j++ )
                 {
                     var param = params[j].trim();
