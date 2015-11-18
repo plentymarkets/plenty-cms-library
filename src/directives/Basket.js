@@ -54,7 +54,7 @@
             var maxLength     = parseInt( quantityInput.attr( 'maxlength' ) ) || 5;
             var value         = parseInt( quantityInput.val() ) + increment;
 
-            if ( (value + '').length <= maxLength && value > 1 )
+            if ( (value + '').length <= maxLength && value >= 0 )
             {
                 quantityInput.val( value );
 
