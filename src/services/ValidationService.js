@@ -307,8 +307,8 @@
                 $form.find('.has-error').each(function(i, elem) {
                     formControl = $(getFormControl(elem));
                     formControl.on('focus click', function() {
-                        formControl.removeClass( errorClass );
-                        $form.find('label[for="'+formControl.attr('id')+'"]').removeClass(errorClass);
+                        $(this).removeClass( errorClass );
+                        $form.find('label[for="'+$(this).attr('id')+'"]').removeClass(errorClass);
                         $(elem).removeClass( errorClass );
                     });
                 });
