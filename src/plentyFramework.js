@@ -387,7 +387,11 @@
 
         var scripts = document.getElementsByTagName( 'SCRIPT' );
         if( scripts.length > 0 ) {
-            PlentyFramework.scriptPath = scripts[ scripts.length - 1 ].src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[ 1 ];
+            var script = scripts[ scripts.length - 1];
+            if( !!script.src && script.src.length > 0 )
+            {
+                PlentyFramework.scriptPath = script.src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[1];
+            }
         }
 
     };
