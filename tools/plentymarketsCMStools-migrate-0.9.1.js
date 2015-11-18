@@ -148,6 +148,19 @@
 
         } );
 
+        $rootElement.find( '[data-plenty-onenter]' ).each( function( i, elem )
+        {
+            var onEnter  = $( elem ).attr( 'data-plenty-onenter' );
+            var callback = typeof window[onEnter] === 'function' ? window[onEnter] : (new Function( 'return ' + onEnter ));
+            $( elem ).on( 'keypress', function( e )
+            {
+
+                if ( e.which === 13 && !!callback && typeof callback === "function" )
+                {
+                    callback.call();
+                }
+            } );
+        } );
     };
 
 })( jQuery, PlentyFramework );
