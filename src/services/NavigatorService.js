@@ -251,12 +251,12 @@
                         $(container[current]).html( response.data[0] );
                         // continue tab change
                         proceedTabChange(contentChanged);
-                        pm.getInstance().bindDirectives();
+                        pm.getInstance().bindDirectives(container[current]);
                     });
             } else {
                 // continue tab change without reloading tab content
                 proceedTabChange(contentChanged);
-                pm.getInstance().bindDirectives();
+                //pm.getInstance().bindDirectives();
             }
 
         }

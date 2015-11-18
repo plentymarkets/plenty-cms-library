@@ -16,10 +16,7 @@
         // resize elements on window size change.
         $( window ).on( 'sizeChange', function()
         {
-            for ( var i = equalHeightElementList.length - 1; i >= 0; i-- )
-            {
-                equalHeight( equalHeightElementList[i], '', true );
-            }
+            fireEqualHeight();
         } );
 
         return {
@@ -27,7 +24,7 @@
             equalHeight         : equalHeight,
             initToTop           : initToTop,
             initLazyload        : initLazyload,
-            slideToggle         : slideToggle,
+            initSlideToggle     : initSlideToggle,
             toggleHideShow      : toggleHideShow,
             toggleSocialShare   : toggleSocialShare,
             toggleClass         : toggleClass
@@ -68,6 +65,14 @@
             } );
         }
 
+        function fireEqualHeight()
+        {
+            for ( var i = equalHeightElementList.length - 1; i >= 0; i-- )
+            {
+                equalHeight( equalHeightElementList[i], '', true );
+            }
+        }
+
         /**
          * Equal Box height
          * Calculates equal box height for chosen elements.
@@ -82,7 +87,7 @@
             var $elem            = $( elem );
             var maxHeight        = 0;
             var $equalTarget     = {};
-            var $equalTargetList = $elem.find('[data-plenty-rel="equal-target"]').length > 0 ? $elem.find('[data-plenty-rel="equal-target"]') : $elem.children();
+            var $equalTargetList = $elem.find( '[data-plenty-rel="equal-target"]' ).length > 0 ? $elem.find( '[data-plenty-rel="equal-target"]' ) : $elem.children();
             var mediaSizeList    = mediaSizes.replace( /\s/g, '' ).split( ',' );
 
             // if element wasn't pushed before.
@@ -168,7 +173,6 @@
          *
          * @param elem
          */
-        // TODO: test
         function toggleHideShow( elem )
         {
             var $elem       = $( elem );
@@ -198,57 +202,37 @@
          *
          * @param elem
          */
-        // TODO: test
-        function slideToggle( elem )
+        function initSlideToggle( elem, checked )
         {
-            console.log( arguments );
             var $elem          = $( elem );
-            var $targetElement = $( $elem.attr( 'data-plenty-target' ) );
+            var $targetElement = $( $elem.attr( 'data-plenty-rel' ) );
 
             if ( $elem.is( 'input[type="radio"]' ) )
             {
                 // is radio button
-                var $radio           = $( 'input[type="radio"][name="' + ( $elem.attr( 'name' ) ) + '"]' );
-                var visibleOnChecked = $elem.is( '[data-plenty-slidetoggle="checked"]' );
-                $radio.change( function()
-                {
-                    $targetElement.parents( '[data-plenty-equal-target]' ).css( 'height', 'auto' );
+                var $radioGroupList  = $( 'input[type="radio"][name="' + ( $elem.attr( 'name' ) ) + '"]' );
+                var visibleOnChecked = !checked || checked == 'checked';
 
-                    if ( $( this ).is( ':checked' ) && $( this )[0] === $( elem )[0] )
+                $radioGroupList.change( function()
+                {
+                    var $self = $( this );
+                    $targetElement.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+
+                    if ( $self.is( ':checked' ) && $self[0] === $elem[0] && visibleOnChecked == true )
                     {
                         // checked
-                        if ( visibleOnChecked == true )
+                        $targetElement.slideDown( 400, function()
                         {
-                            $targetElement.slideDown( 400, function()
-                            {
-                                pm.getInstance().bindDirectives( '[data-plenty-equal]' );
-                            } );
-                        }
-                        else
-                        {
-                            $targetElement.slideUp( 400, function()
-                            {
-                                pm.getInstance().bindDirectives( '[data-plenty-equal]' );
-                            } );
-                        }
+                            fireEqualHeight();
+                        } );
                     }
                     else
                     {
                         // unchecked (since other radio button has been checked)
-                        if ( visibleOnChecked == true )
+                        $targetElement.slideUp( 400, function()
                         {
-                            $targetElement.slideUp( 400, function()
-                            {
-                                pm.getInstance().bindDirectives( '[data-plenty-equal]' );
-                            } );
-                        }
-                        else
-                        {
-                            $targetElement.slideDown( 400, function()
-                            {
-                                pm.getInstance().bindDirectives( '[data-plenty-equal]' );
-                            } );
-                        }
+                            fireEqualHeight();
+                        } );
                     }
                 } );
             }
@@ -257,14 +241,14 @@
                 // is not radio button
                 $elem.click( function()
                 {
-                    $targetElement.parents( '[data-plenty-equal-target]' ).css( 'height', 'auto' );
+                    //$targetElement.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
 
                     $elem.addClass( 'animating' );
-                    $( $targetElement ).slideToggle( 400, function()
+                    $targetElement.slideToggle( 400, function()
                     {
                         $elem.removeClass( 'animating' );
                         $elem.toggleClass( 'active' );
-                        pm.getInstance().bindDirectives( '[data-plenty-equal]' );
+                        fireEqualHeight();
                     } );
                 } );
             }
@@ -351,7 +335,7 @@
          */
         function toggleClass( cssClass, target, interval )
         {
-            if( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval(interval) ) )
+            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
             {
                 var $elem = $( target );
                 $elem.toggleClass( cssClass );
