@@ -48,7 +48,7 @@ Responses.GET.container_totals = {
         message: ""
     },
     data: [
-        '<div data-test="">New Totals</div>'
+        '<div data-plenty="Test.init(this)">New Totals</div>'
     ]
 };
 
@@ -59,7 +59,7 @@ Responses.GET.category_content = {
         message: ""
     },
     data: [
-        '<div data-test="">New category content</div>'
+        '<div data-plenty="Test.init(this)">New category content</div>'
     ]
 };
 
@@ -70,7 +70,7 @@ Responses.GET.container_basketpreviewlist = {
         message: ""
     },
     data: [
-        '<div data-test="">New itemview content</div>'
+        '<div data-plenty="Test.init(this)">New itemview content</div>'
     ]
 };
 

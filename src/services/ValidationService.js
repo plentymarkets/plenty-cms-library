@@ -177,10 +177,10 @@
          *          // handle missing fields
          *      });
          */
-        function validate( form ) {
+        function validate( form, errorClass ) {
             var formControl, formControls, validationKey, currentHasError, group, checked, checkedMin, checkedMax, attrValidate, validationKeys, formControlAttrType;
             var $form = $(form);
-            var errorClass = !!$form.attr('data-plenty-checkform') ? $form.attr('data-plenty-checkform') : 'has-error';
+            errorClass = errorClass || 'has-error';
             var missingFields = [];
             var hasError = false;
 
@@ -290,6 +290,7 @@
                 } else if( $form.is('.modal') ) {
                     $scrollTarget = $form.find('.modal-body');
                     errorOffset = $scrollTarget.scrollTop() - ( $scrollTarget.offset().top - $error.offset().top );
+
                 }
 
                 console.log( errorOffset, $scrollTarget );
@@ -309,7 +310,6 @@
                     formControl.on('focus click', function() {
                         $(this).removeClass( errorClass );
                         $form.find('label[for="'+$(this).attr('id')+'"]').removeClass(errorClass);
-                        $(elem).removeClass( errorClass );
                     });
                 });
 
