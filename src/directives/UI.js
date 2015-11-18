@@ -280,11 +280,10 @@
          *
          * @param elem
          */
-        // TODO: test
-        function toggleSocialShare( elem )
+        function toggleSocialShare( elem, socialShareService )
         {
             var $elem   = $( elem );
-            var $toggle = $elem.find( '[data-plenty="switch"]' );
+            var $toggle = $elem.find( '[data-plenty-rel="social-switch"]' );
 
             // append container to put / delete service.html
             $elem.append( '<div class="social-container"></div>' );
@@ -307,14 +306,13 @@
                     }
                     $toggle.removeClass( 'off' ).addClass( 'on' );
                     // hide dummy button
-                    $elem.find( '[data-plenty="placeholder"]' ).hide();
+                    $elem.find( '[data-plenty-rel="social-placeholder"]' ).hide();
                     // load HTML defined in 'api'
-                    $elem.find( '.social-container' ).append( SocialShareService.getSocialService( $elem.attr( 'data-plenty-social' ) ) );
+                    $elem.find( '.social-container' ).append( SocialShareService.getSocialService( socialShareService ) );
                 }
                 // do not disable social medias after activation
             } );
         }
-
 
         /**
          * Toggle Class
