@@ -55,26 +55,42 @@
                     $( resizeOrTouchSelector ).parent().removeClass( toggleClass );
                 }
             } );
+
+            $( 'html' ).click( function()
+            {
+                if ( !!activeDropdown )
+                {
+                    activeDropdown.parent().removeClass( toggleClass );
+                    activeDropdown = null;
+                }
+            } );
         }
 
-        function openDropdown( elem, mediaSizes, touch )
+        function openDropdown( elem, mediaSizes )
         {
             var $elem = $( elem );
             var activeParent;
 
-            if ( MediaSizeService.isInterval( mediaSizes )
-                || (touch == "touch" && Modernizr.touch)
-                || (!Modernizr.touch && touch != "touch") )
+            if ( Modernizr.touch && MediaSizeService.isInterval( 'md, lg' )
+                || MediaSizeService.isInterval( mediaSizes ) )
             {
-
-                if ( activeDropdown )
+                if ( !!activeDropdown && activeDropdown[0] == $elem[0] )
                 {
                     activeDropdown.parent().removeClass( toggleClass );
+                    activeDropdown = null;
                 }
-                if ( !activeDropdown || activeDropdown[0] != $elem[0] )
+                else
                 {
+                    if ( !!activeDropdown && activeDropdown[0] != $elem[0] )
+                    {
+                        activeDropdown.parent().removeClass( toggleClass );
+                    }
                     activeDropdown = $elem;
                     activeParent   = activeDropdown.parent();
+                    activeParent.click( function( event )
+                    {
+                        event.stopPropagation();
+                    } );
                     if ( !activeParent.hasClass( toggleClass ) )
                     {
                         activeParent.addClass( toggleClass );
@@ -87,11 +103,6 @@
         {
             var $elem       = $( elem );
             var $elemParent = $elem.parent();
-
-            $( 'html' ).click( function()
-            {
-                $( resizeOrTouchSelector ).not( $elem ).parent().removeClass( toggleClass );
-            } );
 
             if ( condition == "toggle-xs-sm-or-touch" )
             {
