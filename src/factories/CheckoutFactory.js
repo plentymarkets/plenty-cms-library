@@ -111,7 +111,7 @@
                     $('[data-plenty-checkout-template="' + container + '"]')
                         .each(function (i, elem) {
                             $(elem).html(response.data[0]);
-                            pm.getInstance().bindDirectives();
+                            pm.getInstance().bindDirectives(elem);
                         });
                 });
         }
@@ -131,7 +131,7 @@
                     $('[data-plenty-checkout-catcontent="'+catId+'"]')
                         .each(function(i, elem) {
                             $(elem).html(response.data[0]);
-                            pm.getInstance().bindDirectives();
+                            pm.getInstance().bindDirectives(elem);
                         });
                 });
 
@@ -151,7 +151,7 @@
                     $('[data-plenty-itemview-template="'+container+'"]')
                         .each(function(i, elem) {
                             $(elem).html(response.data[0]);
-                            pm.getInstance().bindDirectives();
+                            pm.getInstance().bindDirectives(elem);
                         });
                 });
 
