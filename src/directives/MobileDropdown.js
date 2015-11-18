@@ -16,43 +16,22 @@
     // TODO: handle external dependency to Modernizr
     pm.directive( 'MobileDropdown', function( MediaSizeService )
     {
-        var sizes                 = {xs: "xs", sm: "sm"};
         var toggleClass           = "open";
-        var resizeOrTouchSelector = '.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]';
-        var aTouchSelector        = '.dropdown.open > a[data-plenty-enable="touch"]';
         var activeDropdown        = null;
-
-        if ( isIntervalNotFitting() )
-        {
-            $( aTouchSelector ).parent().removeClass( 'open' );
-        }
 
         return {
             initMobileDropdown: initMobileDropdown,
-            mobileMenu        : mobileMenu,
             openDropdown      : openDropdown
         };
 
         function initMobileDropdown()
         {
-            $( window ).on( 'orientationchange', function()
+            $( window ).on( 'orientationchange sizeChange', function()
             {
-                if ( isFittingOrNotInterval() )
+                if ( !!activeDropdown )
                 {
-                    $( resizeOrTouchSelector ).parent().removeClass( toggleClass );
-                }
-
-                if ( isIntervalNotFitting() )
-                {
-                    $( aTouchSelector ).parent().removeClass( toggleClass );
-                }
-            } );
-
-            $( window ).on( 'sizeChange', function( newValue )
-            {
-                if ( newValue != sizes.xs && newValue != sizes.sm && !Modernizr.touch )
-                {
-                    $( resizeOrTouchSelector ).parent().removeClass( toggleClass );
+                    activeDropdown.parent().removeClass( toggleClass );
+                    activeDropdown = null;
                 }
             } );
 
@@ -86,6 +65,7 @@
                         activeDropdown.parent().removeClass( toggleClass );
                     }
                     activeDropdown = $elem;
+
                     activeParent   = activeDropdown.parent();
                     activeParent.click( function( event )
                     {
@@ -97,74 +77,6 @@
                     }
                 }
             }
-        }
-
-        function mobileMenu( elem, condition )
-        {
-            var $elem       = $( elem );
-            var $elemParent = $elem.parent();
-
-            if ( condition == "toggle-xs-sm-or-touch" )
-            {
-                $elem.click( function( e )
-                {
-                    if ( isFittingOrNotInterval() )
-                    {
-                        $( resizeOrTouchSelector ).not( $elem ).parent().removeClass( toggleClass );
-                        $elemParent.toggleClass( toggleClass );
-                        return false;
-                    }
-                } );
-            }
-
-            // dropdown enabled touch
-            else if ( condition == "touch" )
-            {
-                $elem.click( function()
-                {
-                    if ( isIntervalNotFitting() )
-                    { // otherwise already has mobile navigation
-                        $( aTouchSelector ).not( $elem ).parent().removeClass( toggleClass );
-                        $elemParent.addClass( toggleClass );
-                        return false;
-                    }
-                } );
-            }
-        }
-
-        pm.directive( '*', function( i, elem, MediaSizeService )
-        {
-
-            $( elem ).click( function( e )
-            {
-                if ( isFittingOrNotInterval() )
-                {
-                    var dropdown = $( resizeOrTouchSelector ).parent();
-                    if ( dropdown.length > 0 && !dropdown.is( e.target ) && dropdown.has( e.target ).length <= 0 )
-                    {
-                        dropdown.removeClass( toggleClass );
-                    }
-                }
-
-                if ( isIntervalNotFitting() )
-                {
-                    var dropdown = $( aTouchSelector ).parent();
-                    if ( dropdown.length > 0 && !dropdown.is( e.target ) && dropdown.has( e.target ).length <= 0 )
-                    {
-                        dropdown.removeClass( toggleClass );
-                    }
-                }
-            } );
-        }, ['MediaSizeService'] );
-
-        function isIntervalNotFitting()
-        {
-            return (!MediaSizeService.isInterval( "xs, sm" ) && Modernizr.touch);
-        }
-
-        function isFittingOrNotInterval()
-        {
-            return (MediaSizeService.isInterval( "xs, sm" ) || isIntervalNotFitting());
         }
 
     }, ['MediaSizeService'] );
