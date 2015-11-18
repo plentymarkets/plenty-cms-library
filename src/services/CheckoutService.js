@@ -90,7 +90,13 @@
         function saveShippingAddress( validateForm ) {
             var form = $('[data-plenty-checkout-form="shippingAddress"]');
 
+
             if( !validateForm && !form.validateForm() ) {
+                return false;
+            }
+
+            if( !pm.getInstance().AddressDoctorService.validateAddress() )
+            {
                 return false;
             }
 

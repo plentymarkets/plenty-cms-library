@@ -15,13 +15,14 @@
             validateAddress: validateAddress
         };
 
-        function validateAddress( requiredFields )
+        function validateAddress()
         {
             var addressIsValid = true;
 
             $( '[data-plenty-address-doctor]:visible' ).each( function( i, form )
             {
                 var addressDoctor = new AddressDoctor( form );
+                var requiredFields = $(form).attr('data-plenty-address-doctor' ).replace(/\s/g, '').split(',');
                 if ( !addressDoctor.isValid( requiredFields ) )
                 {
                     addressIsValid = false;
@@ -73,6 +74,7 @@
                 {
                     if( !validateInput( requiredFields[i] ) )
                     {
+                        $form.trigger('validationFailed');
                         return;
                     }
                 }
@@ -80,12 +82,18 @@
                 if( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) )
                 {
                     $inputs.HouseNo.removeClass('has-error');
+                    $form.find('label[for="' + $inputs.HouseNo.attr('id') + '"]' ).removeClass('has-error');
+
                     $inputs.HouseNo.addClass('has-success');
+                    $form.find('label[for="' + $inputs.HouseNo.attr('id') + '"]' ).addClass('has-success');
                 }
                 else
                 {
                     $inputs.HouseNo.removeClass('has-success');
+                    $form.find('label[for="' + $inputs.HouseNo.attr('id') + '"]' ).removeClass('has-success');
+
                     $inputs.HouseNo.addClass('has-error');
+                    $form.find('label[for="' + $inputs.HouseNo.attr('id') + '"]' ).addClass('has-error');
                 }
             }
 
@@ -99,20 +107,32 @@
                     $suggestionContainer[key].remove();
                 }
 
+                if( !$inputs[key] )
+                {
+                    return true;
+                }
+
                 if ( valueList.length == 1 )
                 {
                     $inputs[key].val( valueList[0] );
 
                     $inputs[key].removeClass('has-error');
+                    $form.find('label[for="' + $inputs[key].attr('id') + '"]' ).removeClass('has-error');
+
                     $inputs[key].addClass('has-success');
+                    $form.find('label[for="' + $inputs[key].attr('id') + '"]' ).addClass('has-success');
                     return true;
                 }
                 else
                 {
                     $inputs[key].removeClass('has-success');
+                    $form.find('label[for="' + $inputs[key].attr('id') + '"]' ).removeClass('has-success');
+
                     $inputs[key].addClass('has-error');
+                    $form.find('label[for="' + $inputs[key].attr('id') + '"]' ).addClass('has-error');
 
                     buildSuggestionList( $inputs[key], valueList );
+                    $inputs[key].off('focus');
                     $inputs[key].focus();
                     return false;
 
