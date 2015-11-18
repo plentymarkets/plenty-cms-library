@@ -31,9 +31,7 @@
             toggleHideShow      : toggleHideShow,
             toggleSocialShare   : toggleSocialShare,
             toggleClass         : toggleClass,
-            openTab             : openTab,
-            openRemoteTab       : openRemoteTab,
-            setRemoteTab        : setRemoteTab
+            openTab             : openTab
         };
 
         /**
@@ -204,6 +202,7 @@
         // TODO: test
         function slideToggle( elem )
         {
+            console.log( arguments );
             var $elem          = $( elem );
             var $targetElement = $( $elem.attr( 'data-plenty-target' ) );
 
@@ -333,127 +332,6 @@
             } );
         }
 
-        /**
-         * Tab Handling
-         *
-         * Show tab with jQuery-selector 'TAB_SELECTOR'
-         * <a data-plenty-opentab="TAB_SELECTOR">
-         * (!) Requires bootstrap.js
-         *
-         * Legacy directive selector: a[data-plenty-opentab]
-         *
-         * @param elem
-         */
-        // TODO: test
-        function openTab( elem )
-        {
-            var tabSelector = $( elem ).attr( 'data-plenty-opentab' );
-            tabSelector     = ( tabSelector == 'href' ) ? $( this ).attr( 'href' ) : tabSelector;
-            $( tabSelector ).tab( 'show' );
-        }
-
-        /**
-         * Show remote tab with jQuery-selector 'TAB_1' in target container (below)
-         * <span data-plenty-openremotetab="TAB_1">
-         *
-         * Legacy directive selector: data-plenty-openremotetab
-         *
-         * @param tabSelector
-         */
-        // TODO: test
-        function openRemoteTab( tabSelector )
-        {
-            console.log( tabSelector, $(tabSelector) );
-            $( tabSelector ).trigger( 'tabchange' );
-        }
-
-        /**
-         * Remote tabs
-         * tab content can be placed anywhere in body
-         *
-         * Content of remote tab
-         * <div data-plenty-labelledby="TAB_1" data-plenty-remotetabs-id="REMOTE_TAB_GROUP">
-         *     <!-- Content of TAB_1 -->
-         * </div>
-         *
-         * Remote tab navigation
-         * [...]
-         * <div data-plenty="remoteTabs" data-plenty-remotetabs-id="REMOTE_TAB_GROUP">
-         *     <ul>
-         *         <li class="active">
-         *             <a data-plenty-tab-id="TAB_1">
-         *                 <!-- Title of TAB_1 -->
-         *             </a>
-         *         </li>
-         *         <li>
-         *             <a data-plenty-tab-id="TAB_2">
-         *                 <!-- Titel of TAB_2 -->
-         *             </a>
-         *         </li>
-         *     </ul>
-         * </div>
-         *
-         * Legacy directive selector: data-plenty="remoteTabs"
-         *
-         * @param elem
-         */
-        // TODO: test
-        function setRemoteTab( elem )
-        {
-            var tabId = $( elem ).attr( 'data-plenty-remotetabs-id' );
-
-            // find tabs grouped by remotetabs-id
-            $( '[data-plenty="remoteTabs"][data-plenty-remotetabs-id="' + tabId + '"]' ).each( function( i, tabs )
-            {
-
-                // bind each remote-tab
-                $( tabs ).find( 'a' ).each( function( i, singleTab )
-                {
-
-                    var singleTabId = $( singleTab ).attr( 'data-plenty-tab-id' );
-
-                    // listen to 'tabchange' event
-                    $( singleTab ).on( 'tabchange', function()
-                    {
-                        // toggle class 'active'
-                        $( singleTab ).closest( '[data-plenty="remoteTabs"]' ).children( '.active' ).removeClass( 'active' );
-                        $( singleTab ).closest( 'li' ).addClass( 'active' );
-
-                        // hide inactive tabs & show active tab
-                        var tabpanelsInactive     = $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby]' ).not( '[data-plenty-tabpanel-labelledby="' + singleTabId + '"]' );
-                        var tabpanelActive        = $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby="' + singleTabId + '"]' );
-                        var zIndexTabpanelParents = 0;
-                        if ( $( tabs ).attr( 'data-plenty-remotetabs-adapt' ) == 'tabpanel-parent' )
-                        {
-                            zIndexTabpanelParents = 2147483646;
-                            $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby]' ).parent().each( function()
-                            {
-                                var zIndexCurrent = parseInt( $( this ).css( 'zIndex' ) );
-                                if ( typeof zIndexCurrent == 'number' && zIndexCurrent < zIndexTabpanelParents )
-                                {
-                                    zIndexTabpanelParents = zIndexCurrent;
-                                }
-                            } );
-                        }
-
-                        // adjust z-index if neccessary
-                        $( tabpanelsInactive ).hide().removeClass( 'in' );
-                        $( tabpanelActive ).show().addClass( 'in' );
-                        if ( zIndexTabpanelParents != 0 )
-                        {
-                            $( tabpanelsInactive ).parent().css( 'zIndex', zIndexTabpanelParents );
-                            $( tabpanelActive ).parent().css( 'zIndex', zIndexTabpanelParents + 1 );
-                        }
-                    } );
-                } );
-            } );
-
-            // trigger 'tabchange' event
-            $( elem ).find( 'a' ).click( function()
-            {
-                $( this ).trigger( 'tabchange' );
-            } );
-        }
 
         /**
          * Toggle Class
