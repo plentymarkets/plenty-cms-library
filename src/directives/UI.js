@@ -30,8 +30,7 @@
             slideToggle         : slideToggle,
             toggleHideShow      : toggleHideShow,
             toggleSocialShare   : toggleSocialShare,
-            toggleClass         : toggleClass,
-            openTab             : openTab
+            toggleClass         : toggleClass
         };
 
         /**
