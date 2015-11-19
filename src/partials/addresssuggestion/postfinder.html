@@ -1,0 +1,26 @@
+{{#addresses}}
+<div class="row">
+    <div class="col-xs-12">
+        <label class="address-select">
+            <input type="radio" value="{{index}}" name="shippingAddressID">
+		<span class="lh-075 address-box-inner">
+
+			<span class="row">
+				<span class="col-sm-6">
+					<span class="block bold">{{type}} {{number}}</span>
+					<span class="block">{{street}} {{houseNo}}</span>
+					<span class="block">{{zip}} {{city}}</span>
+				</span>
+
+				<span class="col-sm-6 muted">
+					<span class="block bold"><span>{{distance}} {{dimension}}</span></span>
+					<span class="block">{{remark}}</span>
+				</span>
+
+			</span>
+
+		</span>
+        </label>
+    </div>
+</div>
+{{/addresses}}
