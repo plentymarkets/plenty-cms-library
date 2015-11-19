@@ -2,6 +2,7 @@
 
     pm.partials.Modal = {
 
+
         /**
          * Will be called after a new modal was created and injected into DOM
          * @param {HTMLElement} element The injected modal element
@@ -63,6 +64,7 @@
 
             return modal;
         }
+
     };
 
 }(jQuery, PlentyFramework));

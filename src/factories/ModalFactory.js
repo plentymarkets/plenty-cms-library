@@ -62,6 +62,8 @@
              */
             modal.title      = '';
 
+            modal.cssClass = '';
+
             /**
              * The content of the modal
              * @attribute content
@@ -139,6 +141,7 @@
 
             return {
                 setTitle: setTitle,
+                setClass: setClass,
                 setContent: setContent,
                 setContainer: setContainer,
                 setLabelConfirm: setLabelConfirm,
@@ -158,6 +161,11 @@
              */
             function setTitle( title ) {
                 modal.title = title;
+                return this;
+            }
+
+            function setClass( cssClass ) {
+                modal.cssClass = cssClass;
                 return this;
             }
 
@@ -247,6 +255,7 @@
              * @function show
              */
             function show() {
+                var entryNumber = 0;
                 if( isModal( modal.content ) ) {
                     bsModal = PlentyFramework.partials.Modal.getModal( modal.content );
                 } else {

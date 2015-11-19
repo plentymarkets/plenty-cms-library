@@ -7,5 +7,7 @@
   "Save": "Save",
   "Do you really want to remove \"{{item}}\" from your basket?": "Do you really want to remove \"{{item}}\" from your basket?",
   "Select order parameters": "Select order parameters",
-  "Edit order parameters": "Edit order parameters"
+  "Edit order parameters": "Edit order parameters",
+  "Packstations and post offices in your area": "Packstations and post offices in your area",
+  "Please enter a ZIP code and/or a city.": "Please enter a ZIP code and/or a city."
 }
