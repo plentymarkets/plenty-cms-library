@@ -110,7 +110,7 @@
                                 shippingFields.PostfinderItemHouseNo.removeClass( 'has-error' ).addClass( 'has-success' );
                                 $( 'label[for="' + shippingFields.PostfinderItemHouseNo.attr( 'id' ) + '"]' ).removeClass( 'has-error' ).addClass( 'has-success' );
 
-                                packstationID = $( 'input[type="radio"][name="shippingAddressID"]:checked' ).val();
+                                packstationID = $( 'input[type="radio"][name="postfinder"]:checked' ).val();
 
                                 if ( result[packstationID].PostfinderItemIsPackstation )
                                 {
