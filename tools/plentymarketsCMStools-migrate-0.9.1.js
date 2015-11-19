@@ -167,7 +167,7 @@
 
         $rootElement.find( '[data-plenty-equal]' ).each( function( i, elem )
         {
-            pm.directives['UI'].equalHeight( elem );
+            pm.directives['UI'].equalHeight( elem, $(elem ).attr("data-plenty-equal") );
         } );
 
         $rootElement.find( '[data-plenty="toTop"]' ).each( function( i, elem )

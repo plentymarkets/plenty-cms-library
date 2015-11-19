@@ -30,7 +30,7 @@
             {
                 if ( !!activeDropdown )
                 {
-                    activeDropdown.parent().removeClass( toggleClass );
+                    activeDropdown.parents("ul" ).find("li." + toggleClass).removeClass( toggleClass );
                     activeDropdown = null;
                 }
             } );
