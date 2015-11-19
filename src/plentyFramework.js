@@ -264,7 +264,7 @@
 
             if ( !!match[6] && match[6].length > 0 )
             {
-                var params = match[6].match(/(['][\w\s,"-]+['])|([\w-]+)|(["][\w\s,'-]+["])/g);
+                var params = match[6].match(/(['][^']+['])|([\w-]+)|(["][^"]+["])/g);
                 for ( var j = 0; j < params.length; j++ )
                 {
                     var param = params[j].trim();
