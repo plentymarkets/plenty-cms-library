@@ -146,7 +146,7 @@
     PlentyFramework.prototype.bindDirectives = function( rootElement )
     {
 
-        rootElement = rootElement || 'body';
+        rootElement = rootElement || 'html';
 
         $( rootElement ).find( '[data-plenty]' ).each( function( i, element )
         {
@@ -571,12 +571,9 @@
         }
 
         var scripts = document.getElementsByTagName( 'SCRIPT' );
-        if( scripts.length > 0 ) {
-            var script = scripts[ scripts.length - 1];
-            if( !!script.src && script.src.length > 0 )
-            {
-                PlentyFramework.scriptPath = script.src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[1];
-            }
+        if ( scripts.length > 0 )
+        {
+            PlentyFramework.scriptPath = scripts[scripts.length - 1].src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[1];
         }
 
     };
