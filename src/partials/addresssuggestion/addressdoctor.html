@@ -1,5 +1,9 @@
-<ul class="addressDoctorStyle">
-    {{#entries}}
-    <li>{{.}}</li>
-    {{/entries}}
+<ul class="suggestion-list">
+    {{#values}}
+    <li>
+        <a href="javascript:void(0)" data-address-value="{{.}}">
+            {{.}}
+        </a>
+    </li>
+    {{/values}}
 </ul>

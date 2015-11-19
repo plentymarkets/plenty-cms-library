@@ -145,7 +145,7 @@
                 var suggestionKey = $parent.attr('name');
 
                 // render html content
-                $suggestionContainer[ suggestionKey ] = $( pm.compileTemplate( 'addressDoctor/suggestionList.html', {values: values} ) );
+                $suggestionContainer[ suggestionKey ] = $( pm.compileTemplate( 'addressSuggestion/addressDoctor.html', {values: values} ) );
                 $suggestionContainer[ suggestionKey ].css({
                     'width': $parent.outerWidth(true),
                     'left': $parent.position().left,

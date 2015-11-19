@@ -90,7 +90,7 @@
                             } );
                         }
 
-                        var html = pm.compileTemplate( 'addresssuggestion/postfinder.html', params );
+                        var html = pm.compileTemplate( 'addressSuggestion/postFinder.html', params );
 
                         Modal.prepare()
                             .setTitle( pm.translate( 'Packstations and post offices in your area' ) )
