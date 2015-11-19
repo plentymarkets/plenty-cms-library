@@ -65,7 +65,6 @@
                         activeDropdown.parent().removeClass( toggleClass );
                     }
                     activeDropdown = $elem;
-
                     activeParent   = activeDropdown.parent();
                     activeParent.click( function( event )
                     {

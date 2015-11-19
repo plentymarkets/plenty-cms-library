@@ -4,7 +4,14 @@
     PlentyFramework.getInstance().bindDirectives = function( rootElement )
     {
 
-        var $rootElement = $( rootElement || 'body' );
+        var $rootElement = $( rootElement || 'html' );
+
+        // #### COMMON ACTIONS
+        if ( $rootElement.find( 'body' ).length > 0 )
+        {
+            pm.directives['MobileDropdown'].initMobileDropdown();
+            pm.directives['UI'].initUIWindowEvents();
+        }
 
         $rootElement.find( '[data-plenty="addBasketItemButton"]' ).each( function( i, button )
         {
@@ -134,20 +141,6 @@
 
         } );
 
-        $rootElement.find( '[data-plenty-toggle]' ).each( function( i, elem )
-        {
-
-            $( elem ).click( function()
-            {
-                var dataString = $( elem ).attr( 'data-plenty-toggle' );
-                var data       = (new Function( "return " + dataString )).call();
-                var media      = data.media.replace( ' ', ',' );
-
-                pm.directives['UI'].toggleClass( data.class, data.target, media );
-            } );
-
-        } );
-
         $rootElement.find( '[data-plenty-onenter]' ).each( function( i, elem )
         {
             var onEnter  = $( elem ).attr( 'data-plenty-onenter' );
@@ -160,6 +153,60 @@
                     callback.call();
                 }
             } );
+        } );
+
+        $rootElement.find( '[data-plenty-enable]' ).each( function( i, elem )
+        {
+            pm.directives['MobileDropdown'].openDropdown( elem, $( elem ).attr( 'data-plenty-enable' ) );
+        } );
+
+        $rootElement.find( '[data-plenty="contentpageSlider"]' ).each( function( i, elem )
+        {
+            pm.directives['UI'].addContentPageSlider( elem );
+        } );
+
+        $rootElement.find( '[data-plenty-equal]' ).each( function( i, elem )
+        {
+            pm.directives['UI'].equalHeight( elem );
+        } );
+
+        $rootElement.find( '[data-plenty="toTop"]' ).each( function( i, elem )
+        {
+            pm.directives['UI'].initToTop( elem );
+        } );
+
+        $rootElement.find( 'img[data-plenty-lazyload]' ).each( function( i, elem )
+        {
+            pm.directives['UI'].initLazyload( elem, $( elem ).attr( "data-plenty-lazyload" ) );
+        } );
+
+        $rootElement.find( '[data-plenty="openCloseToggle"]' ).each( function( i, elem )
+        {
+            pm.directives['UI'].toggleHideShow( elem );
+        } );
+
+        $rootElement.find( '[data-plenty-slidetoggle]' ).each( function( i, elem )
+        {
+            pm.directives['UI'].initSlideToggle( elem, $( elem ).attr( '[data-plenty-slidetoggle]' ) );
+        } );
+
+        $rootElement.find( '[data-plenty-social]' ).each( function( i, elem )
+        {
+            pm.directives['UI'].toggleSocialShare( elem, $( elem ).attr( '[data-plenty-social]' ) );
+        } );
+
+        $rootElement.find( '[data-plenty-toggle]' ).each( function( i, elem )
+        {
+
+            $( elem ).click( function()
+            {
+                var dataString = $( elem ).attr( 'data-plenty-toggle' );
+                var data       = (new Function( "return " + dataString )).call();
+                var media      = data.media.replace( ' ', ',' );
+
+                pm.directives['UI'].toggleClass( data.class, data.target, media );
+            } );
+
         } );
     };
 

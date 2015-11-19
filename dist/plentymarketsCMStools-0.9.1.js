@@ -82,17 +82,34 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 /**
  * @module PlentyFramework
  */
-(function($) {
+(function( $ )
+{
+
+    /**
+     * Collection of uncompiled registered factories & services.
+     * See {{#crossLink "PlentyFramework/compile:method"}}.compile(){{/crossLink}}
+     * @attribute components
+     * @static
+     * @type {{factories: {}, services: {}}}
+     */
+    var components = {
+        factories : {},
+        services  : {},
+        directives: {}
+    };
 
     /**
      * Framework providing client functions for plentymarkets Webshops.
      * @class PlentyFramework
      * @constructor
      */
-    PlentyFramework = function() {};
+    PlentyFramework = function()
+    {
+    };
 
-    var instance = null;
-    PlentyFramework.getInstance = function() {
+    var instance                = null;
+    PlentyFramework.getInstance = function()
+    {
         instance = instance || new PlentyFramework();
         return instance;
     };
@@ -122,9 +139,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param {*}       value       The value to set
      * @return {*}                  The value
      */
-    PlentyFramework.setGlobal = function( identifier, value ) {
-        if( PlentyFramework.globals.hasOwnProperty( identifier ) ) {
-            console.error('Global variable "' + identifier + '" already exists and cannot be overridden.');
+    PlentyFramework.setGlobal = function( identifier, value )
+    {
+        if ( PlentyFramework.globals.hasOwnProperty( identifier ) )
+        {
+            console.error( 'Global variable "' + identifier + '" already exists and cannot be overridden.' );
             return null;
         }
 
@@ -140,7 +159,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param  identifier  The identifier of the requested variable
      * @return {*}         The value of the variable
      */
-    PlentyFramework.getGlobal = function( identifier ) {
+    PlentyFramework.getGlobal = function( identifier )
+    {
         return PlentyFramework.globals[identifier];
     };
 
@@ -149,7 +169,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @type {Array}
      * @static
      */
-    PlentyFramework.directives = [];
+    PlentyFramework.directives = {};
 
     /**
      * Register directive. Directives can be bound to dynamically added nodes by calling pm.bindPlentyFunctions();
@@ -161,18 +181,33 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param   {boolean}   allowDuplicates Defines if a directive can be bound to the same element multiple times
      * @return  {object}                    The created directive
      */
-    PlentyFramework.directive = function(selector, callback, dependencies, allowDuplicates) {
-        var directive = {
-            id:			PlentyFramework.directives.length,
-            selector:	selector,
-            callback:	callback,
-            dependencies: dependencies,
-            allowDuplicates: !!allowDuplicates,
-            elements:	[]
-        };
-        PlentyFramework.directives.push(directive);
+    PlentyFramework.directive = function( directiveName, directiveFunctions, dependencies )
+    {
+        // Catch type mismatching for 'directiveName'
+        if ( typeof directiveName !== 'string' )
+        {
+            console.error( "Type mismatch: Expect first parameter to be a 'string', '" + typeof directiveName + "' given." );
+            return;
+        }
 
-        return directive;
+        // Catch type mismatching for 'serviceFunctions'
+        if ( typeof directiveFunctions !== 'function' )
+        {
+            console.error( "Type mismatch: Expect second parameter to be a 'function', '" + typeof directiveFunctions + "' given." );
+            return;
+        }
+
+        dependencies = dependencies || [];
+
+        components.directives[directiveName] = {
+            name        : directiveName,
+            dependencies: dependencies,
+            compile     : function()
+            {
+                var params                                = PlentyFramework.resolveServices( dependencies );
+                PlentyFramework.directives[directiveName] = directiveFunctions.apply( null, params );
+            }
+        };
     };
 
     /**
@@ -180,53 +215,149 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @function bindDirectives
      * @param {string} [directiveSelector] restrict binding to elements matching this selector
      */
-    PlentyFramework.prototype.bindDirectives = function( directiveSelector ) {
+    PlentyFramework.prototype.bindDirectives = function( rootElement )
+    {
 
-        $.each( PlentyFramework.directives, function(i, directive)  {
-            if( !directiveSelector || directiveSelector === directive.selector ) {
-                var elements = [];
-                // filter elements already bound
-                $(directive.selector).each(function (j, obj) {
-                    if ($.inArray(obj, directive.elements) < 0) {
-                        elements.push(obj);
-                    }
-                });
+        rootElement = rootElement || 'body';
 
-                $.each(elements, function (i, elem) {
-                    var params = [i, elem];
+        $( rootElement ).find( '[data-plenty]' ).each( function( i, element )
+        {
 
-                    // append dependencies if exists
-                    if (!!directive.dependencies && directive.dependencies.length > 0) {
-                        params = params.concat(PlentyFramework.resolveServices(directive.dependencies));
-                    }
+            var directives = parseDirectives( $( element ).attr( 'data-plenty' ), $( element ) );
 
-                    // apply loop variables and depending services to callback
-                    directive.callback.apply(null, params);
-                });
-
-                $(elements).each(function (j, obj) {
-                    // store function ID to avoid duplicate bindings
-                    if (!directive.allowDuplicates) {
-                        directive.elements.push(obj);
-                    }
-                });
+            if( directives.length <= 0 ) {
+                // continue
+                return;
             }
 
-        });
+            for(var i = 0; i < directives.length; i++ )
+            {
+                var directive = directives[i];
+                if ( !!PlentyFramework.directives[directive.class] && PlentyFramework.directives.hasOwnProperty( directive.class ) )
+                {
+
+                    var callback = PlentyFramework.directives[directive.class][directive.method];
+                    if ( !!callback && typeof callback == "function" )
+                    {
+
+                        if ( directive.event == "ready" )
+                        {
+                            directive = injectEvent( directive, undefined );
+                            callback.apply( null, directive.params );
+                        }
+                        else
+                        {
+                            $( element ).on( directive.event, function( e )
+                            {
+                                directive = injectEvent( directive, e );
+                                return callback.apply( null, directive.params );
+                            } );
+                        }
+
+                    }
+                    else
+                    {
+                        console.error( "Method not found: " + directives.method + " in " + directives.class );
+                    }
+
+                }
+                else
+                {
+                    console.error( "Directive not found: " + directives.class );
+                }
+            }
+        } );
+
+        $(document).trigger('initPartials', rootElement );
     };
 
+    function injectEvent( directive, event )
+    {
+        for( var i = 0; i < directive.params.length; i++ )
+        {
+            if( !!directive.params[i].toLowerCase && (directive.params[i].toLowerCase() == 'e' || directive.params[i].toLowerCase() == 'event') )
+            {
+                directive.params[i] = event;
+            }
+        }
 
-    /**
-     * Collection of uncompiled registered factories & services.
-     * See {{#crossLink "PlentyFramework/compile:method"}}.compile(){{/crossLink}}
-     * @attribute components
-     * @static
-     * @type {{factories: {}, services: {}}}
-     */
-    PlentyFramework.components = {
-        factories: {},
-        services: {}
-    };
+        return directive;
+    }
+
+    function parseDirectives( input, thisValue )
+    {
+        var directivePattern = /^(([\w]+):)?([\w]+)\.([\w]+)(\((.*)\))?$/;
+        var expressions = input.split(';');
+        var directives = [];
+
+        for( var i = 0; i < expressions.length; i++ )
+        {
+            var expression = expressions[i];
+
+            if( !expression ) {
+                continue;
+            }
+
+            if ( !directivePattern.test( expression ) )
+            {
+                console.warn( "Invalid directive: " + expression );
+                continue;
+            }
+
+            var match = expression.match( directivePattern );
+
+            if ( !match[3] || match[3].length <= 0 )
+            {
+                console.error( "Cannot parse '" + expression + "': Class name not set." );
+                continue;
+            }
+
+            if ( !match[4] || match[4].length <= 0 )
+            {
+                console.error( "Cannot parse '" + expression + "': Method not set." );
+                continue;
+            }
+
+            var directive = {
+                event : match[2] || 'ready',
+                class : match[3],
+                method: match[4],
+                params: []
+            };
+
+            if ( !!match[6] && match[6].length > 0 )
+            {
+                var params = match[6].match( /([\w'"-]+)/g );
+                for ( var j = 0; j < params.length; j++ )
+                {
+                    if ( !isNaN( parseFloat( params[j] ) ) )
+                    {
+                        directive.params.push( parseFloat( params[j] ) );
+                    }
+                    else if ( params[j].toLowerCase() == 'true' )
+                    {
+                        directive.params.push( true );
+                    }
+                    else if ( params[j].toLowerCase() == 'false' )
+                    {
+                        directive.params.push( false );
+                    }
+                    else if ( params[j].toLowerCase() == 'this' )
+                    {
+                        directive.params.push( thisValue );
+                    }
+                    else
+                    {
+                        directive.params.push( params[j].replace( /^['"]|['"]$/g, '' ) );
+                    }
+                }
+            }
+
+            directives.push( directive );
+
+        }
+        return directives;
+    }
 
     /**
      * Register a new service
@@ -235,29 +366,34 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param {string}      serviceName        Unique identifier of the service to get/ create
      * @param {function}    serviceFunctions   Callback containing all public functions of this service.
      * @param {Array}       [dependencies]     Identifiers of required services to inject in serviceFunctions
-     * @return {object}                        The object described in serviceFunctions(). Can be received via PlentyFramework.[serviceName]
+     * @return {object}                        The object described in serviceFunctions(). Can be received via
+     *     PlentyFramework.[serviceName]
      */
-    PlentyFramework.service = function( serviceName, serviceFunctions, dependencies ) {
+    PlentyFramework.service = function( serviceName, serviceFunctions, dependencies )
+    {
 
         // Catch type mismatching for 'serviceName'
-        if( typeof serviceName !== 'string' ) {
-            console.error("Type mismatch: Expect first parameter to be a 'string', '" + typeof serviceName + "' given.");
+        if ( typeof serviceName !== 'string' )
+        {
+            console.error( "Type mismatch: Expect first parameter to be a 'string', '" + typeof serviceName + "' given." );
             return;
         }
 
         // Catch type mismatching for 'serviceFunctions'
-        if( typeof serviceFunctions !== 'function' ) {
-            console.error("Type mismatch: Expect second parameter to be a 'function', '" + typeof serviceFunctions + "' given.");
+        if ( typeof serviceFunctions !== 'function' )
+        {
+            console.error( "Type mismatch: Expect second parameter to be a 'function', '" + typeof serviceFunctions + "' given." );
             return;
         }
 
         dependencies = dependencies || [];
 
-        PlentyFramework.components.services[serviceName] = {
-            name: serviceName,
+        components.services[serviceName] = {
+            name        : serviceName,
             dependencies: dependencies,
-            compile: function() {
-                var params = PlentyFramework.resolveFactories( dependencies );
+            compile     : function()
+            {
+                var params                             = PlentyFramework.resolveFactories( dependencies );
                 PlentyFramework.prototype[serviceName] = serviceFunctions.apply( null, params );
             }
         };
@@ -272,23 +408,29 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param  {Array} dependencies    Names of required factories
      * @return {Array}                 Objects to apply to callback function
      */
-    PlentyFramework.resolveServices = function( dependencies ) {
+    PlentyFramework.resolveServices = function( dependencies )
+    {
         var compiledServices = [];
 
-        $.each( dependencies, function(j, dependency) {
+        $.each( dependencies, function( j, dependency )
+        {
 
             // factory not found: try to compile dependent factory first
-            if( !PlentyFramework.prototype.hasOwnProperty(dependency) ) {
-                if( PlentyFramework.components.services.hasOwnProperty(dependency) ) {
-                    PlentyFramework.components.services[dependency].compile();
-                } else {
-                    console.error('Cannot inject Service "' + dependency + '": Service not found.');
+            if ( !PlentyFramework.prototype.hasOwnProperty( dependency ) )
+            {
+                if ( components.services.hasOwnProperty( dependency ) )
+                {
+                    components.services[dependency].compile();
+                }
+                else
+                {
+                    console.error( 'Cannot inject Service "' + dependency + '": Service not found.' );
                     return false;
                 }
             }
             var service = PlentyFramework.prototype[dependency];
             compiledServices.push( service );
-        });
+        } );
 
         return compiledServices;
     };
@@ -309,26 +451,30 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param {function}    factoryFunctions    The function describing the factory
      * @param {Array}       dependencies        List of required factories to inject
      */
-    PlentyFramework.factory = function( factoryName, factoryFunctions, dependencies ) {
+    PlentyFramework.factory = function( factoryName, factoryFunctions, dependencies )
+    {
 
         // Catch type mismatching for 'serviceName'
-        if( typeof factoryName !== 'string' ) {
-            console.error("Type mismatch: Expect first parameter to be a 'string', '" + typeof factoryName + "' given.");
+        if ( typeof factoryName !== 'string' )
+        {
+            console.error( "Type mismatch: Expect first parameter to be a 'string', '" + typeof factoryName + "' given." );
             return;
         }
 
         // Catch type mismatching for 'serviceFunctions'
-        if( typeof factoryFunctions !== 'function' ) {
-            console.error("Type mismatch: Expect second parameter to be a 'function', '" + typeof factoryFunctions + "' given.");
+        if ( typeof factoryFunctions !== 'function' )
+        {
+            console.error( "Type mismatch: Expect second parameter to be a 'function', '" + typeof factoryFunctions + "' given." );
             return;
         }
 
-        dependencies = dependencies || [];
-        PlentyFramework.components.factories[factoryName] = {
-            name: factoryName,
+        dependencies                      = dependencies || [];
+        components.factories[factoryName] = {
+            name        : factoryName,
             dependencies: dependencies,
-            compile: function() {
-                var params = PlentyFramework.resolveFactories( dependencies );
+            compile     : function()
+            {
+                var params                             = PlentyFramework.resolveFactories( dependencies );
                 PlentyFramework.factories[factoryName] = factoryFunctions.apply( null, params );
             }
         };
@@ -343,23 +489,29 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param  {Array}   dependencies  Names of required factories
      * @return {Array}                 Objects to apply to callback function
      */
-    PlentyFramework.resolveFactories = function( dependencies ) {
+    PlentyFramework.resolveFactories = function( dependencies )
+    {
         var compiledFactories = [];
 
-        $.each( dependencies, function(j, dependency) {
+        $.each( dependencies, function( j, dependency )
+        {
 
             // factory not found: try to compile dependent factory first
-            if( !PlentyFramework.factories.hasOwnProperty(dependency) ) {
-                if( PlentyFramework.components.factories.hasOwnProperty(dependency) ) {
-                    PlentyFramework.components.factories[dependency].compile();
-                } else {
-                    console.error('Cannot inject Factory "' + dependency + '": Factory not found.');
+            if ( !PlentyFramework.factories.hasOwnProperty( dependency ) )
+            {
+                if ( components.factories.hasOwnProperty( dependency ) )
+                {
+                    components.factories[dependency].compile();
+                }
+                else
+                {
+                    console.error( 'Cannot inject Factory "' + dependency + '": Factory not found.' );
                     return false;
                 }
             }
             var factory = PlentyFramework.factories[dependency];
             compiledFactories.push( factory );
-        });
+        } );
 
         return compiledFactories;
     };
@@ -373,11 +525,14 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param {Object} data     data to privide to templates scope.
      * @returns {String}        The rendered html string
      */
-    PlentyFramework.compileTemplate = function( template, data ) {
-        data = data || {};
-        data.translate = function() {
-            return function( text, render ) {
-                return render( PlentyFramework.translate(text) );
+    PlentyFramework.compileTemplate = function( template, data )
+    {
+        data           = data || {};
+        data.translate = function()
+        {
+            return function( text, render )
+            {
+                return render( PlentyFramework.translate( text ) );
             };
         };
         return Mustache.render( TemplateCache[template], data );
@@ -405,10 +560,12 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @static
      * @param fileName  relative path to language file.
      */
-    PlentyFramework.loadLanguageFile = function( fileName ) {
-        $.get( PlentyFramework.scriptPath + fileName ).done(function(response) {
+    PlentyFramework.loadLanguageFile = function( fileName )
+    {
+        $.get( PlentyFramework.scriptPath + fileName ).done( function( response )
+        {
             PlentyFramework.Strings = response;
-        });
+        } );
     };
 
     /**
@@ -421,16 +578,21 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param {Object} [params] additional data for rendering
      * @returns {String}        The translation of the given string if found. Otherwise returns the original string.
      */
-    PlentyFramework.translate = function( string, params ) {
+    PlentyFramework.translate = function( string, params )
+    {
         var localeString;
-        if( PlentyFramework.Strings.hasOwnProperty(string) ) {
+        if ( PlentyFramework.Strings.hasOwnProperty( string ) )
+        {
             localeString = PlentyFramework.Strings[string];
-        } else {
+        }
+        else
+        {
             localeString = string;
-            console.warn('No translation found for "' + localeString + '".');
+            console.warn( 'No translation found for "' + localeString + '".' );
         }
 
-        if( !!params ) {
+        if ( !!params )
+        {
             localeString = Mustache.render( localeString, params );
         }
 
@@ -443,28 +605,42 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @function compile
      * @static
      */
-    PlentyFramework.compile = function() {
+    PlentyFramework.compile = function()
+    {
 
-        for( var factory in PlentyFramework.components.factories ) {
-            if( !PlentyFramework.factories.hasOwnProperty(factory) ) {
-                PlentyFramework.components.factories[factory].compile();
+        for ( var factory in components.factories )
+        {
+            if ( !PlentyFramework.factories.hasOwnProperty( factory ) )
+            {
+                components.factories[factory].compile();
             }
         }
 
-        for( var service in PlentyFramework.components.services ) {
-            if( !PlentyFramework.prototype.hasOwnProperty(service) ) {
-                PlentyFramework.components.services[service].compile();
+        for ( var service in components.services )
+        {
+            if ( !PlentyFramework.prototype.hasOwnProperty( service ) )
+            {
+                components.services[service].compile();
+            }
+        }
+
+        for ( var directive in components.directives )
+        {
+            if ( !PlentyFramework.directives.hasOwnProperty( directive ) )
+            {
+                components.directives[directive].compile();
             }
         }
 
         var scripts = document.getElementsByTagName( 'SCRIPT' );
-        if( scripts.length > 0 ) {
-            PlentyFramework.scriptPath = scripts[ scripts.length - 1 ].src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[ 1 ];
+        if ( scripts.length > 0 )
+        {
+            PlentyFramework.scriptPath = scripts[scripts.length - 1].src.match( /(.*)\/(.*)\.js(\?\S*)?$/ )[1];
         }
 
     };
 
-}(jQuery));
+}( jQuery ));
 
 
 
@@ -581,6 +757,17 @@ PlentyFramework.cssClasses = {
     };
 
 }(jQuery, PlentyFramework));
+(function($) {
+
+    $(document).on('initPartials', function(e, root) {
+
+        $(root).find('[data-toggle="tooltip"]' ).tooltip({
+            container: 'body'
+        });
+
+    });
+
+})(jQuery);
 (function($, pm) {
 
     pm.partials.WaitScreen = {
@@ -1728,6 +1915,7 @@ PlentyFramework.cssClasses = {
 		return {
 			addItem: addBasketItem,
             removeItem: removeBasketItem,
+            getItem: getBasketItem,
             setItemQuantity: setItemQuantity,
             editItemAttributes: editItemAttributes,
             editOrderParams: editOrderParams,
@@ -1993,16 +2181,10 @@ PlentyFramework.cssClasses = {
          */
         function removeBasketItem( BasketItemID, forceDelete ) {
 
-            // get item name
-            var itemName, originalItemQuantity;
-            var params = Checkout.getCheckout().BasketItemsList;
+            var deferred = $.Deferred();
 
-            for ( var i = 0; i < params.length; i++ ) {
-                if ( params[i].BasketItemID == BasketItemID ) {
-                    originalItemQuantity = params[i].BasketItemQuantity;
-                    itemName = params[i].BasketItemNameMap[1];
-                }
-            }
+            // get item name
+            var itemName = getBasketItem(BasketItemID).BasketItemNameMap[1];
 
             // calling the delete request
             function doDelete() {
@@ -2018,6 +2200,8 @@ PlentyFramework.cssClasses = {
                             }
 
                             refreshBasketPreview();
+
+                            deferred.resolve();
                         });
                     });
             }
@@ -2028,7 +2212,8 @@ PlentyFramework.cssClasses = {
                     .setTitle( pm.translate('Please confirm') )
                     .setContent('<p>' + pm.translate( "Do you really want to remove \"{{item}}\" from your basket?", {item: itemName}) + '</p>')
                     .onDismiss(function () {
-                        $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty="quantityInput"]').val(originalItemQuantity);
+                        //$('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty="quantityInput"]').val(originalItemQuantity);
+                        deferred.reject();
                     })
                     .onConfirm(function () {
                         doDelete();
@@ -2038,6 +2223,8 @@ PlentyFramework.cssClasses = {
             } else {
                 doDelete();
             }
+
+            return deferred;
         }
 
         /**
@@ -2050,9 +2237,10 @@ PlentyFramework.cssClasses = {
         function setItemQuantity( BasketItemID, BasketItemQuantity ) {
             // delete item if quantity is 0
             if( BasketItemQuantity <= 0 ) {
-                removeBasketItem( BasketItemID );
+                return removeBasketItem( BasketItemID );
             }
 
+            var deferred = $.Deferred();
             var params = Checkout.getCheckout().BasketItemsList;
             var basketItem;
             var basketItemIndex;
@@ -2083,9 +2271,12 @@ PlentyFramework.cssClasses = {
                             }
                             $('[data-basket-item-id="' + BasketItemID + '"]').find('[data-plenty-checkout="basket-item-price-total"]').html(basketItemsPriceTotal);
                             refreshBasketPreview();
+                            deferred.resolve();
                         });
                     });
             }
+
+            return deferred;
         }
 
         /**
@@ -3492,15 +3683,15 @@ PlentyFramework.cssClasses = {
          *          // handle missing fields
          *      });
          */
-        function validate( form ) {
+        function validate( form, errorClass ) {
             var formControl, formControls, validationKey, currentHasError, group, checked, checkedMin, checkedMax, attrValidate, validationKeys, formControlAttrType;
-            var wrappedForm = $(form);
-            var errorClass = !!wrappedForm.attr('data-plenty-checkform') ? wrappedForm.attr('data-plenty-checkform') : 'has-error';
+            var $form = $(form);
+            errorClass = errorClass || 'has-error';
             var missingFields = [];
             var hasError = false;
 
             // check every required input inside form
-            wrappedForm.find('[data-plenty-validate], input.Required').each(function(i, elem) {
+            $form.find('[data-plenty-validate], input.Required').each(function(i, elem) {
                 attrValidate = $(elem).attr('data-plenty-validate');
                 formControls = getFormControl(elem)
                 // validate text inputs
@@ -3554,7 +3745,7 @@ PlentyFramework.cssClasses = {
                         || formControlAttrType == 'checkbox')) {
                         // validate radio buttons
                         group = formControl.attr('name');
-                        checked = wrappedForm.find('input[name="' + group + '"]:checked').length;
+                        checked = $form.find('input[name="' + group + '"]:checked').length;
 
                         if (formControlAttrType == 'radio') {
                             checkedMin = 1;
@@ -3581,7 +3772,7 @@ PlentyFramework.cssClasses = {
 
                         if(formControls.length > 1 ) {
                             formControl.addClass(errorClass);
-                            wrappedForm.find('label[for="'+formControl.attr('id')+'"]').addClass(errorClass);
+                            $form.find('label[for="'+formControl.attr('id')+'"]').addClass(errorClass);
                         } else {
                             $(elem).addClass(errorClass);
                         }
@@ -3591,16 +3782,16 @@ PlentyFramework.cssClasses = {
             });
 
             // scroll to element on 'validationFailed'
-            wrappedForm.on('validationFailed', function() {
+            $form.on('validationFailed', function() {
                 var distanceTop = 50;
-                var errorOffset = wrappedForm.find('.has-error').first().offset().top;
+                var errorOffset = $form.find('.has-error').first().offset().top;
                 var scrollTarget = $('html, body');
 
                 // if form is inside of modal, scroll modal instead of body
-                if( wrappedForm.parents('.modal').length > 0 ) {
-                    scrollTarget = wrappedForm.parents('.modal');
-                } else if( wrappedForm.is('.modal') ) {
-                    scrollTarget = wrappedForm;
+                if( $form.parents('.modal').length > 0 ) {
+                    scrollTarget = $form.parents('.modal');
+                } else if( $form.is('.modal') ) {
+                    scrollTarget = $form;
                 }
 
                 // only scroll if error is outside of viewport
@@ -3613,24 +3804,24 @@ PlentyFramework.cssClasses = {
 
             if ( hasError ) {
                 // remove error class on focus
-                wrappedForm.find('.has-error').each(function(i, elem) {
+                $form.find('.has-error').each(function(i, elem) {
                     formControl = $(getFormControl(elem));
                     formControl.on('focus click', function() {
                         formControl.removeClass( errorClass );
-                        wrappedForm.find('label[for="'+formControl.attr('id')+'"]').removeClass(errorClass);
+                        $form.find('label[for="'+formControl.attr('id')+'"]').removeClass(errorClass);
                         $(elem).removeClass( errorClass );
                     });
                 });
 
-                wrappedForm.trigger('validationFailed', [missingFields]);
+                $form.trigger('validationFailed', [missingFields]);
             }
 
-            var callback = wrappedForm.attr('data-plenty-callback');
+            var callback = $form.attr('data-plenty-callback');
 
             if( !hasError && !!callback && callback != "submit" && typeof window[callback] == "function") {
 
                 var fields = {};
-                wrappedForm.find('input, textarea, select').each(function (){
+                $form.find('input, textarea, select').each(function (){
                     if( $(this).attr('type') == 'checkbox' ) {
                         fields[$(this).attr('name')] = $(this).is(':checked');
                     } else {
@@ -3721,859 +3912,626 @@ PlentyFramework.cssClasses = {
  *      //...
  *      plenty.ServiceName.functionInService/();
  */
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-/**
- * @module Directives
- */
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-	pm.directive('[data-plenty="addBasketItemButton"]', function(i, button, BasketService)
+(function( $, pm )
+{
+    pm.directive( 'Basket', function( BasketService )
     {
 
-        $(button).click( function(e)
+        return {
+            addBasketItem     : addBasketItem,
+            changeItemQuantity: changeItemQuantity,
+            setItemQuantity   : setItemQuantity
+        };
+
+        function addBasketItem( e, button )
         {
-            // avoid directing to href
             e.preventDefault();
-
             //init
-            var basketItemsList	= {};
-            var parentForm		= $(button).parents('form');
+            var basketItemsList = {};
+            var parentForm      = $( button ).parents( 'form' );
 
-            basketItemsList.BasketItemItemID	= parentForm.find('[name="ArticleID"]').val();
-            basketItemsList.BasketItemPriceID	= parentForm.find('[name="SYS_P_ID"]').val();
-            basketItemsList.BasketItemQuantity	= parentForm.find('[name="ArticleQuantity"]').val();
-            basketItemsList.BasketItemBranchID	= parentForm.find('[name="source_category"]').val();
+            basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
+            basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
+            basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
+            basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
 
             //attributes
-            var attributeInputsList = parentForm.find('[name^="ArticleAttribute"]');
-            var attributesList = [];
+            var attributeInputsList = parentForm.find( '[name^="ArticleAttribute"]' );
+            var attributesList      = [];
 
-            $.each(attributeInputsList, function (idx, elem) {
-                var match = elem.name.match(/^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/);
-                if(match && match[1])
+            $.each( attributeInputsList, function( idx, elem )
+            {
+                var match = elem.name.match( /^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/ );
+                if ( match && match[1] )
                 {
-                    attributesList.push({
-                        BasketItemAttributeID 		: match[1],
-                        BasketItemAttributeValueID	: $(elem).val()
-                    });
+                    attributesList.push( {
+                        BasketItemAttributeID     : match[1],
+                        BasketItemAttributeValueID: $( elem ).val()
+                    } );
                 }
-            });
+            } );
 
-            if(attributesList.length != 0)
+            if ( attributesList.length != 0 )
             {
                 basketItemsList.BasketItemAttributesList = attributesList;
             }
 
             //add basketItem and refresh previewLists
-            BasketService.addItem([basketItemsList]);
+            BasketService.addItem( [basketItemsList] );
 
-        });
-    }, ['BasketService']);
-} (jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    // append Bootstrap Tooltip
-    pm.directive('[data-toggle="tooltip"]', function(i, elem) {
-        $(elem).tooltip({
-            container: 'body'
-        });
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-	pm.directive('[data-plenty-checkout-href]', function(i, elem, NavigatorService) {
-        $(elem).click(function () {
-            NavigatorService.goToID( $(this).attr('data-plenty-checkout-href') );
-        });
-	}, ['NavigatorService']);
-} (jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-
-    /*
-     * content page slider
-     *
-     * usage (functionality requires only attribute data-plenty="contentpageSlider"):
-     * <div class="contentpageSlider" data-plenty="contentpageSlider">
-     *     <div class="slide">
-     *         ...
-     *     </div>
-     *     <div class="slide">
-     *         ...
-     *     </div>
-     *     ...
-     * </div>
-     */
-    pm.directive('[data-plenty="contentpageSlider"]', function(i, elem) {
-        $(elem).owlCarousel({
-            navigation: true,
-            navigationText: false,
-            slideSpeed: 1000,
-            paginationSpeed: 1000,
-            singleItem: true,
-            autoPlay: 6000,
-            stopOnHover: true,
-            afterMove: function(current) { $(current).find('img[data-plenty-lazyload]').trigger('appear'); }
-        });
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    /*
-     * Equal Box heights
-     */
-    pm.directive('[data-plenty-equal]', function(i, elem, MediaSizeService) {
-        var mediaSizes = $(elem).data('plenty-equal').replace(/\s/g, '').split(',');
-
-        var targets = ( $(elem).find('[data-plenty-equal-target]').length > 0 ) ? $(elem).find('[data-plenty-equal-target]') : $(elem).children();
-
-        var maxHeight = 0;
-        $(targets).each(function(j, child) {
-
-            $(child).css('height', '');
-
-            if( $(child).outerHeight(true) > maxHeight ) {
-                maxHeight = $(child).outerHeight(true);
-            }
-        });
-
-        if( !mediaSizes || $.inArray( MediaSizeService.interval(), mediaSizes ) >= 0 ) targets.height(maxHeight);
-
-    }, ['MediaSizeService'], true);
-
-    // refresh calculation on window resize
-    $(window).on('sizeChange', function() {
-        pm.getInstance().bindDirectives( '[data-plenty-equal]' );
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    // lazyload images (requires lazyload.min.js)
-    // TODO: handle external dependencies dependencies
-    pm.directive('img[data-plenty-lazyload]', function(i, elem) {
-        $(elem).lazyload({
-            effect: $(this).attr('data-plenty-lazyload')
-        });
-        $(elem).on("loaded", function() {
-            $(elem).css('display', 'inline-block');
-        });
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    pm.directive('[data-plenty-checkout-form="customerLogin"]', function(i, elem, AuthenticationService) {
-        $(elem).on('submit', function (e) {
-            e.preventDefault();
-            AuthenticationService.customerLogin( $(e.target) );
-        });
-    }, ["AuthenticationService"]);
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    /*
-     * Mobile dropdowns
-     * Toggles dropdowns using css class 'open' instead of pseudo class :hover
-     * Usage:
-         <li class="dropdown">
-         <a data-plenty-enable="CONDITION">...</a>
-         </li>
-     *
-     * possible values for CONDITION
-     * "touch"						: use 'open'-class if device is touch-device AND media size is 'md' or 'lg'
-     * "toggle-xs-sm-or-touch" : use 'open'-class if device is "touch" (as above) OR media size is 'xs' or 'sm'
-     */
-    // TODO: handle external dependency to Modernizr
-    pm.directive('.dropdown > a[data-plenty-enable]', function(i, elem, MediaSizeService) {
-
-       if( $(elem).attr('data-plenty-enable') == "toggle-xs-sm-or-touch" ) {
-            $(elem).click(function(e) {
-                if ( MediaSizeService.interval() == 'xs' || MediaSizeService.interval() == 'sm' || ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch ) ) {
-                    $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').not( $(this) ).parent().removeClass('open');
-                    $(this).parent().toggleClass('open');
-                    return false;
-                }
-            });
         }
 
-        // dropdown enabled touch
-        else if( $(elem).attr('data-plenty-enable') == "touch" ) {
-            $(elem).click(function() {
-                if ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch ) { // otherwise already has mobile navigation
-                    $('.dropdown.open > a[data-plenty-enable="touch"]').not( $(this) ).parent().removeClass('open');
-                    if ( ! $(this).parent().hasClass('open') ) {
-                        $(this).parent().addClass('open');
-                        return false;
+        function changeItemQuantity( elem, increment )
+        {
+            var $elem         = $( elem );
+            var quantityInput = $elem.parent().find( 'input' );
+            var maxLength     = parseInt( quantityInput.attr( 'maxlength' ) ) || 5;
+            var value         = parseInt( quantityInput.val() ) + increment;
+
+            if ( (value + '').length <= maxLength && value > 1 )
+            {
+                quantityInput.val( value );
+
+                var isBasketView = elem.parents( '[data-basket-item-id]' ).length > 0;
+                if ( isBasketView )
+                {
+                    var timeout = elem.data( 'timeout' );
+
+                    if ( !!timeout )
+                    {
+                        window.clearTimeout( timeout );
                     }
-                }
-            });
-        }
-    }, ['MediaSizeService']);
 
+                    timeout = window.setTimeout( function()
+                    {
+                        quantityInput.trigger( 'change' );
+                    }, 1000 );
 
-    pm.directive('*', function(i, elem, MediaSizeService) {
-
-        $(elem).click(function (e) {
-            if (MediaSizeService.interval() == 'xs' || MediaSizeService.interval() == 'sm' || ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch )) {
-                var dropdown = $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent();
-                if (dropdown.length > 0 && !dropdown.is(e.target) && dropdown.has(e.target).length <= 0) {
-                    dropdown.removeClass('open');
+                    elem.data( 'timeout', timeout );
                 }
             }
-
-            if (MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch) {
-                var dropdown = $('.dropdown.open > a[data-plenty-enable="touch"]').parent();
-                if (dropdown.length > 0 && !dropdown.is(e.target) && dropdown.has(e.target).length <= 0) {
-                    dropdown.removeClass('open');
-                }
-            }
-        });
-    }, ['MediaSizeService']);
-
-
-    pm.directive(window, function(i, elem, MediaSizeService) {
-        $(window).on('orientationchange', function() {
-            if ( MediaSizeService.interval() == 'xs' || MediaSizeService.interval() == 'sm' || ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch ) ) {
-                $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent().removeClass('open');
-            }
-
-            if ( MediaSizeService.interval() != 'xs' && MediaSizeService.interval() != 'sm' && Modernizr.touch ) {
-                $('.dropdown.open > a[data-plenty-enable="touch"]').parent().removeClass('open');
-            }
-        });
-        $(window).on('sizeChange', function(newValue) {
-            if ( newValue != 'xs' && newValue != 'sm' && ! Modernizr.touch ) {
-                $('.dropdown.open > a[data-plenty-enable="toggle-xs-sm-or-touch"]').parent().removeClass('open');
-            }
-        });
-    }, ['MediaSizeService']);
-
-    $(document).ready(function() {
-
-        if ( pm.getInstance().MediaSizeService.interval() != 'xs' && pm.getInstance().MediaSizeService.interval() != 'sm' && Modernizr.touch ) {
-            $('.dropdown.open > a[data-plenty-enable="touch"]').parent().removeClass('open');
         }
 
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    // Call function if enter key pressed while element is focused
-    pm.directive('[data-plenty-onenter]', function(i, elem) {
-        var onEnter = $(elem).attr('data-plenty-onenter');
-        var callback = typeof window[onEnter] === 'function' ? window[onEnter] : (new Function('return ' + onEnter));
-        $(elem).on('keypress', function(e) {
-
-            if(e.which === 13 && !!callback && typeof callback === "function") {
-                callback.call();
-            }
-        });
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    // Tree navigation toggle
-    pm.directive('[data-plenty="openCloseToggle"]', function(i, elem) {
-        $(elem).click(function () {
-            $(elem).parent().addClass('animating');
-            $(elem).siblings('ul').slideToggle(200, function () {
-                if ($(elem).parent().is('.open')) {
-                    $(elem).parent().removeClass('open');
-                }
-                else {
-                    $(elem).parent().addClass('open');
-                }
-                $(elem).removeAttr('style');
-                $(elem).parent().removeClass('animating');
-            });
-        });
-
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    // TODO: merge to single directive. Differentiate between increasing and decreasing by additional parameter
-    pm.directive('[data-plenty="quantityInputButtonPlus"]', function(i, elem) {
-        // quantity input plus/minus buttons
-        $(elem).click(function() {
-            var input = $($(elem).closest('[data-plenty="quantityInputWrapper"]').find('input'));
-            var value = parseInt( input.val() );
-            var maxLength = parseInt(input.attr('maxlength')) || 1000;
-            if ( ( (value + 1) + '').length <= maxLength ) {
-                input.val(value + 1);
-            }
-        });
-    });
-
-    pm.directive('[data-plenty="quantityInputButtonMinus"]', function(i, elem) {
-        $(elem).click(function() {
-            var input = $($(elem).closest('[data-plenty="quantityInputWrapper"]').find('input'));
-            var value = parseInt( input.val() );
-            if ( value > 1 ) {
-                input.val(value - 1);
-            }
-        });
-    });
-
-    // Quantity Buttons in BasketView
-    pm.directive('[data-basket-item-id] [data-plenty="quantityInputButtonPlus"], [data-basket-item-id] [data-plenty="quantityInputButtonMinus"]', function(i, button) {
-        $(button).click(function() {
-
-            var self = $(this);
-            if( !!self.data('timeout') ) {
-                window.clearTimeout( self.data('timeout') );
-            }
-
-            var timeout = window.setTimeout(function() {
-                self.parents('[data-plenty="quantityInputWrapper"]').find('[data-plenty="quantityInput"]').trigger('change');
-            }, 1000);
-
-            self.data('timeout', timeout);
-
-        });
-    });
-
-    pm.directive('[data-basket-item-id] [data-plenty="quantityInput"]', function(i, input, BasketService) {
-        $(input).change( function() {
-
-            var self = $(this);
-            var newQuantity = parseInt( self.val() );
-            var basketItemID = self.parents('[data-basket-item-id]').attr('data-basket-item-id');
-
+        function setItemQuantity( basketItemID, input )
+        {
             BasketService.setItemQuantity(
                 basketItemID,
-                newQuantity
-            );
-        });
-    }, ['BasketService']);
-
-
-
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    // link non-anchor elements
-    pm.directive('a[data-plenty-href]', function(i, elem, MediaSizeService) {
-        $(elem).each(function() {
-            var href = $(this).attr('href');
-            var identifier = $(this).attr('data-plenty-href');
-
-            $('[data-plenty-link="'+identifier+'"]').click(function() {
-                if( MediaSizeService.interval() != 'xs' ) {
-                    window.location.assign( href );
-                }
-            });
-        });
-    }, ['MediaSizeService']);
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    // Toggle target content on click.
-    // Can be bound on checked-/ unchecked-property of radio buttons
-    pm.directive('[data-plenty-slidetoggle]', function(i, trigger) {
-
-        var target = $( $(trigger).attr('data-plenty-target') );
-
-        if( $(trigger).is('input[type="radio"]') ) {
-            // is radio button
-            var radioList = $('input[type="radio"][name="'+( $(trigger).attr('name') )+'"]');
-            var visibleOnChecked = $(trigger).is('[data-plenty-slidetoggle="checked"]');
-            $(radioList).change(function() {
-                $(target).parents('[data-plenty-equal-target]').css('height', 'auto');
-
-                if ( $(this).is(':checked') && $(this)[0] === $(trigger)[0] ) {
-                    // checked
-                    if ( visibleOnChecked == true ) {
-                        $(target).slideDown(400, function() {
-                            pm.getInstance().bindDirectives('[data-plenty-equal]');
-                        });
-                    } else {
-                        $(target).slideUp(400, function() {
-                            pm.getInstance().bindDirectives('[data-plenty-equal]');
-                        });
-                    }
-                }
-                else {
-                    // unchecked (since other radio button has been checked)
-                    if ( visibleOnChecked == true ) {
-                        $(target).slideUp(400, function() {
-                            pm.getInstance().bindDirectives('[data-plenty-equal]');
-                        });
-                    } else {
-                        $(target).slideDown(400, function() {
-                            pm.getInstance().bindDirectives('[data-plenty-equal]');
-                        });
-                    }
-                }
-            });
-        } else {
-            // is not radio button
-            $(trigger).click(function() {
-                $(target).parents('[data-plenty-equal-target]').css('height', 'auto');
-
-                $(trigger).addClass('animating');
-                $(target).slideToggle(400, function() {
-                    $(trigger).removeClass('animating');
-                    $(trigger).toggleClass('active');
-                    pm.getInstance().bindDirectives('[data-plenty-equal]');
-                });
+                parseInt( $( input ).val() )
+            ).fail(function() {
+                // reset input's value on cancel
+                var basketItem = BasketService.getItem( basketItemID );
+                $( input ).val( basketItem.BasketItemQuantity );
             });
         }
-    });
 
-}(jQuery, PlentyFramework));
+    }, ['BasketService'] );
+}( jQuery, PlentyFramework ));
 /**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
+ * Add fancy ui modifications - the visual stuff - here.
+ * Respond functionality like 'event':UI.myFunctionality(currentElement)
+ *
+ * Example:
+ *      <button type="button" data-plenty="click:UI.addTooltip(this)">go to top</button>
+ *
  */
+(function( $, pm )
+{
+    pm.directive( 'UI', function( MediaSizeService, SocialShareService )
+    {
+        // elements to calculate height.
+        var equalHeightElementList = [];
 
-(function($, pm) {
-
-    /*
-     * Social Share Activation
-     * Activate and load share-buttons manually by clicking a separate button
-     * Usage / data-attributes:
-     * <div data-plenty-social="twitter">
-     * 	<span data-plenty="switch"></span>				Will be used to activate the service set in data-plenty-social=""
-     *		<span data-plenty="placeholder"></span>		Will be replaced with loaded share button
-     * </div>
-     *
-     * possible values for data-plenty-social:
-     * "facebook-like"			: Load Facebooks "Like"-Button
-     * "facebook-recommend"		: Load Facebooks "Recommend"-Button
-     * "twitter"				: Load Twitter Button
-     * "google-plus"			: Load google "+1"-Button
-     *
-     * Additional Tooltips
-     * You can extend the parent element with a (bootstrap) tooltip by adding data-toggle="tooltip" and title="TOOLTIP CONTENT"
-     * Tooltip will be destroyed after activating a social service
-     * (!) Requires bootstrap.js
-     */
-    pm.directive('[data-plenty-social]', function(i, elem, SocialShareService) {
-
-        var toggle = $(elem).find('[data-plenty="switch"]');
-
-        // append container to put / delete service.html
-        $(elem).append('<div class="social-container"></div>');
-
-        // add "off" class to switch, if neither "off" or "on" is set
-        if ( !toggle.hasClass('off') && !toggle.hasClass('on') ) {
-            toggle.addClass('off');
-        }
-
-        // toggle switch
-        toggle.on('click', function() {
-            if ( toggle.hasClass('off') ) {
-                if ( $(elem).attr("data-toggle") == "tooltip" ) { $(elem).tooltip('destroy') };
-                toggle.removeClass('off').addClass('on');
-                // hide dummy button
-                $(elem).find('[data-plenty="placeholder"]').hide();
-                // load HTML defined in 'api'
-                $(elem).find('.social-container').append( SocialShareService.getSocialService( $(elem).attr('data-plenty-social') ) );
+        // resize elements on window size change.
+        $( window ).on( 'sizeChange', function()
+        {
+            for ( var i = equalHeightElementList.length - 1; i >= 0; i-- )
+            {
+                equalHeight( equalHeightElementList[i], '', true );
             }
-            // do not disable social medias after activation
-            /*
-             else
-             {
-             toggle.removeClass('on').addClass('off');
-             // show dummy button
-             $(elem).find('[data-plenty="placeholder"]').show();
-             // remove api HTML
-             $(elem).find('.social-container').html('');
-             }
-             */
-        });
-    }, ['SocialShareService']);
+        } );
 
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    /* Tab Handling
-     *
-     * Show tab with jQuery-selector 'TAB_SELECTOR'
-        <a data-plenty-opentab="TAB_SELECTOR">
-     * (!) Requires bootstrap.js
-     *
-     * Show remote tab with jQuery-selector 'TAB_1' in target container (below)
-        <span data-plenty-openremotetab="TAB_1">
-     *
-     */
-    pm.directive('a[data-plenty-opentab]', function(i, elem) {
-        // open tab
-        $(elem).click(function() {
-            var tabSelector = $(this).attr('data-plenty-opentab');
-            tabSelector = ( tabSelector == 'href' ) ? $(this).attr('href') : tabSelector;
-            $(tabSelector).tab('show');
-        });
-    });
-
-    pm.directive('[data-plenty-openremotetab]', function(i, elem) {
-        // open remote tab{
-        $(elem).click(function () {
-            var tabSelector = $(this).attr('data-plenty-openremotetab');
-            $(tabSelector).trigger('tabchange');
-        });
-    });
-
-    /*
-     * Remote tabs
-     * tab content can be placed anywhere in body
-     *
-     * Content of remote tab
-         <div data-plenty-labelledby="TAB_1" data-plenty-remotetabs-id="REMOTE_TAB_GROUP">
-            <!-- Content of TAB_1 -->
-         </div>
-     *
-     * Remote tab navigation
-     * [...]
-         <div data-plenty="remoteTabs" data-plenty-remotetabs-id="REMOTE_TAB_GROUP">
-             <ul>
-                 <li class="active">
-                     <a data-plenty-tab-id="TAB_1">
-                        <!-- Title of TAB_1 -->
-                     </a>
-                 </li>
-                 <li>
-                     <a data-plenty-tab-id="TAB_2">
-                        <!-- Titel of TAB_2 -->
-                     </a>
-                 </li>
-             </ul>
-         </div>
-     *
-     */
-    pm.directive('[data-plenty="remoteTabs"]', function(i, remoteTab) {
-
-        var tabsId = $(remoteTab).attr('data-plenty-remotetabs-id');
-
-        // find tabs grouped by remotetabs-id
-        $('[data-plenty="remoteTabs"][data-plenty-remotetabs-id="'+tabsId+'"]').each(function(i, tabs) {
-
-            // bind each remote-tab
-            $(tabs).find('a').each(function(i, singleTab) {
-
-                var singleTabId = $(singleTab).attr('data-plenty-tab-id');
-
-                // listen to 'tabchange' event
-                $(singleTab).on('tabchange', function() {
-                    // toggle class 'active'
-                    $(singleTab).closest('[data-plenty="remoteTabs"]').children('.active').removeClass('active');
-                    $(singleTab).closest('li').addClass('active');
-
-                    // hide inactive tabs & show active tab
-                    var tabpanelsInactive = $('[data-plenty-remotetabs-id="'+tabsId+'"][data-plenty-tabpanel-labelledby]').not('[data-plenty-tabpanel-labelledby="'+singleTabId+'"]');
-                    var tabpanelActive = $('[data-plenty-remotetabs-id="'+tabsId+'"][data-plenty-tabpanel-labelledby="'+singleTabId+'"]');
-                    var zIndexTabpanelParents = 0;
-                    if ( $(tabs).attr('data-plenty-remotetabs-adapt') == 'tabpanel-parent' ) {
-                        zIndexTabpanelParents = 2147483646;
-                        $('[data-plenty-remotetabs-id="'+tabsId+'"][data-plenty-tabpanel-labelledby]').parent().each(function() {
-                            var zIndexCurrent = parseInt( $(this).css('zIndex') );
-                            if ( typeof zIndexCurrent == 'number' && zIndexCurrent < zIndexTabpanelParents ) zIndexTabpanelParents = zIndexCurrent;
-                        });
-                    }
-
-                    // adjust z-index if neccessary
-                    $(tabpanelsInactive).hide().removeClass('in');
-                    $(tabpanelActive).show().addClass('in');
-                    if ( zIndexTabpanelParents != 0 ) {
-                        $(tabpanelsInactive).parent().css('zIndex', zIndexTabpanelParents);
-                        $(tabpanelActive).parent().css('zIndex', zIndexTabpanelParents + 1);
-                    }
-                });
-            });
-        });
-
-        // trigger 'tabchange' event
-        $(remoteTab).find('a').click(function() {
-            $(this).trigger('tabchange');
-        });
-    });
-
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function($, pm) {
-
-    pm.directive('[data-plenty="toTop"]', function(i, elem) {
-        $(elem).click(function() {
-            $('html, body').animate({
-                scrollTop: 0
-            }, 400);
-            return false;
-        });
-
-        var positionToTopButton = function() {
-            if( $(document).scrollTop() > 100 ) {
-                $(elem).addClass('visible');
-            } else {
-                $(elem).removeClass('visible');
-            }
+        return {
+            addContentPageSlider: addContentPageSlider,
+            equalHeight         : equalHeight,
+            initToTop           : initToTop,
+            initLazyload        : initLazyload,
+            slideToggle         : slideToggle,
+            toggleHideShow      : toggleHideShow,
+            toggleSocialShare   : toggleSocialShare,
+            toggleCssClass      : toggleCssClass,
+            openTab             : openTab,
+            openRemoteTab       : openRemoteTab,
+            setRemoteTab        : setRemoteTab
         };
 
-        $(window).on("scroll resize", function() {
-            positionToTopButton();
-        });
+        /**
+         * Adds content page slider (owlCarousel)
+         *
+         * usage:
+         * <div class="contentpageSlider" data-plenty="contentpageSlider">
+         *     <div class="slide">
+         *         ...
+         *     </div>
+         *     <div class="slide">
+         *         ...
+         *     </div>
+         *     ...
+         * </div>
+         *
+         * Legacy directive selector: data-plenty="contentpageSlider"
+         *
+         * @param elem
+         */
+        function addContentPageSlider( elem )
+        {
+            $( elem ).owlCarousel( {
+                navigation     : true,
+                navigationText : false,
+                slideSpeed     : 1000,
+                paginationSpeed: 1000,
+                singleItem     : true,
+                autoPlay       : 6000,
+                stopOnHover    : true,
+                afterMove      : function( current )
+                {
+                    $( current ).find( 'img[data-plenty-rel="lazyload"]' ).trigger( 'appear' );
+                }
+            } );
+        }
 
-    });
+        /**
+         * Equal Box height
+         * Calculates equal box height for chosen elements.
+         *
+         * Legacy directive selector: data-plenty-equal
+         *
+         * @param elem
+         * @param elementExists - default false
+         */
+        function equalHeight( elem, mediaSizes, elementExists )
+        {
+            var $elem            = $( elem );
+            var maxHeight        = 0;
+            var $equalTarget     = {};
+            var $equalTargetList = $elem.find('[data-plenty-rel="equal-target"]').length > 0 ? $elem.find('[data-plenty-rel="equal-target"]') : $elem.children();
+            var mediaSizeList    = mediaSizes.replace( /\s/g, '' ).split( ',' );
 
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
+            // if element wasn't pushed before.
+            if ( elementExists !== true )
+            {
+                equalHeightElementList.push( elem );
+            }
 
-(function($, pm) {
+            for ( var i = $equalTargetList.length; i >= 0; i-- )
+            {
+                $equalTarget = $( $equalTargetList[i] );
+                $equalTarget.css( 'height', '' );
 
-    /*
-     * Toggle Class
-     * toggle style-classes on click
-     * Usage / data-attribute:
-     * <div data-plenty-toggle="{target: 'body', class: 'toggledClass', media: 'xs sm'}"></div>
-     * target	:	jQuery selector to toggle the class at.
-     * class		:  class(es) to toggle at target element
-     * media		:  only toggle class on given media sizes (optional)
-     *
-     * (!) using data-plenty-toggle on <a>-elements will prevent redirecting to href=""
-     */
-    pm.directive('[data-plenty-toggle]', function(i, elem, MediaSizeService) {
-        if( $(elem).attr('data-plenty-toggle').search(';') < 0 ) {
-            eval('var data = ' + $(elem).attr('data-plenty-toggle'));
-            if ( data.target && data.class ) {
-                $(elem).click(function() {
-                    var isMedia = false;
-                    if ( data.media ) {
-                        if ( data.media.indexOf(' ') != -1 ) {
-                            var mediaArr = data.media.split(' ');
-                            for ( i = 0; i < mediaArr.length; i++ ) {
-                                if ( MediaSizeService.interval() == mediaArr[i] ) {
+                if ( $equalTarget.outerHeight( true ) > maxHeight )
+                {
+                    maxHeight = $equalTarget.outerHeight( true );
+                }
+            }
+
+            if ( !mediaSizeList || $.inArray( MediaSizeService.interval(), mediaSizeList ) >= 0 )
+            {
+                $equalTargetList.height( maxHeight );
+            }
+        }
+
+        /**
+         * Scroll page to top.
+         * Just add without events.
+         *
+         * Legacy directive selector: data-plenty="toTop"
+         *
+         * @param elem
+         */
+        function initToTop( elem )
+        {
+            var $elem = $( elem );
+
+            $elem.click( function()
+            {
+                $( 'html, body' ).animate( {
+                    scrollTop: 0
+                }, 400 );
+                return false;
+            } );
+
+            $( window ).on( "scroll resize", function()
+            {
+                if ( $( document ).scrollTop() > 100 )
+                {
+                    $elem.addClass( 'visible' );
+                }
+                else
+                {
+                    $elem.removeClass( 'visible' );
+                }
+            } );
+        }
+
+        /**
+         * lazy load on ready.
+         *
+         * Legacy directive selector: img[data-plenty-lazyload]
+         *
+         * @param elem
+         */
+        function initLazyload( elem, effect )
+        {
+            var $elem = $( elem );
+
+            $elem.lazyload( {
+                effect: effect
+            } );
+            $elem.on( "loaded", function()
+            {
+                $elem.css( 'display', 'inline-block' );
+            } );
+        }
+
+        /**
+         * Toggle show and hide animation.
+         *
+         * Legacy directive selector: data-plenty="openCloseToggle"
+         *
+         * @param elem
+         */
+        function toggleHideShow( elem )
+        {
+            var $elem       = $( elem );
+            var $elemParent = $elem.parent();
+
+            $elemParent.addClass( 'animating' );
+            $elem.siblings( 'ul' ).slideToggle( 200, function()
+            {
+                if ( $elemParent.is( '.open' ) )
+                {
+                    $elemParent.removeClass( 'open' );
+                }
+                else
+                {
+                    $elemParent.addClass( 'open' );
+                }
+                $elem.removeAttr( 'style' );
+                $elemParent.removeClass( 'animating' );
+            } );
+        }
+
+        /**
+         * Toggle target content on click.
+         * Bind to checked-/ unchecked-property of radio buttons
+         *
+         * Legacy directive selector: data-plenty-slidetoggle
+         *
+         * @param elem
+         */
+        function slideToggle( elem )
+        {
+            var $elem          = $( elem );
+            var $targetElement = $( $elem.attr( 'data-plenty-target' ) );
+
+            if ( $elem.is( 'input[type="radio"]' ) )
+            {
+                // is radio button
+                var $radio           = $( 'input[type="radio"][name="' + ( $elem.attr( 'name' ) ) + '"]' );
+                var visibleOnChecked = $elem.is( '[data-plenty-slidetoggle="checked"]' );
+                $radio.change( function()
+                {
+                    $targetElement.parents( '[data-plenty-equal-target]' ).css( 'height', 'auto' );
+
+                    if ( $( this ).is( ':checked' ) && $( this )[0] === $( elem )[0] )
+                    {
+                        // checked
+                        if ( visibleOnChecked == true )
+                        {
+                            $targetElement.slideDown( 400, function()
+                            {
+                                pm.getInstance().bindDirectives( '[data-plenty-equal]' );
+                            } );
+                        }
+                        else
+                        {
+                            $targetElement.slideUp( 400, function()
+                            {
+                                pm.getInstance().bindDirectives( '[data-plenty-equal]' );
+                            } );
+                        }
+                    }
+                    else
+                    {
+                        // unchecked (since other radio button has been checked)
+                        if ( visibleOnChecked == true )
+                        {
+                            $targetElement.slideUp( 400, function()
+                            {
+                                pm.getInstance().bindDirectives( '[data-plenty-equal]' );
+                            } );
+                        }
+                        else
+                        {
+                            $targetElement.slideDown( 400, function()
+                            {
+                                pm.getInstance().bindDirectives( '[data-plenty-equal]' );
+                            } );
+                        }
+                    }
+                } );
+            }
+            else
+            {
+                // is not radio button
+                $elem.click( function()
+                {
+                    $targetElement.parents( '[data-plenty-equal-target]' ).css( 'height', 'auto' );
+
+                    $elem.addClass( 'animating' );
+                    $( $targetElement ).slideToggle( 400, function()
+                    {
+                        $elem.removeClass( 'animating' );
+                        $elem.toggleClass( 'active' );
+                        pm.getInstance().bindDirectives( '[data-plenty-equal]' );
+                    } );
+                } );
+            }
+        }
+
+        /**
+         * TODO check comment
+         * Social Share Activation
+         * Activate and load share-buttons manually by clicking a separate button
+         * Usage / data-attributes:
+         * <div data-plenty-social="twitter">
+         *    <span data-plenty="switch"></span>        Will be used to activate the service set in
+         * data-plenty-social=""
+         *    <span data-plenty="placeholder"></span>   Will be replaced with loaded share button
+         * </div>
+         *
+         * possible values for data-plenty-social:
+         * "facebook-like"            : Load Facebooks "Like"-Button
+         * "facebook-recommend"        : Load Facebooks "Recommend"-Button
+         * "twitter"                : Load Twitter Button
+         * "google-plus"            : Load google "+1"-Button
+         *
+         * Additional Tooltips
+         * You can extend the parent element with a (bootstrap) tooltip by adding data-toggle="tooltip" and
+         * title="TOOLTIP CONTENT" Tooltip will be destroyed after activating a social service
+         * (!) Requires bootstrap.js
+         *
+         * Legacy directive selector: data-plenty-social
+         *
+         * @param elem
+         */
+        function toggleSocialShare( elem )
+        {
+            var $elem   = $( elem );
+            var $toggle = $elem.find( '[data-plenty="switch"]' );
+
+            // append container to put / delete service.html
+            $elem.append( '<div class="social-container"></div>' );
+
+            // add "off" class to switch, if neither "off" or "on" is set
+            // replaced hasClass() with is() benchmark: http://jsperf.com/hasclasstest
+            if ( !$toggle.is( 'off, on' ) )
+            {
+                $toggle.addClass( 'off' );
+            }
+
+            // toggle switch
+            $toggle.on( 'click', function()
+            {
+                if ( $toggle.hasClass( 'off' ) )
+                {
+                    if ( $elem.attr( "data-toggle" ) == "tooltip" )
+                    {
+                        $elem.tooltip( 'destroy' )
+                    }
+                    $toggle.removeClass( 'off' ).addClass( 'on' );
+                    // hide dummy button
+                    $elem.find( '[data-plenty="placeholder"]' ).hide();
+                    // load HTML defined in 'api'
+                    $elem.find( '.social-container' ).append( SocialShareService.getSocialService( $elem.attr( 'data-plenty-social' ) ) );
+                }
+                // do not disable social medias after activation
+            } );
+        }
+
+        /**
+         * Tab Handling
+         *
+         * Show tab with jQuery-selector 'TAB_SELECTOR'
+         * <a data-plenty-opentab="TAB_SELECTOR">
+         * (!) Requires bootstrap.js
+         *
+         * Legacy directive selector: a[data-plenty-opentab]
+         *
+         * @param elem
+         */
+        function openTab( elem )
+        {
+            var tabSelector = $( elem ).attr( 'data-plenty-opentab' );
+            tabSelector     = ( tabSelector == 'href' ) ? $( this ).attr( 'href' ) : tabSelector;
+            $( tabSelector ).tab( 'show' );
+        }
+
+        /**
+         * Show remote tab with jQuery-selector 'TAB_1' in target container (below)
+         * <span data-plenty-openremotetab="TAB_1">
+         *
+         * Legacy directive selector: data-plenty-openremotetab
+         *
+         * @param elem
+         */
+        function openRemoteTab( elem )
+        {
+            var tabSelector = $( elem ).attr( 'data-plenty-openremotetab' );
+            $( tabSelector ).trigger( 'tabchange' );
+        }
+
+        /**
+         * Remote tabs
+         * tab content can be placed anywhere in body
+         *
+         * Content of remote tab
+         * <div data-plenty-labelledby="TAB_1" data-plenty-remotetabs-id="REMOTE_TAB_GROUP">
+         *     <!-- Content of TAB_1 -->
+         * </div>
+         *
+         * Remote tab navigation
+         * [...]
+         * <div data-plenty="remoteTabs" data-plenty-remotetabs-id="REMOTE_TAB_GROUP">
+         *     <ul>
+         *         <li class="active">
+         *             <a data-plenty-tab-id="TAB_1">
+         *                 <!-- Title of TAB_1 -->
+         *             </a>
+         *         </li>
+         *         <li>
+         *             <a data-plenty-tab-id="TAB_2">
+         *                 <!-- Titel of TAB_2 -->
+         *             </a>
+         *         </li>
+         *     </ul>
+         * </div>
+         *
+         * Legacy directive selector: data-plenty="remoteTabs"
+         *
+         * @param elem
+         */
+        function setRemoteTab( elem )
+        {
+            var tabId = $( elem ).attr( 'data-plenty-remotetabs-id' );
+
+            // find tabs grouped by remotetabs-id
+            $( '[data-plenty="remoteTabs"][data-plenty-remotetabs-id="' + tabId + '"]' ).each( function( i, tabs )
+            {
+
+                // bind each remote-tab
+                $( tabs ).find( 'a' ).each( function( i, singleTab )
+                {
+
+                    var singleTabId = $( singleTab ).attr( 'data-plenty-tab-id' );
+
+                    // listen to 'tabchange' event
+                    $( singleTab ).on( 'tabchange', function()
+                    {
+                        // toggle class 'active'
+                        $( singleTab ).closest( '[data-plenty="remoteTabs"]' ).children( '.active' ).removeClass( 'active' );
+                        $( singleTab ).closest( 'li' ).addClass( 'active' );
+
+                        // hide inactive tabs & show active tab
+                        var tabpanelsInactive     = $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby]' ).not( '[data-plenty-tabpanel-labelledby="' + singleTabId + '"]' );
+                        var tabpanelActive        = $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby="' + singleTabId + '"]' );
+                        var zIndexTabpanelParents = 0;
+                        if ( $( tabs ).attr( 'data-plenty-remotetabs-adapt' ) == 'tabpanel-parent' )
+                        {
+                            zIndexTabpanelParents = 2147483646;
+                            $( '[data-plenty-remotetabs-id="' + tabId + '"][data-plenty-tabpanel-labelledby]' ).parent().each( function()
+                            {
+                                var zIndexCurrent = parseInt( $( this ).css( 'zIndex' ) );
+                                if ( typeof zIndexCurrent == 'number' && zIndexCurrent < zIndexTabpanelParents )
+                                {
+                                    zIndexTabpanelParents = zIndexCurrent;
+                                }
+                            } );
+                        }
+
+                        // adjust z-index if neccessary
+                        $( tabpanelsInactive ).hide().removeClass( 'in' );
+                        $( tabpanelActive ).show().addClass( 'in' );
+                        if ( zIndexTabpanelParents != 0 )
+                        {
+                            $( tabpanelsInactive ).parent().css( 'zIndex', zIndexTabpanelParents );
+                            $( tabpanelActive ).parent().css( 'zIndex', zIndexTabpanelParents + 1 );
+                        }
+                    } );
+                } );
+            } );
+
+            // trigger 'tabchange' event
+            $( elem ).find( 'a' ).click( function()
+            {
+                $( this ).trigger( 'tabchange' );
+            } );
+        }
+
+        /**
+         * Toggle Class
+         * toggle style-classes on click
+         * Usage / data-attribute:
+         * <div data-plenty-toggle="{target: 'body', class: 'toggledClass', media: 'xs sm'}"></div>
+         * target    :    jQuery selector to toggle the class at.
+         * class        :  class(es) to toggle at target element
+         * media        :  only toggle class on given media sizes (optional)
+         *
+         * (!) using data-plenty-toggle on <a>-elements will prevent redirecting to href=""
+         *
+         * Legacy directive selector: data-plenty-toggle
+         *
+         * @param elem
+         */
+        function toggleCssClass( elem )
+        {
+            if ( $( elem ).attr( 'data-plenty-toggle' ).search( ';' ) < 0 )
+            {
+                eval( 'var data = ' + $( elem ).attr( 'data-plenty-toggle' ) );
+                if ( data.target && data.class )
+                {
+                    $( elem ).click( function()
+                    {
+                        var isMedia = false;
+                        if ( data.media )
+                        {
+                            if ( data.media.indexOf( ' ' ) != -1 )
+                            {
+                                var mediaArr = data.media.split( ' ' );
+                                for ( i = 0; i < mediaArr.length; i++ )
+                                {
+                                    if ( MediaSizeService.interval() == mediaArr[i] )
+                                    {
+                                        isMedia = true;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if ( MediaSizeService.interval() == data.media )
+                                {
                                     isMedia = true;
                                 }
                             }
                         }
-                        else {
-                            if ( MediaSizeService.interval() == data.media ) isMedia = true;
+                        if ( !data.media || isMedia == true )
+                        {
+                            $( data.target ).toggleClass( data.class );
+                            if ( $( elem ).is( 'a' ) )
+                            {
+                                return false;
+                            }
                         }
-                    }
-                    if ( ! data.media || isMedia == true  ) {
-                        $(data.target).toggleClass(data.class);
-                        if ( $(elem).is('a') ) return false;
-                    }
-                });
+                    } );
+                }
             }
         }
-    }, ['MediaSizeService']);
 
-}(jQuery, PlentyFramework));
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
+    }, ['MediaSizeService', 'SocialShareService'] );
+}( jQuery, PlentyFramework ));
 (function($, pm) {
+	pm.directive('Validator', function( ValidationService ) {
 
-    /*
-     * Form Validation
-     * Validate required form inputs as given type of value
-     * Usage / data-Attributes:
-     * <form data-plenty-checkform="ERROR_CLASS">		This will activate the script for this form
-     *													and add ERROR_CLASS to invalid elements
-     *
-     * <input data-plenty-validate="text">				Check if the value of this input is text (or number) and add ERROR_CLASS on failure
-     * <div data-plenty-validate="text"><input></div>	You can put the data-plenty-validate="" on a parent element of an input.
-     *													This will check the value of the input(s) inside and add ERROR_CLASS to the <div> on failure
+        return {
+            validate: validate
+        };
 
-     *	possible values for data-plenty-validate=""		text	: validate if value is text (or number or mixed)
-     *													mail	: checks if value is a valid mail-address (not depending on inputs type-attribute)
-     *													number: checks if value is a numeric value. For detailed information see: isNumberic()
-     *													{min: 1, max: 3} validate that at least 'min' and maximum 'max' options are selected (checkboxes)
-     *
-     * possible form elements to validate				<input type="text | mail | password">
-     * 													<textarea></textarea>					can validate "text", "mail", "number"
-     *													<input type="radio" name="myRadio"> 	check if one radio-button in group "myRadio" is checked.
-     *																							Ignores the value of data-plenty-validate
-     *													<input type="checkbox" name="myCheck">	check if one checkbox in group "myCheck" is checked or use
-     *																							data-plenty-valudate="{min: 3, max: 5}" to define custom range
-     *													<select></select>						check if an option is selected and otions value is not "-1" (plenty default for: "choose"-option)
-     *
-     * Events:
-     * 'validationFailed'								will be triggered if at least one element is not valid.
-     *													Usage:
-     *													form.on('validationFailed', function(event, invalidFields) {
-     *	 													$(invalidFields).each({
-     *															// manipulate invalid fields
-     *														});
-     *													});
-     */
-    pm.directive('form[data-plenty-checkform], form.PlentySubmitForm', function(i, elem, ValidationService) {
+        function validate( form, errorClass )
+        {
+            return ValidationService.validate( form, errorClass );
+        }
 
-        $(elem).submit(function() {
-            return ValidationService.validate( elem );
-        });
-
-    }, ['ValidationService']);
-
-}(jQuery, PlentyFramework));
+	}, ['ValidationService']);
+} (jQuery, PlentyFramework));
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)

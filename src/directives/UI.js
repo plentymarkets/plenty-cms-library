@@ -12,14 +12,10 @@
     {
         // elements to calculate height.
         var equalHeightElementList = [];
-
-        // resize elements on window size change.
-        $( window ).on( 'sizeChange', function()
-        {
-            fireEqualHeight();
-        } );
+        var toTopButtonList        = [];
 
         return {
+            initUIWindowEvents  : initUIWindowEvents,
             addContentPageSlider: addContentPageSlider,
             equalHeight         : equalHeight,
             initToTop           : initToTop,
@@ -29,6 +25,30 @@
             toggleSocialShare   : toggleSocialShare,
             toggleClass         : toggleClass
         };
+
+        function initUIWindowEvents()
+        {
+            // resize elements on window size change.
+            $( window ).on( 'sizeChange', function()
+            {
+                fireEqualHeight();
+            } );
+
+            $( window ).on( "scroll resize", function()
+            {
+                if ( toTopButtonList.length > 0 )
+                {
+                    if ( $( document ).scrollTop() > 100 )
+                    {
+                        doToArrayElements( toTopButtonList, "addClass", "visible" );
+                    }
+                    else
+                    {
+                        doToArrayElements( toTopButtonList, "removeClass", "visible" );
+                    }
+                }
+            } );
+        }
 
         /**
          * Adds content page slider (owlCarousel)
@@ -65,14 +85,6 @@
             } );
         }
 
-        function fireEqualHeight()
-        {
-            for ( var i = equalHeightElementList.length - 1; i >= 0; i-- )
-            {
-                equalHeight( equalHeightElementList[i], '', true );
-            }
-        }
-
         /**
          * Equal Box height
          * Calculates equal box height for chosen elements.
@@ -106,7 +118,7 @@
                 }
             }
 
-            if ( !mediaSizes || MediaSizeService.isInterval(mediaSizes) )
+            if ( !mediaSizes || MediaSizeService.isInterval( mediaSizes ) )
             {
                 $equalTargetList.height( maxHeight );
             }
@@ -132,17 +144,10 @@
                 return false;
             } );
 
-            $( window ).on( "scroll resize", function()
+            if ( !!$.inArray( $elem, toTopButtonList ) )
             {
-                if ( $( document ).scrollTop() > 100 )
-                {
-                    $elem.addClass( 'visible' );
-                }
-                else
-                {
-                    $elem.removeClass( 'visible' );
-                }
-            } );
+                toTopButtonList.push( $elem );
+            }
         }
 
         /**
@@ -338,6 +343,26 @@
                 var $elem = $( target );
                 $elem.toggleClass( cssClass );
                 return false;
+            }
+        }
+
+        /*
+         ##### PRIVATE FUNCTIONS ######
+         */
+
+        function fireEqualHeight()
+        {
+            for ( var i = equalHeightElementList.length - 1; i >= 0; i-- )
+            {
+                equalHeight( equalHeightElementList[i], '', true );
+            }
+        }
+
+        function doToArrayElements( array, func, params )
+        {
+            for ( var i = array.length - 1; i >= 0; i-- )
+            {
+                array[i][func]( params );
             }
         }
 
