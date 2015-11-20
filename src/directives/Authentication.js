@@ -15,7 +15,7 @@
             login: login
         };
 
-        function login( event )
+        function login( elem, event )
         {
             event.preventDefault();
             AuthenticationService.customerLogin( $( event.target ) );

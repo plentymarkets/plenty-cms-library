@@ -202,15 +202,31 @@
         $( document ).trigger( 'initPartials', rootElement );
     };
 
-    function bindEventCallback( $elem, event, callback, params )
+    /**
+     * Bind event to element by eventType.
+     * If cms says "click:Foo.bar(this, event)" eventType is "click".
+     *
+     * @param $elem - jQuery object on which event was triggered
+     * @param eventType - type of event
+     * @param callback - callback function of directive [example: "bar(this, event)"]
+     * @param params - list of parameters for callback function.
+     */
+    function bindEventCallback( $elem, eventType, callback, params )
     {
-        $elem.on( event, function( e )
+        $elem.on( eventType, function( event )
         {
-            e.preventDefault();
-            return callback.apply( null, injectEvent( params, e ) );
+            return callback.apply( null, injectEvent( params, event ) );
         } );
     }
 
+    /**
+     * If cms function call contains String "e" or "event", replace String with original jQuery event.
+     * So we can handle event our in directive callback function.
+     *
+     * @param paramList
+     * @param event
+     * @returns {*}
+     */
     function injectEvent( paramList, event )
     {
         for ( var i = 0; i < paramList.length; i++ )
