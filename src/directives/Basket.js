@@ -54,26 +54,33 @@
             var maxLength     = parseInt( quantityInput.attr( 'maxlength' ) ) || 5;
             var value         = parseInt( quantityInput.val() ) + increment;
 
-            if ( (value + '').length <= maxLength && value >= 0 )
+            var isBasketView = elem.parents( '[data-basket-item-id]' ).length > 0;
+
+            if ( isBasketView )
             {
-                quantityInput.val( value );
-
-                var isBasketView = elem.parents( '[data-basket-item-id]' ).length > 0;
-                if ( isBasketView )
+                if ( (value + '').length <= maxLength && value >= 0 )
                 {
-                    var timeout = elem.data( 'timeout' );
+                    quantityInput.val( value );
+                }
 
-                    if ( !!timeout )
-                    {
-                        window.clearTimeout( timeout );
-                    }
+                var timeout = elem.data( 'timeout' );
 
-                    timeout = window.setTimeout( function()
-                    {
-                        quantityInput.trigger( 'change' );
-                    }, 1000 );
+                if ( !!timeout )
+                {
+                    window.clearTimeout( timeout );
+                }
 
-                    elem.data( 'timeout', timeout );
+                timeout = window.setTimeout( function()
+                {
+                    quantityInput.trigger( 'change' );
+                }, 1000 );
+
+                elem.data( 'timeout', timeout );
+            }
+            else {
+                if ( (value + '').length <= maxLength && value >= 1 )
+                {
+                    quantityInput.val( value );
                 }
             }
         }
