@@ -81,6 +81,10 @@
                     }
                 }
             }
+            else
+            {
+                $elem.unbind( 'click' );
+            }
         }
 
     }, ['MediaSizeService'] );
