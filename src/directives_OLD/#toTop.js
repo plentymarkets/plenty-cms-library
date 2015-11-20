@@ -7,28 +7,36 @@
  * =====================================================================================
  */
 
-(function($, pm) {
+(function( $, pm )
+{
 
-    pm.directive('[data-plenty="toTop"]', function(i, elem) {
-        $(elem).click(function() {
-            $('html, body').animate({
+    pm.directive( '[data-plenty="toTop"]', function( i, elem )
+    {
+        $( elem ).click( function()
+        {
+            $( 'html, body' ).animate( {
                 scrollTop: 0
-            }, 400);
+            }, 400 );
             return false;
-        });
+        } );
 
-        var positionToTopButton = function() {
-            if( $(document).scrollTop() > 100 ) {
-                $(elem).addClass('visible');
-            } else {
-                $(elem).removeClass('visible');
+        var positionToTopButton = function()
+        {
+            if ( $( document ).scrollTop() > 100 )
+            {
+                $( elem ).addClass( 'visible' );
+            }
+            else
+            {
+                $( elem ).removeClass( 'visible' );
             }
         };
 
-        $(window).on("scroll resize", function() {
+        $( window ).on( "scroll resize", function()
+        {
             positionToTopButton();
-        });
+        } );
 
-    });
+    } );
 
-}(jQuery, PlentyFramework));
+}( jQuery, PlentyFramework ));

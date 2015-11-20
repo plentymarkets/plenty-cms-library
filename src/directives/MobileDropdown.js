@@ -28,25 +28,25 @@
         {
             $( window ).on( 'orientationchange sizeChange', function()
             {
-                $('[data-plenty="click:UI.toggleHideShow(this)"]').parent( "li." + toggleClass ).removeClass( toggleClass );
+                $( '[data-plenty="click:UI.toggleHideShow(this)"]' ).parent( "li." + toggleClass ).removeClass( toggleClass );
                 /*if ( !!activeDropdown )
-                {
-                    activeDropdown.parent().removeClass( toggleClass );
+                 {
+                 activeDropdown.parent().removeClass( toggleClass );
 
-                    //activeDropdown.parents( "ul" ).find( "li." + toggleClass ).removeClass( toggleClass );
-                    activeDropdown = null;
-                }*/
+                 //activeDropdown.parents( "ul" ).find( "li." + toggleClass ).removeClass( toggleClass );
+                 activeDropdown = null;
+                 }*/
             } );
 
             // close open menu on click outside menu
             $( 'html' ).click( function()
             {
-                $('[data-plenty="click:UI.toggleHideShow(this)"]').parent( "li.open" ).removeClass( 'open' );
+                $( '[data-plenty="click:UI.toggleHideShow(this)"]' ).parent( "li.open" ).removeClass( 'open' );
                 /*if ( !!activeDropdown )
-                {
-                    activeDropdown.parent().removeClass( toggleClass );
-                    activeDropdown = null;
-                }*/
+                 {
+                 activeDropdown.parent().removeClass( toggleClass );
+                 activeDropdown = null;
+                 }*/
             } );
         }
 

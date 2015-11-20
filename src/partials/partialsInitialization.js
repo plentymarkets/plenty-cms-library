@@ -1,11 +1,13 @@
-(function($) {
+(function( $ )
+{
 
-    $(document).on('initPartials', function(e, root) {
+    $( document ).on( 'initPartials', function( e, root )
+    {
 
-        $(root).find('[data-toggle="tooltip"]' ).tooltip({
+        $( root ).find( '[data-toggle="tooltip"]' ).tooltip( {
             container: 'body'
-        });
+        } );
 
-    });
+    } );
 
-})(jQuery);
+})( jQuery );

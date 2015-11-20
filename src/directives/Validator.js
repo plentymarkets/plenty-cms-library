@@ -1,5 +1,7 @@
-(function($, pm) {
-	pm.directive('Validator', function( ValidationService ) {
+(function( $, pm )
+{
+    pm.directive( 'Validator', function( ValidationService )
+    {
 
         return {
             validate: validate
@@ -10,5 +12,5 @@
             return ValidationService.validate( form, errorClass );
         }
 
-	}, ['ValidationService']);
-} (jQuery, PlentyFramework));
+    }, ['ValidationService'] );
+}( jQuery, PlentyFramework ));

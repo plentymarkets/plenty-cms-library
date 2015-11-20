@@ -7,7 +7,8 @@
  * =====================================================================================
  */
 
-(function($, pm) {
+(function( $, pm )
+{
 
     /*
      * Form Validation
@@ -42,12 +43,14 @@
      *														});
      *													});
      */
-    pm.directive('form[data-plenty-checkform], form.PlentySubmitForm', function(i, elem, ValidationService) {
+    pm.directive( 'form[data-plenty-checkform], form.PlentySubmitForm', function( i, elem, ValidationService )
+    {
 
-        $(elem).submit(function() {
+        $( elem ).submit( function()
+        {
             return ValidationService.validate( elem );
-        });
+        } );
 
-    }, ['ValidationService']);
+    }, ['ValidationService'] );
 
-}(jQuery, PlentyFramework));
+}( jQuery, PlentyFramework ));

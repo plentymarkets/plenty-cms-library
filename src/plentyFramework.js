@@ -153,12 +153,13 @@
 
             var directives = parseDirectives( $( element ).attr( 'data-plenty' ), $( element ) );
 
-            if( directives.length <= 0 ) {
+            if ( directives.length <= 0 )
+            {
                 // continue
                 return;
             }
 
-            for(var i = 0; i < directives.length; i++ )
+            for ( var i = 0; i < directives.length; i++ )
             {
                 var directive = directives[i];
                 if ( !!PlentyFramework.directives[directive.class] && PlentyFramework.directives.hasOwnProperty( directive.class ) )
@@ -174,14 +175,14 @@
                         }
                         else
                         {
-                            bindEventCallback( $(element), directive.event, callback, directive.params );
+                            bindEventCallback( $( element ), directive.event, callback, directive.params );
                             /*
-                            $( element ).on( directive.event, function( e )
-                            {
-                                directive = injectEvent( directive, e );
-                                return callback.apply( null, directive.params );
-                            } );
-                            */
+                             $( element ).on( directive.event, function( e )
+                             {
+                             directive = injectEvent( directive, e );
+                             return callback.apply( null, directive.params );
+                             } );
+                             */
                         }
 
                     }
@@ -198,21 +199,23 @@
             }
         } );
 
-        $(document).trigger('initPartials', rootElement );
+        $( document ).trigger( 'initPartials', rootElement );
     };
 
     function bindEventCallback( $elem, event, callback, params )
     {
-        $elem.on( event, function(e) {
-            return callback.apply( null, injectEvent(params, e) );
-        });
+        $elem.on( event, function( e )
+        {
+            e.preventDefault();
+            return callback.apply( null, injectEvent( params, e ) );
+        } );
     }
 
     function injectEvent( paramList, event )
     {
-        for( var i = 0; i < paramList.length; i++ )
+        for ( var i = 0; i < paramList.length; i++ )
         {
-            if( !!paramList[i].toLowerCase && (paramList[i].toLowerCase() == 'e' || paramList[i].toLowerCase() == 'event') )
+            if ( !!paramList[i].toLowerCase && (paramList[i].toLowerCase() == 'e' || paramList[i].toLowerCase() == 'event') )
             {
                 paramList[i] = event;
             }
@@ -224,14 +227,15 @@
     function parseDirectives( input, thisValue )
     {
         var directivePattern = /^(([\w]+):)?([\w]+)\.([\w]+)(\((.*)\))?$/;
-        var expressions = input.split(';');
-        var directives = [];
+        var expressions      = input.split( ';' );
+        var directives       = [];
 
-        for( var i = 0; i < expressions.length; i++ )
+        for ( var i = 0; i < expressions.length; i++ )
         {
             var expression = expressions[i].trim();
 
-            if( !expression ) {
+            if ( !expression )
+            {
                 continue;
             }
 
@@ -264,7 +268,7 @@
 
             if ( !!match[6] && match[6].length > 0 )
             {
-                var params = match[6].match(/(['][^']+['])|([\w-]+)|(["][^"]+["])/g);
+                var params = match[6].match( /(['][^']+['])|([\w-]+)|(["][^"]+["])/g );
                 for ( var j = 0; j < params.length; j++ )
                 {
                     var param = params[j].trim();

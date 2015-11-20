@@ -21,8 +21,8 @@
 
             $( '[data-plenty-address-doctor]:visible' ).each( function( i, form )
             {
-                var addressDoctor = new AddressDoctor( form );
-                var requiredFields = $(form).attr('data-plenty-address-doctor' ).replace(/\s/g, '').split(',');
+                var addressDoctor  = new AddressDoctor( form );
+                var requiredFields = $( form ).attr( 'data-plenty-address-doctor' ).replace( /\s/g, '' ).split( ',' );
                 if ( !addressDoctor.isValid( requiredFields ) )
                 {
                     addressIsValid = false;
@@ -35,11 +35,11 @@
 
         function AddressDoctor( form )
         {
-            var $form   = $( form );
-            var $inputs = {
-                Street: $form.find( 'input[name="Street"]' ),
-                ZIP   : $form.find( 'input[name="ZIP"]' ),
-                City  : $form.find( 'input[name="City"]' ),
+            var $form                = $( form );
+            var $inputs              = {
+                Street : $form.find( 'input[name="Street"]' ),
+                ZIP    : $form.find( 'input[name="ZIP"]' ),
+                City   : $form.find( 'input[name="City"]' ),
                 HouseNo: $form.find( 'input[name="HouseNo"]' )
             };
             var $suggestionContainer = {};
@@ -54,11 +54,12 @@
             function isValid( fields )
             {
 
-                if( isPackstation() ) {
+                if ( isPackstation() )
+                {
                     return true;
                 }
 
-                suggestions = new AddressList( $form.getFormValues() );
+                suggestions    = new AddressList( $form.getFormValues() );
                 requiredFields = fields;
 
                 refreshView();
@@ -68,46 +69,45 @@
 
             function refreshView()
             {
-                $('.suggestion-list').remove();
+                $( '.suggestion-list' ).remove();
 
-                for( var i = 0; i < requiredFields.length; i++ )
+                for ( var i = 0; i < requiredFields.length; i++ )
                 {
-                    if( !validateInput( requiredFields[i] ) )
+                    if ( !validateInput( requiredFields[i] ) )
                     {
-                        $form.trigger('validationFailed');
+                        $form.trigger( 'validationFailed' );
                         return;
                     }
                 }
 
-                if( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) )
+                if ( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) )
                 {
-                    $inputs.HouseNo.removeClass('has-error');
-                    $form.find('label[for="' + $inputs.HouseNo.attr('id') + '"]' ).removeClass('has-error');
+                    $inputs.HouseNo.removeClass( 'has-error' );
+                    $form.find( 'label[for="' + $inputs.HouseNo.attr( 'id' ) + '"]' ).removeClass( 'has-error' );
 
-                    $inputs.HouseNo.addClass('has-success');
-                    $form.find('label[for="' + $inputs.HouseNo.attr('id') + '"]' ).addClass('has-success');
+                    $inputs.HouseNo.addClass( 'has-success' );
+                    $form.find( 'label[for="' + $inputs.HouseNo.attr( 'id' ) + '"]' ).addClass( 'has-success' );
                 }
                 else
                 {
-                    $inputs.HouseNo.removeClass('has-success');
-                    $form.find('label[for="' + $inputs.HouseNo.attr('id') + '"]' ).removeClass('has-success');
+                    $inputs.HouseNo.removeClass( 'has-success' );
+                    $form.find( 'label[for="' + $inputs.HouseNo.attr( 'id' ) + '"]' ).removeClass( 'has-success' );
 
-                    $inputs.HouseNo.addClass('has-error');
-                    $form.find('label[for="' + $inputs.HouseNo.attr('id') + '"]' ).addClass('has-error');
+                    $inputs.HouseNo.addClass( 'has-error' );
+                    $form.find( 'label[for="' + $inputs.HouseNo.attr( 'id' ) + '"]' ).addClass( 'has-error' );
                 }
             }
-
 
             function validateInput( key )
             {
                 var valueList = suggestions.getList( key );
 
-                if( !!$suggestionContainer[key]  )
+                if ( !!$suggestionContainer[key] )
                 {
                     $suggestionContainer[key].remove();
                 }
 
-                if( !$inputs[key] )
+                if ( !$inputs[key] )
                 {
                     return true;
                 }
@@ -116,48 +116,47 @@
                 {
                     $inputs[key].val( valueList[0] );
 
-                    $inputs[key].removeClass('has-error');
-                    $form.find('label[for="' + $inputs[key].attr('id') + '"]' ).removeClass('has-error');
+                    $inputs[key].removeClass( 'has-error' );
+                    $form.find( 'label[for="' + $inputs[key].attr( 'id' ) + '"]' ).removeClass( 'has-error' );
 
-                    $inputs[key].addClass('has-success');
-                    $form.find('label[for="' + $inputs[key].attr('id') + '"]' ).addClass('has-success');
+                    $inputs[key].addClass( 'has-success' );
+                    $form.find( 'label[for="' + $inputs[key].attr( 'id' ) + '"]' ).addClass( 'has-success' );
                     return true;
                 }
                 else
                 {
-                    $inputs[key].removeClass('has-success');
-                    $form.find('label[for="' + $inputs[key].attr('id') + '"]' ).removeClass('has-success');
+                    $inputs[key].removeClass( 'has-success' );
+                    $form.find( 'label[for="' + $inputs[key].attr( 'id' ) + '"]' ).removeClass( 'has-success' );
 
-                    $inputs[key].addClass('has-error');
-                    $form.find('label[for="' + $inputs[key].attr('id') + '"]' ).addClass('has-error');
+                    $inputs[key].addClass( 'has-error' );
+                    $form.find( 'label[for="' + $inputs[key].attr( 'id' ) + '"]' ).addClass( 'has-error' );
 
                     buildSuggestionList( $inputs[key], valueList );
-                    $inputs[key].off('focus');
+                    $inputs[key].off( 'focus' );
                     $inputs[key].focus();
                     return false;
 
                 }
             }
 
-
             function buildSuggestionList( $parent, values )
             {
-                var suggestionKey = $parent.attr('name');
+                var suggestionKey = $parent.attr( 'name' );
 
                 // render html content
-                $suggestionContainer[ suggestionKey ] = $( pm.compileTemplate( 'addressSuggestions/addressDoctor.html', {values: values} ) );
-                $suggestionContainer[ suggestionKey ].css({
-                    'width': $parent.outerWidth(true),
-                    'left': $parent.position().left,
-                    'top': $parent.position().top + $parent.outerHeight(true)
-                });
+                $suggestionContainer[suggestionKey] = $( pm.compileTemplate( 'addressSuggestions/addressDoctor.html', {values: values} ) );
+                $suggestionContainer[suggestionKey].css( {
+                    'width': $parent.outerWidth( true ),
+                    'left' : $parent.position().left,
+                    'top'  : $parent.position().top + $parent.outerHeight( true )
+                } );
 
                 // bind click event to list elements
-                $suggestionContainer[ suggestionKey ].find( '[data-address-value]' ).each( function( i, elem )
+                $suggestionContainer[suggestionKey].find( '[data-address-value]' ).each( function( i, elem )
                 {
 
                     var $elem = $( elem );
-                    var value = $elem.attr('data-address-value');
+                    var value = $elem.attr( 'data-address-value' );
 
                     $elem.click( function()
                     {
@@ -165,8 +164,8 @@
                         $parent.val( value );
 
                         // filter addresses and show remaining suggestions
-                        var filterAddress = {};
-                        filterAddress[$parent.attr('name')] = value;
+                        var filterAddress                     = {};
+                        filterAddress[$parent.attr( 'name' )] = value;
                         suggestions.filter( filterAddress );
 
                         // refresh suggestion lists
@@ -177,7 +176,7 @@
                 } );
 
                 // inject html
-                $parent.parent().append( $suggestionContainer[ suggestionKey ] );
+                $parent.parent().append( $suggestionContainer[suggestionKey] );
             }
 
             function isPackstation()
@@ -194,9 +193,9 @@
             init();
 
             return {
-                getAddresses: getAddresses,
-                getList: getList,
-                filter: filter,
+                getAddresses  : getAddresses,
+                getList       : getList,
+                filter        : filter,
                 houseNoAllowed: houseNoAllowed
             };
 
@@ -297,11 +296,11 @@
 
                 var addressCount = addresses.length;
 
-                for( var i = 0; i < addressCount; i++ )
+                for ( var i = 0; i < addressCount; i++ )
                 {
                     var address = addresses[i];
 
-                    for( var j = 0; j < address.HouseNo.length; j++ )
+                    for ( var j = 0; j < address.HouseNo.length; j++ )
                     {
                         var range = address.HouseNo[j].split( '-' );
                         if ( ( range.length == 1 && houseNo == range[0] )

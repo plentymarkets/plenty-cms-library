@@ -9,12 +9,12 @@
             setItemQuantity   : setItemQuantity
         };
 
-        function addBasketItem( elem )
+        function addBasketItem( $elem )
         {
-            //elem.preventDefault();
+            //$elem.preventDefault();
             //init
             var basketItemsList = {};
-            var parentForm      = $( elem ).parents( 'form' );
+            var parentForm      = $elem.parents( 'form' );
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
@@ -83,11 +83,12 @@
             BasketService.setItemQuantity(
                 basketItemID,
                 parseInt( $( input ).val() )
-            ).fail(function() {
+            ).fail( function()
+            {
                 // reset input's value on cancel
                 var basketItem = BasketService.getItem( basketItemID );
                 $( input ).val( basketItem.BasketItemQuantity );
-            });
+            } );
         }
 
     }, ['BasketService'] );

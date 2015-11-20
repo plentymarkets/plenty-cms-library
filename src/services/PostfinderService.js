@@ -65,7 +65,7 @@
                         for ( var i = 0; i < numberOfResults; i++ )
                         {
                             var dimension        = 'km';
-                            var distInMeters     = result[i].PostfinderItemDistance;
+                            var distInMeters = result[i].PostfinderItemDistance;
                             var distInKilometers = distInMeters / 1000;
                             distInKilometers     = ((Math.round( distInKilometers * 100 ) / 100).toFixed( 2 )).replace( '.', ',' );
 

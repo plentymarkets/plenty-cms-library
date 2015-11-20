@@ -10,7 +10,8 @@
 /**
  * @module Factories
  */
-(function(pm) {
+(function( pm )
+{
 
     /**
      * Holds checkout data for global access and provides methods
@@ -24,7 +25,8 @@
      * @class CheckoutFactory
      * @static
      */
-	pm.factory('CheckoutFactory', function(API, CMS, UI) {
+    pm.factory( 'CheckoutFactory', function( API, CMS, UI )
+    {
 
         // data received from ReST API
         var checkoutData;
@@ -32,17 +34,17 @@
         // instance wrapped checkout object for global access
         var checkout;
 
-		return {
-            getCheckout: getCheckout,
-            setCheckout: setCheckout,
-            loadCheckout: loadCheckout,
-            reloadContainer: reloadContainer,
-            reloadCatContent: reloadCatContent,
+        return {
+            getCheckout        : getCheckout,
+            setCheckout        : setCheckout,
+            loadCheckout       : loadCheckout,
+            reloadContainer    : reloadContainer,
+            reloadCatContent   : reloadCatContent,
             reloadItemContainer: reloadItemContainer
-		};
+        };
 
-
-        function Checkout() {
+        function Checkout()
+        {
             return checkoutData;
         }
 
@@ -51,49 +53,66 @@
          * @function getCheckout
          * @returns {Checkout} Instance of checkout object
          */
-        function getCheckout( copy ) {
-            if(!checkout || !checkoutData) {
-                loadCheckout(true);
+        function getCheckout( copy )
+        {
+            if ( !checkout || !checkoutData )
+            {
+                loadCheckout( true );
             }
 
-            if( !!copy ) {
-                return $.extend(true, {}, checkoutData);
+            if ( !!copy )
+            {
+                return $.extend( true, {}, checkoutData );
             }
             return checkout;
         }
+
         /**
          * Receive global checkout data from ReST-API
          * @function loadCheckout
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
-        function loadCheckout(sync) {
+        function loadCheckout( sync )
+        {
 
-            return API.get('/rest/checkout/', null, false, true, sync)
-                .done(function(response) {
-                    if( !!response ) {
+            return API.get( '/rest/checkout/', null, false, true, sync )
+                .done( function( response )
+                {
+                    if ( !!response )
+                    {
                         checkoutData = response.data;
-                        checkout = new Checkout();
+                        checkout     = new Checkout();
                     }
-                    else UI.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
-                });
+                    else
+                    {
+                        UI.throwError( 0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]' );
+                    }
+                } );
         }
 
         /**
          * Update checkout data on server
          * @function setCheckout
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
-        function setCheckout() {
+        function setCheckout()
+        {
 
-
-            return API.put('/rest/checkout', checkout)
-                .done(function(response) {
-                    if( !!response ) {
+            return API.put( '/rest/checkout', checkout )
+                .done( function( response )
+                {
+                    if ( !!response )
+                    {
                         checkoutData = response.data;
-                        checkout = new Checkout();
+                        checkout     = new Checkout();
                     }
-                    else UI.throwError(0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]');
-                });
+                    else
+                    {
+                        UI.throwError( 0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]' );
+                    }
+                } );
 
         }
 
@@ -102,38 +121,46 @@
          * in containers marked with <b>data-plenty-checkout-template="..."</b>
          * @function reloadContainer
          * @param  {string} container Name of the template to load from server
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
-        function reloadContainer( container ) {
+        function reloadContainer( container )
+        {
 
-            return CMS.getContainer( "checkout"+container ).from( 'checkout' )
-                .done(function (response) {
-                    $('[data-plenty-checkout-template="' + container + '"]')
-                        .each(function (i, elem) {
-                            $(elem).html(response.data[0]);
-                            pm.getInstance().bindDirectives(elem);
-                        });
-                });
+            return CMS.getContainer( "checkout" + container ).from( 'checkout' )
+                .done( function( response )
+                {
+                    $( '[data-plenty-checkout-template="' + container + '"]' )
+                        .each( function( i, elem )
+                        {
+                            $( elem ).html( response.data[0] );
+                            pm.getInstance().bindDirectives( elem );
+                        } );
+                } );
         }
 
         /**
          * Get category content from server and replace received HTML
          * in containers marked with <b>data-plenty-checkout-catcontent="..."</b>
          * @function reloadCatContent
-         * @param	{number} catId	ID of the category to load content (description 1) from server
-         * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @param    {number} catId    ID of the category to load content (description 1) from server
+         * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          * @deprecated
          */
-        function reloadCatContent( catId ) {
+        function reloadCatContent( catId )
+        {
 
-            return CMS.getCategoryContent(catId)
-                .done(function(response) {
-                    $('[data-plenty-checkout-catcontent="'+catId+'"]')
-                        .each(function(i, elem) {
-                            $(elem).html(response.data[0]);
-                            pm.getInstance().bindDirectives(elem);
-                        });
-                });
+            return CMS.getCategoryContent( catId )
+                .done( function( response )
+                {
+                    $( '[data-plenty-checkout-catcontent="' + catId + '"]' )
+                        .each( function( i, elem )
+                        {
+                            $( elem ).html( response.data[0] );
+                            pm.getInstance().bindDirectives( elem );
+                        } );
+                } );
 
         }
 
@@ -141,21 +168,25 @@
          * Get layout container from server and replace received HTML
          * in containers marked with <b>data-plenty-itemview-template="..."</b>
          * @function reloadItemContainer
-         * @param	{string} container	Name of the (item view) template to load from server
-         * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @param    {string} container    Name of the (item view) template to load from server
+         * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
-        function reloadItemContainer( container ) {
+        function reloadItemContainer( container )
+        {
 
             return CMS.getContainer( 'itemview' + container ).from( 'itemview' )
-                .done(function(response) {
-                    $('[data-plenty-itemview-template="'+container+'"]')
-                        .each(function(i, elem) {
-                            $(elem).html(response.data[0]);
-                            pm.getInstance().bindDirectives(elem);
-                        });
-                });
+                .done( function( response )
+                {
+                    $( '[data-plenty-itemview-template="' + container + '"]' )
+                        .each( function( i, elem )
+                        {
+                            $( elem ).html( response.data[0] );
+                            pm.getInstance().bindDirectives( elem );
+                        } );
+                } );
 
         }
-				
-	}, ['APIFactory', 'CMSFactory', 'UIFactory']);
-}(PlentyFramework));
+
+    }, ['APIFactory', 'CMSFactory', 'UIFactory'] );
+}( PlentyFramework ));
