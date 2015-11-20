@@ -9,9 +9,9 @@
             setItemQuantity   : setItemQuantity
         };
 
-        function addBasketItem( $elem )
+        function addBasketItem( $elem, event )
         {
-            //$elem.preventDefault();
+            event.preventDefault();
             //init
             var basketItemsList = {};
             var parentForm      = $elem.parents( 'form' );
