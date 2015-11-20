@@ -193,7 +193,7 @@
                 {
                     $elemParent.addClass( 'open' );
                 }
-                $elem.removeAttr( 'style' );
+                $elem.siblings( 'ul' ).removeAttr( 'style' );
                 $elemParent.removeClass( 'animating' );
             } );
         }

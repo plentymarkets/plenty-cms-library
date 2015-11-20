@@ -9,12 +9,12 @@
             setItemQuantity   : setItemQuantity
         };
 
-        function addBasketItem( e, button )
+        function addBasketItem( elem )
         {
-            e.preventDefault();
+            //elem.preventDefault();
             //init
             var basketItemsList = {};
-            var parentForm      = $( button ).parents( 'form' );
+            var parentForm      = $( elem ).parents( 'form' );
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();

@@ -16,8 +16,8 @@
     // TODO: handle external dependency to Modernizr
     pm.directive( 'MobileDropdown', function( MediaSizeService )
     {
-        var toggleClass           = "open";
-        var activeDropdown        = null;
+        var toggleClass    = "open";
+        var activeDropdown = null;
 
         return {
             initMobileDropdown: initMobileDropdown,
@@ -28,20 +28,25 @@
         {
             $( window ).on( 'orientationchange sizeChange', function()
             {
-                if ( !!activeDropdown )
+                $('[data-plenty="click:UI.toggleHideShow(this)"]').parent( "li." + toggleClass ).removeClass( toggleClass );
+                /*if ( !!activeDropdown )
                 {
-                    activeDropdown.parents("ul" ).find("li." + toggleClass).removeClass( toggleClass );
+                    activeDropdown.parent().removeClass( toggleClass );
+
+                    //activeDropdown.parents( "ul" ).find( "li." + toggleClass ).removeClass( toggleClass );
                     activeDropdown = null;
-                }
+                }*/
             } );
 
+            // close open menu on click outside menu
             $( 'html' ).click( function()
             {
-                if ( !!activeDropdown )
+                $('[data-plenty="click:UI.toggleHideShow(this)"]').parent( "li.open" ).removeClass( 'open' );
+                /*if ( !!activeDropdown )
                 {
                     activeDropdown.parent().removeClass( toggleClass );
                     activeDropdown = null;
-                }
+                }*/
             } );
         }
 
