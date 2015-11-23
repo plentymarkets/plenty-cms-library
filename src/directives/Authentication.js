@@ -15,9 +15,9 @@
             login: login
         };
 
-        function login( elem, event )
+        function login( elem )
         {
-            event.preventDefault();
+            pm.getRecentEvent().preventDefault();
             AuthenticationService.customerLogin( $( event.target ) );
         }
     }, ["AuthenticationService"] );
