@@ -28,8 +28,6 @@
     pm.service( 'CheckoutService', function( API, CMS, Checkout, Modal )
     {
 
-        var checkoutState;
-
         return {
             init                  : init,
             setCustomerSignAndInfo: setCustomerSignAndInfo,
@@ -51,7 +49,6 @@
         function init()
         {
             Checkout.loadCheckout( true );
-            checkoutState = Checkout.getCheckout( true );
         }
 
         /**
@@ -277,43 +274,36 @@
          */
         function preparePayment()
         {
-            if ( Object.equals( checkoutState, Checkout.getCheckout( true ) ) )
-            {
-                return API.idle();
-            }
-            else
-            {
-                checkoutState = Checkout.getCheckout( true );
-                return API.post( "/rest/checkout/preparepayment/", null )
-                    .done( function( response )
+            return API.post( "/rest/checkout/preparepayment/", null )
+                .done( function( response )
+                {
+                    if ( response.data.CheckoutMethodOfPaymentRedirectURL != '' )
                     {
-                        if ( response.data.CheckoutMethodOfPaymentRedirectURL != '' )
-                        {
 
-                            document.location.assign( response.data.CheckoutMethodOfPaymentRedirectURL );
+                        document.location.assign( response.data.CheckoutMethodOfPaymentRedirectURL );
 
-                        }
-                        else if ( !!response.data.CheckoutMethodOfPaymentAdditionalContent )
-                        {
+                    }
+                    else if ( !!response.data.CheckoutMethodOfPaymentAdditionalContent )
+                    {
 
-                            var isBankDetails = $( response.data.CheckoutMethodOfPaymentAdditionalContent ).find( '[data-plenty-checkout-form="bankDetails"]' ).length > 0;
-                            Modal.prepare()
-                                .setContent( response.data.CheckoutMethodOfPaymentAdditionalContent )
-                                .onConfirm( function()
+                        var isBankDetails = $( response.data.CheckoutMethodOfPaymentAdditionalContent ).find( '[data-plenty-checkout-form="bankDetails"]' ).length > 0;
+                        Modal.prepare()
+                            .setContent( response.data.CheckoutMethodOfPaymentAdditionalContent )
+                            .onConfirm( function()
+                            {
+                                if ( isBankDetails )
                                 {
-                                    if ( isBankDetails )
-                                    {
-                                        return saveBankDetails();
-                                    }
-                                    else
-                                    {
-                                        return saveCreditCard();
-                                    }
-                                } )
-                                .show();
-                        }
-                    } );
-            }
+                                    return saveBankDetails();
+                                }
+                                else
+                                {
+                                    return saveCreditCard();
+                                }
+                            } )
+                            .show();
+                    }
+                } );
+
         }
 
         /**
