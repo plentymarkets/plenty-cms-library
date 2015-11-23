@@ -287,6 +287,7 @@
                         // continue tab change
                         proceedTabChange( contentChanged );
                         pm.getInstance().bindDirectives( container[current] );
+                        $( window ).trigger( 'contentChanged' );
                     } );
             }
             else

@@ -305,6 +305,12 @@
                 bsModal.find( '[data-plenty-modal="confirm"]' ).click( function()
                 {
                     var close = modal.onConfirm();
+
+                    if( typeof close == "undefined" )
+                    {
+                        close = true;
+                    }
+
                     if ( close )
                     {
                         hide( true );
