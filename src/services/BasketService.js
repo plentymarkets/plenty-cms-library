@@ -96,35 +96,36 @@
         {
             //TODO use $("[data-plenty-checkout-form='OrderParamsForm']").serializeArray() to get order params
             var orderParamsForm = $( '[data-plenty-checkout-form="OrderParamsForm"]' );
-            var wrappedThis     = {};
+            var $self           = {};
             var attrType        = "";
+            var match;
 
             //Groups
             orderParamsForm.find( '[name^="ParamGroup"]' ).each( function()
             {
-                var match         = this.name.match( /^ParamGroup\[(\d+)]\[(\d+)]$/ );
+                match             = this.name.match( /^ParamGroup\[(\d+)]\[(\d+)]$/ );
                 articleWithParams = addOrderParamValue( articleWithParams, match[1], $( this ).val(), $( this ).val() );
             } );
 
             //Values
             orderParamsForm.find( '[name^="ParamValue"]' ).each( function()
             {
-                wrappedThis = $( this );
-                attrType    = wrappedThis.attr( 'type' );
+                $self    = $( this );
+                attrType = $self.attr( 'type' );
 
-                if ( ((attrType == 'checkbox' && wrappedThis.is( ':checked' )) ||
-                    (attrType == 'radio' && wrappedThis.is( ':checked' )) ||
+                if ( ((attrType == 'checkbox' && $self.is( ':checked' )) ||
+                    (attrType == 'radio' && $self.is( ':checked' )) ||
                     (attrType != 'radio' && attrType != 'checkbox')) &&
                     attrType != 'file' )
                 {
-                    var match = this.name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
+                    var match = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
 
-                    articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], wrappedThis.val() );
+                    articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], $self.val() );
 
                 }
-                else if ( attrType == 'file' )
+                else if ( attrType == 'file' && $self[0].files && $self[0].files.length > 0 )
                 {
-                    articleWithParams = orderParamFileUpload( this, articleWithParams );
+                    articleWithParams = orderParamFileUpload( $self, articleWithParams );
                 }
             } );
 
@@ -173,9 +174,9 @@
                 } )
         }
 
-        function orderParamFileUpload( input, articleWithParams )
+        function orderParamFileUpload( $input, articleWithParams )
         {
-            var key                   = input.id;
+            var key                   = $input[0].id;
             var orderParamUploadFiles = {};
             var orderParamFileIdStack = [];
             var formData;
@@ -190,8 +191,9 @@
                 contentType: false
             };
 
-            orderParamUploadFiles[key] = $( input )[0].files;
+            orderParamUploadFiles[key] = $input[0].files;
 
+            // if input not pushed before.
             if ( orderParamFileIdStack.indexOf( key ) == -1 )
             {
                 orderParamFileIdStack.push( key );
@@ -208,9 +210,9 @@
                 API.post( "/rest/checkout/orderparamfile/", params );
             }
 
-            var match = input.name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
+            var match = $input[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
 
-            return addOrderParamValue( articleWithParams, match[1], match[2], $( input ).val() );
+            return addOrderParamValue( articleWithParams, match[1], match[2], $input.val() );
         }
 
         /**
