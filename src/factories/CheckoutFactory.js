@@ -135,6 +135,7 @@
                         {
                             $( elem ).html( response.data[0] );
                             pm.getInstance().bindDirectives( elem );
+                            $( window ).trigger( 'contentChanged' );
                         } );
                 } );
         }
@@ -159,6 +160,8 @@
                         {
                             $( elem ).html( response.data[0] );
                             pm.getInstance().bindDirectives( elem );
+                            $( window ).trigger( 'contentChanged' );
+
                         } );
                 } );
 
@@ -183,6 +186,8 @@
                         {
                             $( elem ).html( response.data[0] );
                             pm.getInstance().bindDirectives( elem );
+                            $( window ).trigger( 'contentChanged' );
+
                         } );
                 } );
 

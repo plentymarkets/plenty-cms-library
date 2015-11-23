@@ -29,7 +29,7 @@
         function initUIWindowEvents()
         {
             // resize elements on window size change.
-            $( window ).on( 'sizeChange', function()
+            $( window ).on( 'sizeChange contentChanged', function()
             {
                 fireEqualHeight();
             } );
