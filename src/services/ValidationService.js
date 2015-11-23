@@ -344,8 +344,6 @@
 
                 }
 
-                console.log( errorOffset, $scrollTarget );
-
                 // only scroll if error is outside of viewport
                 if ( errorOffset - distanceTop < window.pageYOffset || errorOffset > (window.pageYOffset + window.innerHeight) )
                 {
@@ -363,7 +361,8 @@
                     formControl = $( getFormControl( elem ) );
                     formControl.on( 'focus click', function()
                     {
-                        $( this ).removeClass( errorClass );
+                        var $errorElement = $(elem);
+                        $errorElement.removeClass( errorClass );
                         $form.find( 'label[for="' + $( this ).attr( 'id' ) + '"]' ).removeClass( errorClass );
                     } );
                 } );
