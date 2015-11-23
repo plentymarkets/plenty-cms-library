@@ -71,12 +71,13 @@
             {
                 $( '.suggestion-list' ).remove();
 
+                var suggestionListVisible = false;
                 for ( var i = 0; i < requiredFields.length; i++ )
                 {
-                    if ( !validateInput( requiredFields[i] ) )
+                    if ( !validateInput( requiredFields[i], suggestionListVisible ) )
                     {
                         $form.trigger( 'validationFailed' );
-                        return;
+                        suggestionListVisible = true;
                     }
                 }
 
@@ -98,7 +99,7 @@
                 }
             }
 
-            function validateInput( key )
+            function validateInput( key, suggestionListVisible )
             {
                 var valueList = suggestions.getList( key );
 
@@ -131,7 +132,7 @@
                     $inputs[key].addClass( 'has-error' );
                     $form.find( 'label[for="' + $inputs[key].attr( 'id' ) + '"]' ).addClass( 'has-error' );
 
-                    buildSuggestionList( $inputs[key], valueList );
+                    if( !suggestionListVisible ) buildSuggestionList( $inputs[key], valueList );
                     $inputs[key].off( 'focus' );
                     $inputs[key].focus();
                     return false;
