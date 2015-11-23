@@ -326,7 +326,7 @@
             $form.on( 'validationFailed', function()
             {
                 var distanceTop   = 50;
-                var $error        = $form.find( '.has-error' ).first();
+                var $error        = $form.find( '.' + errorClass ).first();
                 var errorOffset   = $error.offset().top;
                 var $scrollTarget = $( 'html, body' );
 
@@ -358,7 +358,7 @@
             if ( hasError )
             {
                 // remove error class on focus
-                $form.find( '.has-error' ).each( function( i, elem )
+                $form.find( '.' + errorClass ).each( function( i, elem )
                 {
                     formControl = $( getFormControl( elem ) );
                     formControl.on( 'focus click', function()
