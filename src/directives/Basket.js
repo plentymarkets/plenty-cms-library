@@ -9,9 +9,9 @@
             setItemQuantity   : setItemQuantity
         };
 
-        function addBasketItem( $elem, event )
+        function addBasketItem( $elem )
         {
-            event.preventDefault();
+            pm.getRecentEvent().preventDefault();
             //init
             var basketItemsList = {};
             var parentForm      = $elem.parents( 'form' );
@@ -44,8 +44,6 @@
 
             //add basketItem and refresh previewLists
             BasketService.addItem( [basketItemsList] );
-
-            return false;
 
         }
 

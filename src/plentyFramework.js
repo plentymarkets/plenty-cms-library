@@ -202,6 +202,31 @@
         $( document ).trigger( 'initPartials', rootElement );
     };
 
+    var eventStack = [];
+
+    PlentyFramework.getRecentEvent = function( eventType )
+    {
+        var lastEventIdx = eventStack.length - 1;
+        if( !eventType )
+        {
+            return eventStack[ lastEventIdx ];
+        }
+        else
+        {
+            for( var i = lastEventIdx; i >= 0; i-- )
+            {
+               if( eventType == eventStack[i].type )
+               {
+                   return eventStack[i];
+               }
+            }
+        }
+
+        return null;
+
+    };
+
+
     /**
      * Bind event to element by eventType.
      * If cms says "click:Foo.bar(this, event)" eventType is "click".
@@ -215,29 +240,9 @@
     {
         $elem.on( eventType, function( event )
         {
-            return callback.apply( null, injectEvent( params, event ) );
+            eventStack.push( event );
+            return callback.apply( null, params );
         } );
-    }
-
-    /**
-     * If cms function call contains String "e" or "event", replace String with original jQuery event.
-     * So we can handle event our in directive callback function.
-     *
-     * @param paramList
-     * @param event
-     * @returns {*}
-     */
-    function injectEvent( paramList, event )
-    {
-        for ( var i = 0; i < paramList.length; i++ )
-        {
-            if ( !!paramList[i].toLowerCase && (paramList[i].toLowerCase() == 'e' || paramList[i].toLowerCase() == 'event') )
-            {
-                paramList[i] = event;
-            }
-        }
-
-        return paramList;
     }
 
     function parseDirectives( input, thisValue )
