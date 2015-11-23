@@ -290,6 +290,7 @@
 
             var basketItem = getBasketItem( BasketItemID );
             // FIX: unset old order params
+
             basketItem.BasketItemOrderParamsList = [];
 
             API.get( '/rest/checkout/container_' + 'CheckoutOrderParamsList'.toLowerCase() + '/', {
@@ -303,13 +304,21 @@
                     .setContent( resp.data[0] )
                     .setTitle( pm.translate( "Edit order parameters" ) )
                     .setLabelConfirm( pm.translate( "Save" ) )
-                    .onConfirm( function()
+                    .onConfirm( function( btnConfirm )
                     {
-                        // save order params
-                        updateArticle( saveOrderParams( [basketItem] ) );
+                        // validate form
+                        if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+                        {
+                            // save order params
+                            updateArticle( saveOrderParams( [basketItem] ) );
 
-                        // close modal after saving order params
-                        return true;
+                            // close modal after saving order params
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     } )
                     .show();
             } );
