@@ -258,7 +258,9 @@
             {
                 var basketItem     = getBasketItem( BasketItemID );
                 var attributesList = [];
-                modal.find( 'select' ).each( function( i, attributeSelect )
+
+                // check for select or list of images
+                modal.find( 'select, .PlentyFormContainer.AttrImage > input[type="hidden"]' ).each( function( i, attributeSelect )
                 {
                     var match = attributeSelect.name.match( /^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/ );
                     if ( match && match[1] )
@@ -269,12 +271,12 @@
                         } );
                     }
 
-                    if ( attributesList.length != 0 )
-                    {
-                        basketItem.BasketItemAttributesList = attributesList;
-                    }
-
                 } );
+
+                if ( attributesList.length != 0 )
+                {
+                    basketItem.BasketItemAttributesList = attributesList;
+                }
                 //update basketItem and refresh previewLists
                 updateArticle( [basketItem] );
 
