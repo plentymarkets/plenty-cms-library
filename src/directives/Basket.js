@@ -45,6 +45,8 @@
             //add basketItem and refresh previewLists
             BasketService.addItem( [basketItemsList] );
 
+            return false;
+
         }
 
         function changeItemQuantity( elem, increment )
