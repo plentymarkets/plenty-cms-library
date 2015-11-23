@@ -115,8 +115,7 @@
 
                 if ( ((attrType == 'checkbox' && $self.is( ':checked' )) ||
                     (attrType == 'radio' && $self.is( ':checked' )) ||
-                    (attrType != 'radio' && attrType != 'checkbox')) &&
-                    attrType != 'file' )
+                    (attrType != 'radio' && attrType != 'checkbox')) && attrType != 'file' && attrType != 'hidden' )
                 {
                     var match = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
 
@@ -304,7 +303,7 @@
                     .setContent( resp.data[0] )
                     .setTitle( pm.translate( "Edit order parameters" ) )
                     .setLabelConfirm( pm.translate( "Save" ) )
-                    .onConfirm( function( btnConfirm )
+                    .onConfirm( function()
                     {
                         // validate form
                         if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
