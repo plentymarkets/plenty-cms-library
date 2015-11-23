@@ -18,7 +18,7 @@
         function login( elem )
         {
             pm.getRecentEvent().preventDefault();
-            AuthenticationService.customerLogin( $( event.target ) );
+            AuthenticationService.customerLogin( $( elem ) );
         }
     }, ["AuthenticationService"] );
 
