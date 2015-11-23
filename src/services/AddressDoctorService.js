@@ -15,11 +15,11 @@
             validateAddress: validateAddress
         };
 
-        function validateAddress()
+        function validateAddress( addressForms )
         {
             var addressIsValid = true;
-
-            $( '[data-plenty-address-doctor]:visible' ).each( function( i, form )
+            addressForms = addressForms || '[data-plenty-address-doctor]';
+            $( addressForms ).filter('[data-plenty-address-doctor]:visible').each( function( i, form )
             {
                 var addressDoctor  = new AddressDoctor( form );
                 var requiredFields = $( form ).attr( 'data-plenty-address-doctor' ).replace( /\s/g, '' ).split( ',' );

@@ -107,7 +107,7 @@
                 return false;
             }
 
-            if ( !pm.getInstance().AddressDoctorService.validateAddress() )
+            if ( !validateForm && !pm.getInstance().AddressDoctorService.validateAddress( form ) )
             {
                 return false;
             }
