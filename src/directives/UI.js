@@ -338,8 +338,10 @@
          */
         function toggleClass( cssClass, target, interval )
         {
+
             if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
             {
+                pm.getRecentEvent().preventDefault();
                 var $elem = $( target );
                 $elem.toggleClass( cssClass );
                 return false;

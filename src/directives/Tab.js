@@ -1,6 +1,6 @@
 (function( $, pm )
 {
-    pm.directive( 'Tab', function()
+    pm.directive( 'Tab', function( MediaSize )
     {
 
         var tabGroups = {};
@@ -47,11 +47,16 @@
             tabGroups[groupID].getTab( tabID ).setContent( $elem );
         }
 
-        function showRemoteTab( tabID, groupID )
+        function showRemoteTab( tabID, groupID, interval )
         {
-            if ( !!tabGroups[groupID] && !!tabGroups[groupID].getTab( tabID ) )
+            if( MediaSize.isInterval( interval ) )
             {
-                tabGroups[groupID].showTab( tabID );
+                pm.getRecentEvent().preventDefault();
+
+                if ( !!tabGroups[groupID] && !!tabGroups[groupID].getTab( tabID ) )
+                {
+                    tabGroups[groupID].showTab( tabID );
+                }
             }
         }
 
@@ -68,7 +73,7 @@
 
             function addTab( tabID )
             {
-                tabs[tabID] = new Tab();
+                tabs[tabID] = new Tab( tabID );
                 return tabs[tabID];
             }
 
@@ -77,25 +82,33 @@
                 var zIndex = 0;
                 if ( !!activeTab )
                 {
+                    // activeTab is set
                     zIndex = parseInt( activeTab.getContent().parent().css( 'zIndex' ) );
                     activeTab.hide();
                     activeTab.getContent().parent().css( 'zIndex', zIndex - 1 );
                 }
                 else
                 {
+                    // activeTab not set before
                     for ( var tab in tabs )
                     {
-                        var currentZ = parseInt( tabs[tab].getContent().parent().css( 'zIndex' ) );
-                        if ( zIndex == 0 || currentZ < zIndex )
+                        if( !!tabs[tab].getContent() )
                         {
-                            zIndex = currentZ;
+                            var currentZ = parseInt( tabs[tab].getContent().parent().css( 'zIndex' ) );
+                            if ( zIndex == 0 || currentZ < zIndex )
+                            {
+                                zIndex = currentZ;
+                            }
+                            tabs[tab].hide();
                         }
-                        tabs[tab].hide();
                     }
 
                     for ( var tab in tabs )
                     {
-                        tabs[tab].getContent().parent().css( 'zIndex', zIndex );
+                        if( !!tabs[tab].getContent() )
+                        {
+                            tabs[tab].getContent().parent().css( 'zIndex', zIndex - 1 );
+                        }
                     }
                 }
 
@@ -110,18 +123,25 @@
             }
         }
 
-        function Tab()
+        function Tab( id )
         {
             var $labels = [];
             var $content;
+            var tabID = id;
 
             return {
                 addLabel  : addLabel,
                 setContent: setContent,
                 getContent: getContent,
+                getID     : getID,
                 show      : show,
                 hide      : hide
             };
+
+            function getID()
+            {
+                return tabID;
+            }
 
             function addLabel( label )
             {
@@ -168,5 +188,5 @@
             }
         }
 
-    } );
+    }, ['MediaSizeService'] );
 })( jQuery, PlentyFramework );

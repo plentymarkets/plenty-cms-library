@@ -9,11 +9,12 @@
             setItemQuantity   : setItemQuantity
         };
 
-        function addBasketItem( $elem )
+        function addBasketItem( elem )
         {
             pm.getRecentEvent().preventDefault();
             //init
             var basketItemsList = {};
+            var $elem           = $( elem );
             var parentForm      = $elem.parents( 'form' );
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
@@ -50,20 +51,20 @@
         function changeItemQuantity( elem, increment )
         {
             var $elem         = $( elem );
-            var quantityInput = $elem.parent().find( 'input' );
-            var maxLength     = parseInt( quantityInput.attr( 'maxlength' ) ) || 5;
-            var value         = parseInt( quantityInput.val() ) + increment;
+            var $quantityInput = $elem.parent().find( 'input' );
+            var maxLength     = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
+            var value         = parseInt( $quantityInput.val() ) + increment;
 
-            var isBasketView = elem.parents( '[data-basket-item-id]' ).length > 0;
+            var isBasketView = $elem.parents( '[data-basket-item-id]' ).length > 0;
 
             if ( isBasketView )
             {
                 if ( (value + '').length <= maxLength && value >= 0 )
                 {
-                    quantityInput.val( value );
+                    $quantityInput.val( value );
                 }
 
-                var timeout = elem.data( 'timeout' );
+                var timeout = $elem.data( 'timeout' );
 
                 if ( !!timeout )
                 {
@@ -72,15 +73,15 @@
 
                 timeout = window.setTimeout( function()
                 {
-                    quantityInput.trigger( 'change' );
+                    $quantityInput.trigger( 'change' );
                 }, 1000 );
 
-                elem.data( 'timeout', timeout );
+                $elem.data( 'timeout', timeout );
             }
             else {
                 if ( (value + '').length <= maxLength && value >= 1 )
                 {
-                    quantityInput.val( value );
+                    $quantityInput.val( value );
                 }
             }
         }

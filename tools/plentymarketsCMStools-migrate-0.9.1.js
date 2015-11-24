@@ -1,10 +1,19 @@
 (function( $, pm )
 {
 
+    var elementCache = [];
+
     PlentyFramework.getInstance().bindDirectives = function( rootElement )
     {
 
         var $rootElement = $( rootElement || 'html' );
+
+        if( $.inArray($rootElement[0], elementCache) >= 0 )
+        {
+            return;
+        }
+
+        elementCache.push( $rootElement[0] );
 
         // #### COMMON ACTIONS
         if ( $rootElement.find( 'body' ).length > 0 )
@@ -18,7 +27,7 @@
 
             $( button ).click( function( e )
             {
-                e.preventDefault();
+                pm.pushEvent( e );
                 pm.directives['Basket'].addBasketItem( button );
             } );
 
@@ -27,8 +36,9 @@
         $rootElement.find( '[data-plenty="quantityInputButtonPlus"]' ).each( function( i, button )
         {
 
-            $( button ).click( function()
+            $( button ).click( function( e )
             {
+                pm.pushEvent( e );
                 pm.directives['Basket'].changeItemQuantity( button, 1 );
             } );
 
@@ -37,8 +47,9 @@
         $rootElement.find( '[data-plenty="quantityInputButtonMinus"]' ).each( function( i, button )
         {
 
-            $( button ).click( function()
+            $( button ).click( function( e )
             {
+                pm.pushEvent( e );
                 pm.directives['Basket'].changeItemQuantity( button, -1 );
             } );
 
@@ -47,9 +58,10 @@
         $rootElement.find( '[data-basket-item-id] [data-plenty="quantityInput"]' ).each( function( i, input )
         {
 
-            $( input ).on( 'change', function()
+            $( input ).on( 'change', function( e )
             {
-                var basketItemID = self.parents( '[data-basket-item-id]' ).attr( 'data-basket-item-id' );
+                pm.pushEvent( e );
+                var basketItemID = $(input).parents( '[data-basket-item-id]' ).attr( 'data-basket-item-id' );
                 pm.directives['Basket'].setItemQuantity( basketItemID, input );
             } );
 
@@ -58,8 +70,9 @@
         $rootElement.find( 'form[data-plenty-checkform], form.PlentySubmitForm' ).each( function( i, form )
         {
 
-            $( form ).submit( function()
+            $( form ).submit( function( e )
             {
+                pm.pushEvent( e );
                 return pm.directives['Validator'].validate( form, $( form ).attr( '[data-plenty-checkform]' ) || 'has-error' );
             } );
 
@@ -68,8 +81,9 @@
         $rootElement.find( 'a[data-plenty-opentab]' ).each( function( i, elem )
         {
 
-            $( elem ).click( function()
+            $( elem ).click( function( e )
             {
+                pm.pushEvent( e );
                 var tabSelector = $( this ).attr( 'data-plenty-opentab' );
                 tabSelector     = ( tabSelector == 'href' ) ? $( this ).attr( 'href' ) : tabSelector;
                 pm.directives['Tab'].showTab( tabSelector );
@@ -79,23 +93,24 @@
 
         $rootElement.find( '[data-plenty-openremotetab]' ).each( function( i, elem )
         {
-
-            $( elem ).click( function()
+            $( elem ).click( function( e )
             {
+                pm.pushEvent( e );
                 var tabSelector = $( this ).attr( 'data-plenty-openremotetab' );
                 var tabID       = $( tabSelector ).attr( 'data-plenty-tab-id' );
                 var groupID     = $( tabSelector ).parents( '[data-plenty-remotetabs-id]' ).attr( 'data-plenty-remotetabs-id' );
 
                 pm.directives['Tab'].showRemoteTab( tabID, groupID );
+
+                return false;
             } );
 
         } );
 
         $rootElement.find( '[data-plenty-remotetabs-id][data-plenty-tabpanel-labelledby]' ).each( function( i, elem )
         {
-
-            var tabID   = $( elem ).attr( 'data-plenty-remotetabs-id' );
-            var groupID = $( elem ).attr( 'data-plenty-tabpanel-tabelledby' );
+            var tabID   = $( elem ).attr( 'data-plenty-tabpanel-labelledby' );
+            var groupID = $( elem ).attr( 'data-plenty-remotetabs-id' );
             pm.directives['Tab'].initRemoteTab( $( elem ), tabID, groupID );
 
         } );
@@ -111,8 +126,9 @@
 
                 pm.directives['Tab'].initRemoteLabel( $( trigger ).parent(), tabID, groupID );
 
-                $( trigger ).click( function()
+                $( trigger ).click( function( e )
                 {
+                    pm.pushEvent( e );
                     pm.directives['Tab'].showRemoteTab( tabID, groupID );
                 } );
             } );
@@ -121,8 +137,9 @@
         $rootElement.find( '[data-plenty-link]' ).each( function( i, elem )
         {
 
-            $( elem ).click( function()
+            $( elem ).click( function( e )
             {
+                pm.pushEvent( e );
                 var itemID = $( elem ).attr( 'data-plenty-link' );
                 pm.directives['Redirect'].to( '[data-plenty-href="' + itemID + '"]' )
             } );
@@ -132,8 +149,9 @@
         $rootElement.find( '[data-plenty-checkout-href]' ).each( function( i, elem )
         {
 
-            $( elem ).click( function()
+            $( elem ).click( function( e )
             {
+                pm.pushEvent( e );
                 pm.directives['Redirect'].toCheckoutTab(
                     $( elem ).attr( 'data-plenty-checkout-href' )
                 )
@@ -147,7 +165,7 @@
             var callback = typeof window[onEnter] === 'function' ? window[onEnter] : (new Function( 'return ' + onEnter ));
             $( elem ).on( 'keypress', function( e )
             {
-
+                pm.pushEvent( e );
                 if ( e.which === 13 && !!callback && typeof callback === "function" )
                 {
                     callback.call();
@@ -182,7 +200,10 @@
 
         $rootElement.find( '[data-plenty="openCloseToggle"]' ).each( function( i, elem )
         {
-            pm.directives['UI'].toggleHideShow( elem );
+            $( elem ).click( function(e) {
+                pm.pushEvent( e );
+                pm.directives['UI'].toggleHideShow( elem );
+            } );
         } );
 
         $rootElement.find( '[data-plenty-slidetoggle]' ).each( function( i, elem )
@@ -198,11 +219,12 @@
         $rootElement.find( '[data-plenty-toggle]' ).each( function( i, elem )
         {
 
-            $( elem ).click( function()
+            $( elem ).click( function( e )
             {
+                pm.pushEvent( e );
                 var dataString = $( elem ).attr( 'data-plenty-toggle' );
                 var data       = (new Function( "return " + dataString )).call();
-                var media      = data.media.replace( ' ', ',' );
+                var media      = !!data.media ? data.media.replace( ' ', ',' ) : '';
 
                 pm.directives['UI'].toggleClass( data.class, data.target, media );
             } );

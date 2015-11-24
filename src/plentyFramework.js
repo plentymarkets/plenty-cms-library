@@ -226,6 +226,11 @@
 
     };
 
+    PlentyFramework.pushEvent = function( event )
+    {
+        eventStack.push( event );
+    };
+
 
     /**
      * Bind event to element by eventType.
