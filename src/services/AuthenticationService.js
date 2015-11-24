@@ -23,7 +23,7 @@
      * @class AuthenticationService
      * @static
      */
-    pm.service( 'AuthenticationService', function( API, Checkout )
+    pm.service( 'AuthenticationService', function( API, Checkout, UI )
     {
 
         return {
@@ -88,6 +88,8 @@
                     Password: values.loginPassword
                 };
 
+
+                UI.showWaitScreen();
                 return API.post( "/rest/checkout/login/", params )
                     .done( function()
                     {
@@ -178,6 +180,6 @@
                     } );
             }
         }
-    }, ['APIFactory', 'CheckoutFactory'] );
+    }, ['APIFactory', 'CheckoutFactory', 'UIFactory'] );
 
 }( jQuery, PlentyFramework ));
