@@ -13,78 +13,111 @@
  */
 (function( $, pm )
 {
-    // TODO: handle external dependency to Modernizr
-    pm.directive( 'MobileDropdown', function( MediaSizeService )
+    pm.directive( 'MobileDropdown', function( MediaSize )
     {
-        var toggleClass    = "open";
-        var activeDropdown = null;
+        // store all dropdown elements
+        var dropdownElements = [];
+
+        // store dropdown elements which should be closed by clicking outside the element itself
+        var closableDropdownElements = [];
 
         return {
-            initMobileDropdown: initMobileDropdown,
-            openDropdown      : openDropdown
+            initDropdowns: initDropdowns,
+            openDropdown: openDropdown,
+            slideDropdown: slideDropdown
         };
 
-        function initMobileDropdown()
+        function initDropdowns()
         {
-            $( window ).on( 'orientationchange sizeChange', function()
-            {
-                $( '[data-plenty="click:UI.toggleHideShow(this)"]' ).parent( "li." + toggleClass ).removeClass( toggleClass );
-                /*if ( !!activeDropdown )
-                 {
-                 activeDropdown.parent().removeClass( toggleClass );
+            $(window).on('orientationchange sizeChange', function() {
+                resetDropdowns( dropdownElements );
+            });
 
-                 //activeDropdown.parents( "ul" ).find( "li." + toggleClass ).removeClass( toggleClass );
-                 activeDropdown = null;
-                 }*/
-            } );
-
-            // close open menu on click outside menu
-            $( 'html' ).click( function()
-            {
-                $( '[data-plenty="click:UI.toggleHideShow(this)"]' ).parent( "li.open" ).removeClass( 'open' );
-                /*if ( !!activeDropdown )
-                 {
-                 activeDropdown.parent().removeClass( toggleClass );
-                 activeDropdown = null;
-                 }*/
-            } );
+            $( 'html' ).click( function( e ) {
+                resetDropdowns( closableDropdownElements );
+            });
         }
 
-        function openDropdown( elem, mediaSizes )
+        function resetDropdowns( dropdownList )
         {
-            var $elem = $( elem );
-            var activeParent;
 
-            if ( Modernizr.touch && MediaSizeService.isInterval( 'md, lg' )
-                || MediaSizeService.isInterval( mediaSizes ) )
+            for( var i = 0; i < dropdownList.length; i++ )
             {
-                if ( !!activeDropdown && activeDropdown[0] == $elem[0] )
+                $( dropdownList[i] ).removeClass('open');
+            }
+
+        }
+
+        function openDropdown( elem, closable )
+        {
+
+            var $elem = $( elem );
+            var $parent = $elem.parent();
+
+            if( Modernizr.touch )
+            {
+                if ( MediaSize.isInterval('md, lg') && !$parent.is( '.open' ) )
                 {
-                    activeDropdown.parent().removeClass( toggleClass );
-                    activeDropdown = null;
-                }
-                else
-                {
-                    if ( !!activeDropdown && activeDropdown[0] != $elem[0] )
+
+                    // avoid redirecting
+                    pm.getRecentEvent().preventDefault();
+
+                    // hide other dropdowns
+                    resetDropdowns( dropdownElements );
+
+                    // show dropdown
+                    $parent.addClass( 'open' );
+
+                    if ( $.inArray( $parent[0], dropdownElements ) < 0 )
                     {
-                        activeDropdown.parent().removeClass( toggleClass );
+                        dropdownElements.push( $parent[0] );
                     }
-                    activeDropdown = $elem;
-                    activeParent   = activeDropdown.parent();
-                    activeParent.click( function( event )
+
+                    if ( !!closable && $.inArray( $parent[0], closableDropdownElements ) < 0 )
                     {
-                        event.stopPropagation();
+                        closableDropdownElements.push( $parent[0] );
+                    }
+
+                    // avoid closing popup by clicking itself
+                    $parent.off( 'click' );
+                    $parent.on( 'click', function( e )
+                    {
+                        e.stopPropagation();
                     } );
-                    if ( !activeParent.hasClass( toggleClass ) )
-                    {
-                        activeParent.addClass( toggleClass );
-                    }
                 }
+
             }
             else
             {
-                $elem.unbind( 'click' );
+                // redirect to href
+                // do nothing
             }
+
+        }
+
+        function slideDropdown( elem )
+        {
+            var $elem = $( elem );
+            var $elemParent = $elem.parent();
+
+            $elemParent.addClass( 'animating' );
+            $elem.siblings( 'ul' ).slideToggle( 200, function()
+            {
+                if ( $elemParent.is( '.open' ) )
+                {
+                    $elemParent.removeClass( 'open' );
+                }
+                else
+                {
+                    $elemParent.addClass( 'open' );
+                    if( $.inArray( $elemParent[0], dropdownElements) < 0 )
+                    {
+                        dropdownElements.push( $elemParent[0] );
+                    }
+                }
+                $elem.siblings( 'ul' ).removeAttr( 'style' );
+                $elemParent.removeClass( 'animating' );
+            } );
         }
 
     }, ['MediaSizeService'] );

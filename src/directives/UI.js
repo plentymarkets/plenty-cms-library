@@ -179,6 +179,9 @@
          */
         function toggleHideShow( elem )
         {
+
+            console.log( elem );
+
             var $elem       = $( elem );
             var $elemParent = $elem.parent();
 
@@ -341,7 +344,8 @@
 
             if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
             {
-                pm.getRecentEvent().preventDefault();
+                var e = pm.getRecentEvent();
+                if( !!e ) e.preventDefault();
                 var $elem = $( target );
                 $elem.toggleClass( cssClass );
                 return false;
