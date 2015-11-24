@@ -58,7 +58,7 @@
                     {
                         itemID  : article[0].BasketItemItemID,
                         quantity: article[0].BasketItemQuantity
-                    } ).done( function( resp )
+                    }, false, true ).done( function( resp )
                 {
                     // checking for order params!
                     if ( resp.data[0].indexOf( "form-group" ) > 0 )

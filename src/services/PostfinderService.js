@@ -7,6 +7,7 @@
  * =====================================================================================
  */
 
+
 (function( $, pm )
 {
     pm.service( 'PostfinderService', function( API, Modal, UIFactory )
@@ -30,15 +31,16 @@
         function openPostfinderModal()
         {
             shippingFields = {
-                PostfinderItemStreet : $( 'input[name="Street"]', '[data-plenty-checkout-form="shippingAddress"]' ),
-                PostfinderItemZIP    : $( 'input[name="ZIP"]', '[data-plenty-checkout-form="shippingAddress"]' ),
-                PostfinderItemCity   : $( 'input[name="City"]', '[data-plenty-checkout-form="shippingAddress"]' ),
-                PostfinderItemHouseNo: $( 'input[name="HouseNo"]', '[data-plenty-checkout-form="shippingAddress"]' )
+                PostfinderItemStreet        : $( 'input[name="Street"]', '[data-plenty-checkout-form="shippingAddress"]' ),
+                PostfinderItemZIP           : $( 'input[name="ZIP"]', '[data-plenty-checkout-form="shippingAddress"]' ),
+                PostfinderItemCity          : $( 'input[name="City"]', '[data-plenty-checkout-form="shippingAddress"]' ),
+                PostfinderItemHouseNo       : $( 'input[name="HouseNo"]', '[data-plenty-checkout-form="shippingAddress"]' )
+
             };
 
             shippingFields.PostfinderItemStreet.val( '' );
 
-            if ( shippingFields.PostfinderItemZIP.val().length > 2 || shippingFields.PostfinderItemCity.val().length > 2 )
+            if ( (shippingFields.PostfinderItemZIP.val().length > 2 || shippingFields.PostfinderItemCity.val().length > 2) && shippingFields.PostfinderShippingPostNumber != '' )
             {
 
                 API.get( '/rest/checkout/shippingaddresspostfinderlist/',
@@ -65,7 +67,7 @@
                         for ( var i = 0; i < numberOfResults; i++ )
                         {
                             var dimension        = 'km';
-                            var distInMeters = result[i].PostfinderItemDistance;
+                            var distInMeters     = result[i].PostfinderItemDistance;
                             var distInKilometers = distInMeters / 1000;
                             distInKilometers     = ((Math.round( distInKilometers * 100 ) / 100).toFixed( 2 )).replace( '.', ',' );
 
@@ -122,10 +124,10 @@
                                     $( shippingFields.PostfinderItemStreet ).val( 'POSTFILIALE' );
                                     $( shippingFields.PostfinderItemHouseNo ).val( result[packstationID].PostfinderItemPostfilialNo );
                                 }
+                                $( shippingFields.PostfinderItemStreet ).trigger('change');
 
                                 $( shippingFields.PostfinderItemCity ).val( result[packstationID].PostfinderItemCity );
                                 $( shippingFields.PostfinderItemZIP ).val( result[packstationID].PostfinderItemZIP );
-
                                 return true;
                             } )
                             .show()
