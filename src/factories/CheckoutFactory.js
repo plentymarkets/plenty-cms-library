@@ -76,7 +76,7 @@
         function loadCheckout( sync )
         {
 
-            return API.get( '/rest/checkout/', null, false, true, sync )
+            return API.get( '/rest/checkout/', null, false, false, sync )
                 .done( function( response )
                 {
                     if ( !!response )
