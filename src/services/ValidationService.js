@@ -341,7 +341,6 @@
                 {
                     $scrollTarget = $form.find( '.modal-body' );
                     errorOffset   = $scrollTarget.scrollTop() - ( $scrollTarget.offset().top - $error.offset().top );
-
                 }
 
                 // only scroll if error is outside of viewport
