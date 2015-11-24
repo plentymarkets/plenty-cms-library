@@ -57,6 +57,7 @@
                 {
                     tabGroups[groupID].showTab( tabID );
                 }
+
             }
         }
 
@@ -68,7 +69,8 @@
             return {
                 addTab : addTab,
                 showTab: showTab,
-                getTab : getTab
+                getTab : getTab,
+                resetTabs: resetTabs
             };
 
             function addTab( tabID )
@@ -110,6 +112,8 @@
                             tabs[tab].getContent().parent().css( 'zIndex', zIndex - 1 );
                         }
                     }
+
+                    $(window ).on('sizeChange', resetTabs);
                 }
 
                 activeTab = tabs[tabID];
@@ -120,6 +124,19 @@
             function getTab( tabID )
             {
                 return tabs[tabID];
+            }
+
+            function resetTabs()
+            {
+                for ( var tab in tabs )
+                {
+                    if( !!tabs[tab].getContent() )
+                    {
+                        tabs[tab].show();
+                    }
+                }
+
+                activeTab = null;
             }
         }
 

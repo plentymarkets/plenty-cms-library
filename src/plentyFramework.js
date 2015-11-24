@@ -267,7 +267,7 @@
 
             if ( !directivePattern.test( expression ) )
             {
-                console.warn( "Invalid directive: " + expression );
+                // console.warn( "Invalid directive: " + expression );
                 continue;
             }
 
