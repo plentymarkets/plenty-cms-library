@@ -31,16 +31,16 @@
         function openPostfinderModal()
         {
             shippingFields = {
-                PostfinderItemStreet        : $( 'input[name="Street"]', '[data-plenty-checkout-form="shippingAddress"]' ),
-                PostfinderItemZIP           : $( 'input[name="ZIP"]', '[data-plenty-checkout-form="shippingAddress"]' ),
-                PostfinderItemCity          : $( 'input[name="City"]', '[data-plenty-checkout-form="shippingAddress"]' ),
-                PostfinderItemHouseNo       : $( 'input[name="HouseNo"]', '[data-plenty-checkout-form="shippingAddress"]' )
+                PostfinderItemStreet : $( 'input[name="Street"]', '[data-plenty-checkout-form="shippingAddress"]' ),
+                PostfinderItemZIP    : $( 'input[name="ZIP"]', '[data-plenty-checkout-form="shippingAddress"]' ),
+                PostfinderItemCity   : $( 'input[name="City"]', '[data-plenty-checkout-form="shippingAddress"]' ),
+                PostfinderItemHouseNo: $( 'input[name="HouseNo"]', '[data-plenty-checkout-form="shippingAddress"]' )
 
             };
 
             shippingFields.PostfinderItemStreet.val( '' );
 
-            if ( (shippingFields.PostfinderItemZIP.val().length > 2 || shippingFields.PostfinderItemCity.val().length > 2) && shippingFields.PostfinderShippingPostNumber != '' )
+            if ( (shippingFields.PostfinderItemZIP.val().length > 2 || shippingFields.PostfinderItemCity.val().length > 2) )
             {
 
                 API.get( '/rest/checkout/shippingaddresspostfinderlist/',
@@ -124,7 +124,7 @@
                                     $( shippingFields.PostfinderItemStreet ).val( 'POSTFILIALE' );
                                     $( shippingFields.PostfinderItemHouseNo ).val( result[packstationID].PostfinderItemPostfilialNo );
                                 }
-                                $( shippingFields.PostfinderItemStreet ).trigger('change');
+                                $( shippingFields.PostfinderItemStreet ).trigger( 'change' );
 
                                 $( shippingFields.PostfinderItemCity ).val( result[packstationID].PostfinderItemCity );
                                 $( shippingFields.PostfinderItemZIP ).val( result[packstationID].PostfinderItemZIP );
