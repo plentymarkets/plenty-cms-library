@@ -127,11 +127,13 @@
                 {
                     if( shippingAddress.Street == "PACKSTATION" )
                     {
-                        shippingAddress.isPackstation = true;
+                        shippingAddress.isPackstation = 1;
+                        shippingAddress.PackstationNo = shippingAddress.HouseNo;
                     }
                     else if( shippingAddress.Street == "POSTFILIALE" )
                     {
-                        shippingAddress.isPostfiliale = true;
+                        shippingAddress.isPostfiliale = 1;
+                        shippingAddress.PostfilialNo = shippingAddress.HouseNo;
                     }
 
                     // new shipping address
