@@ -125,6 +125,14 @@
 
                 if ( !addressesAreEqual( shippingAddress, Checkout.getCheckout().CustomerShippingAddress ) )
                 {
+                    if( shippingAddress.Street == "PACKSTATION" )
+                    {
+                        shippingAddress.isPackstation = true;
+                    }
+                    else if( shippingAddress.Street == "POSTFILIALE" )
+                    {
+                        shippingAddress.isPostfiliale = true;
+                    }
 
                     // new shipping address
                     return API.post( "/rest/checkout/customershippingaddress/", shippingAddress )
