@@ -69,11 +69,19 @@
                             .setLabelConfirm( pm.translate( "Save" ) )
                             .onConfirm( function()
                             {
-                                // save order params
-                                addArticle( saveOrderParams( article ) );
+                                // validate form
+                                if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+                                {
+                                    // save order params
+                                    addArticle( saveOrderParams( article ) );
 
-                                // close modal after saving order params
-                                return true;
+                                    // close modal after saving order params
+                                    return true;
+                                }
+                                else
+                                {
+                                    return false;
+                                }
                             } )
                             .show();
                     }
