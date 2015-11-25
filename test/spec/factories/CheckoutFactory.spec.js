@@ -94,8 +94,12 @@ describe("CheckoutFactory", function() {
                     responseText: JSON.stringify(Responses.GET.container_totals)
                 });
 
-            testDirective = PlentyFramework.directive('[data-test]', function(i, elem) {
-                $(elem).addClass('test');
+            testDirective = PlentyFramework.directive('Test', function() {
+                return {
+                    init: function( $elem ) {
+                        $elem.addClass('test');
+                    }
+                };
             });
 
             setFixtures('<div data-plenty-checkout-template="Totals" id="testContainer">Old Totals</div>');
@@ -114,7 +118,6 @@ describe("CheckoutFactory", function() {
 
             CheckoutFactory.reloadContainer('Totals');
             expect( $('#testContainer').find('div') ).toHaveClass('test');
-            expect( testDirective.elements ).toContain( $('#testContainer').find('div')[0] );
 
         });
 
@@ -179,7 +182,6 @@ describe("CheckoutFactory", function() {
 
             CheckoutFactory.reloadCatContent(5);
             expect( $('#testContainer').find('div') ).toHaveClass('test');
-            expect( testDirective.elements ).toContain( $('#testContainer').find('div')[0] );
 
         });
 
@@ -240,7 +242,6 @@ describe("CheckoutFactory", function() {
 
             CheckoutFactory.reloadItemContainer('BasketPreviewList');
             expect( $('#testContainer').find('div') ).toHaveClass('test');
-            expect( testDirective.elements ).toContain( $('#testContainer').find('div')[0] );
 
         });
 

@@ -7,13 +7,19 @@
  * =====================================================================================
  */
 
-(function($, pm) {
+(function( $, pm )
+{
+    pm.directive( 'Authentication', function( AuthenticationService )
+    {
+        return {
+            login: login
+        };
 
-    // append Bootstrap Tooltip
-    pm.directive('[data-toggle="tooltip"]', function(i, elem) {
-        $(elem).tooltip({
-            container: 'body'
-        });
-    });
+        function login( elem )
+        {
+            pm.getRecentEvent().preventDefault();
+            AuthenticationService.customerLogin( $( elem ) );
+        }
+    }, ["AuthenticationService"] );
 
-}(jQuery, PlentyFramework));
+}( jQuery, PlentyFramework ));

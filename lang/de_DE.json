@@ -7,5 +7,7 @@
   "Save": "Speichern",
   "Do you really want to remove \"{{item}}\" from your basket?": "Möchten Sie den Artikel \"{{item}}\" wirklich aus dem Warenkorb entfernen?",
   "Select order parameters": "Bestellmerkmale wählen",
-  "Edit order parameters": "Bestellmerkmale ändern"
+  "Edit order parameters": "Bestellmerkmale ändern",
+  "Packstations and post offices in your area": "Packstationen und Postfilialen in der Nähe",
+  "Please enter a ZIP code and/or a city.": "Bitte geben Sie eine Postleitzahl und/oder einen Ort an."
 }
