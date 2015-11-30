@@ -125,15 +125,15 @@
 
                 if ( !addressesAreEqual( shippingAddress, Checkout.getCheckout().CustomerShippingAddress ) )
                 {
-                    if( shippingAddress.Street == "PACKSTATION" )
+                    if ( shippingAddress.Street == "PACKSTATION" )
                     {
                         shippingAddress.isPackstation = 1;
                         shippingAddress.PackstationNo = shippingAddress.HouseNo;
                     }
-                    else if( shippingAddress.Street == "POSTFILIALE" )
+                    else if ( shippingAddress.Street == "POSTFILIALE" )
                     {
                         shippingAddress.isPostfiliale = 1;
-                        shippingAddress.PostfilialNo = shippingAddress.HouseNo;
+                        shippingAddress.PostfilialNo  = shippingAddress.HouseNo;
                     }
 
                     // new shipping address
@@ -204,7 +204,6 @@
 
             form.find( "[data-plenty-property-id]" ).each( function( i, propertyInput )
             {
-
                 invoiceAddress.CustomerPropertiesList.push( {
                     PropertyID   : $( propertyInput ).attr( 'data-plenty-property-id' ),
                     PropertyValue: $( propertyInput ).val()
@@ -213,22 +212,19 @@
 
             if ( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) )
             {
-
                 return API.post( "/rest/checkout/customerinvoiceaddress/", invoiceAddress )
                     .done( function( response )
                     {
+                        Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
                         saveShippingAddress().done( function()
                         {
                             Checkout.getCheckout().CustomerInvoiceAddress = response.data;
                         } );
                     } );
-
             }
             else
             {
-
                 return saveShippingAddress();
-
             }
         }
 
