@@ -20,7 +20,7 @@ var ScriptLoader = {
         if ( !this.scripts ) {
 
             var req = new XMLHttpRequest();
-            req.overrideMimeType("application/json");
+            // req.overrideMimeType("application/json");
             req.open('GET', config.sourceMap, false);
             req.onreadystatechange = function () {
                 if (req.readyState == 4 && req.status == "200") {
@@ -48,6 +48,10 @@ var ScriptLoader = {
         }
 
         function absolutePath( relativePath ) {
+            // FIX: window.location.origin not defined in IE
+            if ( !window.location.origin ) {
+                window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
+            }
             return window.location.origin + relativePath;
         }
     }
