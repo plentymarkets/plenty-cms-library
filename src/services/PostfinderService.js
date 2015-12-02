@@ -149,6 +149,18 @@
 
             shippingFields.PostfinderItemZIP.removeClass( 'has-success' ).addClass( 'has-error' );
             $( 'label[for="' + shippingFields.PostfinderItemZIP.attr( 'id' ) + '"]' ).removeClass( 'has-success' ).addClass( 'has-error' );
+
+            shippingFields.PostfinderItemCity.focus(function() {
+                $(this).removeClass('has-error');
+                var inputId = $(this).attr('id');
+                $(this).closest('.form-group').find('[for="' + inputId + '"]').removeClass('has-error');
+            });
+
+            shippingFields.PostfinderItemZIP.focus(function() {
+                $(this).removeClass('has-error');
+                var inputId = $(this).attr('id');
+                $(this).closest('.form-group').find('[for="' + inputId + '"]').removeClass('has-error');
+            });
         }
     }, ['APIFactory', 'ModalFactory', 'UIFactory'] );
 
