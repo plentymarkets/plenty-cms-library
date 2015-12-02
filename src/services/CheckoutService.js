@@ -219,10 +219,11 @@
                 return API.post( "/rest/checkout/customerinvoiceaddress/", invoiceAddress )
                     .done( function( response )
                     {
-                        Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
+                        //Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
                         saveShippingAddress().done( function()
                         {
-                            Checkout.getCheckout().CustomerInvoiceAddress = response.data;
+                            Checkout.loadCheckout();
+                            //Checkout.getCheckout().CustomerInvoiceAddress = response.data;
                         } );
                     } );
             }
