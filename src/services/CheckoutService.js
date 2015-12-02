@@ -148,6 +148,8 @@
 
                             Checkout.setCheckout().done( function()
                             {
+                                Checkout.reloadContainer("MethodsOfPaymentList");
+                                Checkout.reloadContainer("ShippingProfilesList");
                                 if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
                                 {
                                     Checkout.reloadContainer( 'CustomerShippingAddress' );
@@ -173,6 +175,8 @@
 
                     return Checkout.setCheckout().done( function()
                     {
+                        Checkout.reloadContainer("MethodsOfPaymentList");
+                        Checkout.reloadContainer("ShippingProfilesList");
                         if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
                         {
                             Checkout.reloadContainer( 'CustomerShippingAddress' );
