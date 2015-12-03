@@ -1,6 +1,6 @@
 ![plentymarkets Logo](http://www.plentymarkets.eu/layout/pm/images/logo/plentymarkets-logo.jpg)
 
-# plentymarkets CMS library 0.9.1
+# plentymarkets CMS library 0.9.x
 
 ## Update your **Callisto Light 2** to plentymarketsCMStools 0.9.1
 
