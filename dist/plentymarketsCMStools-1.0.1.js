@@ -367,6 +367,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
     };
 
+    PlentyFramework.pushEvent = function( event )
+    {
+        eventStack.push( event );
+    };
+
 
     /**
      * Bind event to element by eventType.
@@ -403,7 +408,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
             if ( !directivePattern.test( expression ) )
             {
-                console.warn( "Invalid directive: " + expression );
+                // console.warn( "Invalid directive: " + expression );
                 continue;
             }
 
@@ -1369,7 +1374,7 @@ PlentyFramework.cssClasses = {
         function loadCheckout( sync )
         {
 
-            return API.get( '/rest/checkout/', null, false, true, sync )
+            return API.get( '/rest/checkout/', null, false, false, sync )
                 .done( function( response )
                 {
                     if ( !!response )
@@ -2384,7 +2389,7 @@ PlentyFramework.cssClasses = {
      * @class AuthenticationService
      * @static
      */
-    pm.service( 'AuthenticationService', function( API, Checkout )
+    pm.service( 'AuthenticationService', function( API, Checkout, UI )
     {
 
         return {
@@ -2449,6 +2454,8 @@ PlentyFramework.cssClasses = {
                     Password: values.loginPassword
                 };
 
+
+                UI.showWaitScreen();
                 return API.post( "/rest/checkout/login/", params )
                     .done( function()
                     {
@@ -2539,7 +2546,7 @@ PlentyFramework.cssClasses = {
                     } );
             }
         }
-    }, ['APIFactory', 'CheckoutFactory'] );
+    }, ['APIFactory', 'CheckoutFactory', 'UIFactory'] );
 
 }( jQuery, PlentyFramework ));
 /**
@@ -2602,7 +2609,7 @@ PlentyFramework.cssClasses = {
                     {
                         itemID  : article[0].BasketItemItemID,
                         quantity: article[0].BasketItemQuantity
-                    } ).done( function( resp )
+                    }, false, true ).done( function( resp )
                 {
                     // checking for order params!
                     if ( resp.data[0].indexOf( "form-group" ) > 0 )
@@ -2669,14 +2676,23 @@ PlentyFramework.cssClasses = {
                     (attrType == 'radio' && $self.is( ':checked' )) ||
                     (attrType != 'radio' && attrType != 'checkbox')) && attrType != 'file' && attrType != 'hidden' )
                 {
-                    var match = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
 
+                    var match = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
                     articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], $self.val() );
 
                 }
-                else if ( attrType == 'file' && $self[0].files && $self[0].files.length > 0 )
+                else if ( attrType == 'file' )
                 {
-                    articleWithParams = orderParamFileUpload( $self, articleWithParams );
+                    if( $self[0].files && $self[0].files.length > 0 )
+                    {
+                        articleWithParams = orderParamFileUpload( $self, articleWithParams );
+                    }
+                    else
+                    {
+                        var match = $self[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
+                        var paramValue = $( 'input[type="hidden"][name="ParamValue[' + match[1] + '][' + match[2] + ']"]' ).val();
+                        articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], paramValue );
+                    }
                 }
             } );
 
@@ -3235,6 +3251,16 @@ PlentyFramework.cssClasses = {
 
                 if ( !addressesAreEqual( shippingAddress, Checkout.getCheckout().CustomerShippingAddress ) )
                 {
+                    if ( shippingAddress.Street == "PACKSTATION" )
+                    {
+                        shippingAddress.isPackstation = 1;
+                        shippingAddress.PackstationNo = shippingAddress.HouseNo;
+                    }
+                    else if ( shippingAddress.Street == "POSTFILIALE" )
+                    {
+                        shippingAddress.isPostfiliale = 1;
+                        shippingAddress.PostfilialNo  = shippingAddress.HouseNo;
+                    }
 
                     // new shipping address
                     return API.post( "/rest/checkout/customershippingaddress/", shippingAddress )
@@ -3248,6 +3274,8 @@ PlentyFramework.cssClasses = {
 
                             Checkout.setCheckout().done( function()
                             {
+                                Checkout.reloadContainer("MethodsOfPaymentList");
+                                Checkout.reloadContainer("ShippingProfilesList");
                                 if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
                                 {
                                     Checkout.reloadContainer( 'CustomerShippingAddress' );
@@ -3273,6 +3301,8 @@ PlentyFramework.cssClasses = {
 
                     return Checkout.setCheckout().done( function()
                     {
+                        Checkout.reloadContainer("MethodsOfPaymentList");
+                        Checkout.reloadContainer("ShippingProfilesList");
                         if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
                         {
                             Checkout.reloadContainer( 'CustomerShippingAddress' );
@@ -3304,7 +3334,6 @@ PlentyFramework.cssClasses = {
 
             form.find( "[data-plenty-property-id]" ).each( function( i, propertyInput )
             {
-
                 invoiceAddress.CustomerPropertiesList.push( {
                     PropertyID   : $( propertyInput ).attr( 'data-plenty-property-id' ),
                     PropertyValue: $( propertyInput ).val()
@@ -3313,22 +3342,20 @@ PlentyFramework.cssClasses = {
 
             if ( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) )
             {
-
                 return API.post( "/rest/checkout/customerinvoiceaddress/", invoiceAddress )
                     .done( function( response )
                     {
+                        //Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
                         saveShippingAddress().done( function()
                         {
-                            Checkout.getCheckout().CustomerInvoiceAddress = response.data;
+                            Checkout.loadCheckout();
+                            //Checkout.getCheckout().CustomerInvoiceAddress = response.data;
                         } );
                     } );
-
             }
             else
             {
-
                 return saveShippingAddress();
-
             }
         }
 
@@ -4358,6 +4385,7 @@ PlentyFramework.cssClasses = {
  * =====================================================================================
  */
 
+
 (function( $, pm )
 {
     pm.service( 'PostfinderService', function( API, Modal, UIFactory )
@@ -4385,11 +4413,12 @@ PlentyFramework.cssClasses = {
                 PostfinderItemZIP    : $( 'input[name="ZIP"]', '[data-plenty-checkout-form="shippingAddress"]' ),
                 PostfinderItemCity   : $( 'input[name="City"]', '[data-plenty-checkout-form="shippingAddress"]' ),
                 PostfinderItemHouseNo: $( 'input[name="HouseNo"]', '[data-plenty-checkout-form="shippingAddress"]' )
+
             };
 
             shippingFields.PostfinderItemStreet.val( '' );
 
-            if ( shippingFields.PostfinderItemZIP.val().length > 2 || shippingFields.PostfinderItemCity.val().length > 2 )
+            if ( (shippingFields.PostfinderItemZIP.val().length > 2 || shippingFields.PostfinderItemCity.val().length > 2) )
             {
 
                 API.get( '/rest/checkout/shippingaddresspostfinderlist/',
@@ -4416,7 +4445,7 @@ PlentyFramework.cssClasses = {
                         for ( var i = 0; i < numberOfResults; i++ )
                         {
                             var dimension        = 'km';
-                            var distInMeters = result[i].PostfinderItemDistance;
+                            var distInMeters     = result[i].PostfinderItemDistance;
                             var distInKilometers = distInMeters / 1000;
                             distInKilometers     = ((Math.round( distInKilometers * 100 ) / 100).toFixed( 2 )).replace( '.', ',' );
 
@@ -4473,10 +4502,10 @@ PlentyFramework.cssClasses = {
                                     $( shippingFields.PostfinderItemStreet ).val( 'POSTFILIALE' );
                                     $( shippingFields.PostfinderItemHouseNo ).val( result[packstationID].PostfinderItemPostfilialNo );
                                 }
+                                $( shippingFields.PostfinderItemStreet ).trigger( 'change' );
 
                                 $( shippingFields.PostfinderItemCity ).val( result[packstationID].PostfinderItemCity );
                                 $( shippingFields.PostfinderItemZIP ).val( result[packstationID].PostfinderItemZIP );
-
                                 return true;
                             } )
                             .show()
@@ -4498,6 +4527,18 @@ PlentyFramework.cssClasses = {
 
             shippingFields.PostfinderItemZIP.removeClass( 'has-success' ).addClass( 'has-error' );
             $( 'label[for="' + shippingFields.PostfinderItemZIP.attr( 'id' ) + '"]' ).removeClass( 'has-success' ).addClass( 'has-error' );
+
+            shippingFields.PostfinderItemCity.focus(function() {
+                $(this).removeClass('has-error');
+                var inputId = $(this).attr('id');
+                $(this).closest('.form-group').find('[for="' + inputId + '"]').removeClass('has-error');
+            });
+
+            shippingFields.PostfinderItemZIP.focus(function() {
+                $(this).removeClass('has-error');
+                var inputId = $(this).attr('id');
+                $(this).closest('.form-group').find('[for="' + inputId + '"]').removeClass('has-error');
+            });
         }
     }, ['APIFactory', 'ModalFactory', 'UIFactory'] );
 
@@ -5177,11 +5218,12 @@ PlentyFramework.cssClasses = {
             setItemQuantity   : setItemQuantity
         };
 
-        function addBasketItem( $elem )
+        function addBasketItem( elem )
         {
             pm.getRecentEvent().preventDefault();
             //init
             var basketItemsList = {};
+            var $elem           = $( elem );
             var parentForm      = $elem.parents( 'form' );
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
@@ -5218,20 +5260,20 @@ PlentyFramework.cssClasses = {
         function changeItemQuantity( elem, increment )
         {
             var $elem         = $( elem );
-            var quantityInput = $elem.parent().find( 'input' );
-            var maxLength     = parseInt( quantityInput.attr( 'maxlength' ) ) || 5;
-            var value         = parseInt( quantityInput.val() ) + increment;
+            var $quantityInput = $elem.parent().find( 'input' );
+            var maxLength     = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
+            var value         = parseInt( $quantityInput.val() ) + increment;
 
-            var isBasketView = elem.parents( '[data-basket-item-id]' ).length > 0;
+            var isBasketView = $elem.parents( '[data-basket-item-id]' ).length > 0;
 
             if ( isBasketView )
             {
                 if ( (value + '').length <= maxLength && value >= 0 )
                 {
-                    quantityInput.val( value );
+                    $quantityInput.val( value );
                 }
 
-                var timeout = elem.data( 'timeout' );
+                var timeout = $elem.data( 'timeout' );
 
                 if ( !!timeout )
                 {
@@ -5240,15 +5282,15 @@ PlentyFramework.cssClasses = {
 
                 timeout = window.setTimeout( function()
                 {
-                    quantityInput.trigger( 'change' );
+                    $quantityInput.trigger( 'change' );
                 }, 1000 );
 
-                elem.data( 'timeout', timeout );
+                $elem.data( 'timeout', timeout );
             }
             else {
                 if ( (value + '').length <= maxLength && value >= 1 )
                 {
-                    quantityInput.val( value );
+                    $quantityInput.val( value );
                 }
             }
         }
@@ -5283,78 +5325,111 @@ PlentyFramework.cssClasses = {
  */
 (function( $, pm )
 {
-    // TODO: handle external dependency to Modernizr
-    pm.directive( 'MobileDropdown', function( MediaSizeService )
+    pm.directive( 'MobileDropdown', function( MediaSize )
     {
-        var toggleClass    = "open";
-        var activeDropdown = null;
+        // store all dropdown elements
+        var dropdownElements = [];
+
+        // store dropdown elements which should be closed by clicking outside the element itself
+        var closableDropdownElements = [];
 
         return {
-            initMobileDropdown: initMobileDropdown,
-            openDropdown      : openDropdown
+            initDropdowns: initDropdowns,
+            openDropdown: openDropdown,
+            slideDropdown: slideDropdown
         };
 
-        function initMobileDropdown()
+        function initDropdowns()
         {
-            $( window ).on( 'orientationchange sizeChange', function()
-            {
-                $( '[data-plenty="click:UI.toggleHideShow(this)"]' ).parent( "li." + toggleClass ).removeClass( toggleClass );
-                /*if ( !!activeDropdown )
-                 {
-                 activeDropdown.parent().removeClass( toggleClass );
+            $(window).on('orientationchange sizeChange', function() {
+                resetDropdowns( dropdownElements );
+            });
 
-                 //activeDropdown.parents( "ul" ).find( "li." + toggleClass ).removeClass( toggleClass );
-                 activeDropdown = null;
-                 }*/
-            } );
-
-            // close open menu on click outside menu
-            $( 'html' ).click( function()
-            {
-                $( '[data-plenty="click:UI.toggleHideShow(this)"]' ).parent( "li.open" ).removeClass( 'open' );
-                /*if ( !!activeDropdown )
-                 {
-                 activeDropdown.parent().removeClass( toggleClass );
-                 activeDropdown = null;
-                 }*/
-            } );
+            $( 'html' ).click( function( e ) {
+                resetDropdowns( closableDropdownElements );
+            });
         }
 
-        function openDropdown( elem, mediaSizes )
+        function resetDropdowns( dropdownList )
         {
-            var $elem = $( elem );
-            var activeParent;
 
-            if ( Modernizr.touch && MediaSizeService.isInterval( 'md, lg' )
-                || MediaSizeService.isInterval( mediaSizes ) )
+            for( var i = 0; i < dropdownList.length; i++ )
             {
-                if ( !!activeDropdown && activeDropdown[0] == $elem[0] )
+                $( dropdownList[i] ).removeClass('open');
+            }
+
+        }
+
+        function openDropdown( elem, closable )
+        {
+
+            var $elem = $( elem );
+            var $parent = $elem.parent();
+
+            if( Modernizr.touch )
+            {
+                if ( MediaSize.isInterval('md, lg') && !$parent.is( '.open' ) )
                 {
-                    activeDropdown.parent().removeClass( toggleClass );
-                    activeDropdown = null;
-                }
-                else
-                {
-                    if ( !!activeDropdown && activeDropdown[0] != $elem[0] )
+
+                    // avoid redirecting
+                    pm.getRecentEvent().preventDefault();
+
+                    // hide other dropdowns
+                    resetDropdowns( dropdownElements );
+
+                    // show dropdown
+                    $parent.addClass( 'open' );
+
+                    if ( $.inArray( $parent[0], dropdownElements ) < 0 )
                     {
-                        activeDropdown.parent().removeClass( toggleClass );
+                        dropdownElements.push( $parent[0] );
                     }
-                    activeDropdown = $elem;
-                    activeParent   = activeDropdown.parent();
-                    activeParent.click( function( event )
+
+                    if ( !!closable && $.inArray( $parent[0], closableDropdownElements ) < 0 )
                     {
-                        event.stopPropagation();
+                        closableDropdownElements.push( $parent[0] );
+                    }
+
+                    // avoid closing popup by clicking itself
+                    $parent.off( 'click' );
+                    $parent.on( 'click', function( e )
+                    {
+                        e.stopPropagation();
                     } );
-                    if ( !activeParent.hasClass( toggleClass ) )
-                    {
-                        activeParent.addClass( toggleClass );
-                    }
                 }
+
             }
             else
             {
-                $elem.unbind( 'click' );
+                // redirect to href
+                // do nothing
             }
+
+        }
+
+        function slideDropdown( elem )
+        {
+            var $elem = $( elem );
+            var $elemParent = $elem.parent();
+
+            $elemParent.addClass( 'animating' );
+            $elem.siblings( 'ul' ).slideToggle( 200, function()
+            {
+                if ( $elemParent.is( '.open' ) )
+                {
+                    $elemParent.removeClass( 'open' );
+                }
+                else
+                {
+                    $elemParent.addClass( 'open' );
+                    if( $.inArray( $elemParent[0], dropdownElements) < 0 )
+                    {
+                        dropdownElements.push( $elemParent[0] );
+                    }
+                }
+                $elem.siblings( 'ul' ).removeAttr( 'style' );
+                $elemParent.removeClass( 'animating' );
+            } );
         }
 
     }, ['MediaSizeService'] );
@@ -5393,7 +5468,7 @@ PlentyFramework.cssClasses = {
 }( jQuery, PlentyFramework ));
 (function( $, pm )
 {
-    pm.directive( 'Tab', function()
+    pm.directive( 'Tab', function( MediaSize )
     {
 
         var tabGroups = {};
@@ -5440,11 +5515,17 @@ PlentyFramework.cssClasses = {
             tabGroups[groupID].getTab( tabID ).setContent( $elem );
         }
 
-        function showRemoteTab( tabID, groupID )
+        function showRemoteTab( tabID, groupID, interval )
         {
-            if ( !!tabGroups[groupID] && !!tabGroups[groupID].getTab( tabID ) )
+            if( MediaSize.isInterval( interval ) )
             {
-                tabGroups[groupID].showTab( tabID );
+                pm.getRecentEvent().preventDefault();
+
+                if ( !!tabGroups[groupID] && !!tabGroups[groupID].getTab( tabID ) )
+                {
+                    tabGroups[groupID].showTab( tabID );
+                }
+
             }
         }
 
@@ -5456,12 +5537,13 @@ PlentyFramework.cssClasses = {
             return {
                 addTab : addTab,
                 showTab: showTab,
-                getTab : getTab
+                getTab : getTab,
+                resetTabs: resetTabs
             };
 
             function addTab( tabID )
             {
-                tabs[tabID] = new Tab();
+                tabs[tabID] = new Tab( tabID );
                 return tabs[tabID];
             }
 
@@ -5470,26 +5552,36 @@ PlentyFramework.cssClasses = {
                 var zIndex = 0;
                 if ( !!activeTab )
                 {
+                    // activeTab is set
                     zIndex = parseInt( activeTab.getContent().parent().css( 'zIndex' ) );
                     activeTab.hide();
                     activeTab.getContent().parent().css( 'zIndex', zIndex - 1 );
                 }
                 else
                 {
+                    // activeTab not set before
                     for ( var tab in tabs )
                     {
-                        var currentZ = parseInt( tabs[tab].getContent().parent().css( 'zIndex' ) );
-                        if ( zIndex == 0 || currentZ < zIndex )
+                        if( !!tabs[tab].getContent() )
                         {
-                            zIndex = currentZ;
+                            var currentZ = parseInt( tabs[tab].getContent().parent().css( 'zIndex' ) );
+                            if ( zIndex == 0 || currentZ < zIndex )
+                            {
+                                zIndex = currentZ;
+                            }
+                            tabs[tab].hide();
                         }
-                        tabs[tab].hide();
                     }
 
                     for ( var tab in tabs )
                     {
-                        tabs[tab].getContent().parent().css( 'zIndex', zIndex );
+                        if( !!tabs[tab].getContent() )
+                        {
+                            tabs[tab].getContent().parent().css( 'zIndex', zIndex - 1 );
+                        }
                     }
+
+                    $(window ).on('sizeChange', resetTabs);
                 }
 
                 activeTab = tabs[tabID];
@@ -5501,20 +5593,40 @@ PlentyFramework.cssClasses = {
             {
                 return tabs[tabID];
             }
+
+            function resetTabs()
+            {
+                for ( var tab in tabs )
+                {
+                    if( !!tabs[tab].getContent() )
+                    {
+                        tabs[tab].show();
+                    }
+                }
+
+                activeTab = null;
+            }
         }
 
-        function Tab()
+        function Tab( id )
         {
             var $labels = [];
             var $content;
+            var tabID = id;
 
             return {
                 addLabel  : addLabel,
                 setContent: setContent,
                 getContent: getContent,
+                getID     : getID,
                 show      : show,
                 hide      : hide
             };
+
+            function getID()
+            {
+                return tabID;
+            }
 
             function addLabel( label )
             {
@@ -5561,7 +5673,7 @@ PlentyFramework.cssClasses = {
             }
         }
 
-    } );
+    }, ['MediaSizeService'] );
 })( jQuery, PlentyFramework );
 /**
  * Add fancy ui modifications - the visual stuff - here.
@@ -5744,6 +5856,9 @@ PlentyFramework.cssClasses = {
          */
         function toggleHideShow( elem )
         {
+
+            console.log( elem );
+
             var $elem       = $( elem );
             var $elemParent = $elem.parent();
 
@@ -5903,8 +6018,11 @@ PlentyFramework.cssClasses = {
          */
         function toggleClass( cssClass, target, interval )
         {
+
             if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
             {
+                var e = pm.getRecentEvent();
+                if( !!e ) e.preventDefault();
                 var $elem = $( target );
                 $elem.toggleClass( cssClass );
                 return false;
