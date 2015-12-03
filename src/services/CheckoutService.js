@@ -116,6 +116,8 @@
                             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
                             Checkout.setCheckout().done(function () {
+                                Checkout.reloadContainer("MethodsOfPaymentList");
+                                Checkout.reloadContainer("ShippingProfilesList");
                                 if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
                                     Checkout.reloadContainer('CustomerShippingAddress');
                                 }
@@ -134,6 +136,9 @@
                     delete Checkout.getCheckout().CheckoutShippingProfileID;
 
                     return Checkout.setCheckout().done(function () {
+                        Checkout.reloadContainer("MethodsOfPaymentList");
+                        Checkout.reloadContainer("ShippingProfilesList");
+
                         if (Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2) {
                             Checkout.reloadContainer('CustomerShippingAddress');
                         }
@@ -162,7 +167,8 @@
                 return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
                     .done(function (response) {
                         saveShippingAddress().done(function(){
-                            Checkout.getCheckout().CustomerInvoiceAddress = response.data;
+                            Checkout.loadCheckout();
+                            //Checkout.getCheckout().CustomerInvoiceAddress = response.data;
                         });
                     });
 

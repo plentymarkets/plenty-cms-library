@@ -10,7 +10,7 @@
       "libs/jquery-ui.min.js",
       "libs/jquery.ui.touch-punch.min.js",
       "plenty/plenty-2.js",
-      "plenty/plentymarketsCMStools-0.9.0.js"
+      "plenty/plentymarketsCMStools-0.9.2.js"
     ]
   },
   "PageDesignContent": {
