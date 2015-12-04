@@ -23,7 +23,9 @@
             initSlideToggle     : initSlideToggle,
             toggleHideShow      : toggleHideShow,
             toggleSocialShare   : toggleSocialShare,
-            toggleClass         : toggleClass
+            toggleClass         : toggleClass,
+            addClass            : addClass,
+            removeClass         : removeClass
         };
 
         function initUIWindowEvents()
@@ -346,8 +348,32 @@
             {
                 var e = pm.getRecentEvent();
                 if( !!e ) e.preventDefault();
-                var $elem = $( target );
-                $elem.toggleClass( cssClass );
+
+                $( target ).toggleClass( cssClass );
+                return false;
+            }
+        }
+
+        function addClass( cssClass, target, interval )
+        {
+            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
+            {
+                var e = pm.getRecentEvent();
+                if( !!e ) e.preventDefault();
+
+                $( target ).addClass( cssClass );
+                return false;
+            }
+        }
+
+        function removeClass( cssClass, target, interval )
+        {
+            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
+            {
+                var e = pm.getRecentEvent();
+                if( !!e ) e.preventDefault();
+
+                $( target ).removeClass( cssClass );
                 return false;
             }
         }
