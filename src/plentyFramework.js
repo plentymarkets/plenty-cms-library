@@ -159,6 +159,8 @@
                 return;
             }
 
+            addCustomEvents( element );
+
             for ( var i = 0; i < directives.length; i++ )
             {
                 var directive = directives[i];
@@ -248,6 +250,49 @@
             eventStack.push( event );
             return callback.apply( null, params );
         } );
+    }
+
+    function addCustomEvents( element )
+    {
+
+        var $elem = $( element );
+
+        if( $elem.is('input[type="checkbox"]') )
+        {
+            $elem.on('change', function() {
+
+                if( $elem.is(':checked') )
+                {
+                    $elem.trigger('check');
+                }
+                else
+                {
+                    $elem.trigger('uncheck');
+                }
+            });
+        }
+
+        if( $elem.is('input[type="radio"]') )
+        {
+            $elem.on('change', function() {
+
+                var radioGroup = $elem.attr('name');
+
+                $( 'input[type="radio"][name="' + radioGroup + '"]' ).each(function( i, radio ) {
+                    var $radio = $( radio );
+                    if( $radio.is(':checked') )
+                    {
+                        $radio.trigger('check');
+                    }
+                    else
+                    {
+                        $radio.trigger('uncheck');
+                    }
+
+                });
+
+            });
+        }
     }
 
     function parseDirectives( input, thisValue )
