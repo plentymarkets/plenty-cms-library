@@ -21,6 +21,9 @@
             initToTop           : initToTop,
             initLazyload        : initLazyload,
             initSlideToggle     : initSlideToggle,
+            slideDown           : slideDown,
+            slideUp             : slideUp,
+            slideToggle         : slideToggle,
             toggleHideShow      : toggleHideShow,
             toggleSocialShare   : toggleSocialShare,
             toggleClass         : toggleClass,
@@ -262,6 +265,34 @@
                 } );
             }
         }
+
+        function slideDown( target, duration )
+        {
+            duration = duration || 400;
+            $(target).parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+            $(target).slideDown( duration, function() {
+                fireEqualHeight();
+            });
+        }
+
+        function slideUp( target, duration )
+        {
+            duration = duration || 400;
+            $(target).parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+            $(target).slideUp( duration, function() {
+                fireEqualHeight();
+            });
+        }
+
+        function slideToggle( target, duration )
+        {
+            duration = duration || 400;
+            $(target).parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+            $(target).slideToggle( duration, function() {
+                fireEqualHeight();
+            });
+        }
+
 
         /**
          * TODO check comment
