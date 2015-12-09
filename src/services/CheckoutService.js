@@ -115,8 +115,9 @@
             var values            = form.getFormValues();
             var shippingAddressID = $( '[name="shippingAddressID"]:checked' ).val();
 
-            // TODO: move bootstrap specific function
-            $( '#shippingAdressSelect' ).modal( 'hide' );
+            // DONE: move bootstrap specific function
+            //$( '#shippingAdressSelect' ).modal( 'hide' );
+            Modal.prepare( '#shippingAdressSelect' ).hide();
 
             if ( shippingAddressID < 0 )
             {
@@ -285,7 +286,7 @@
          */
         function preparePayment()
         {
-            return API.post( "/rest/checkout/preparepayment/", null )
+            return API.post( "/rest/checkout/preparepayment/", null, true )
                 .done( function( response )
                 {
                     if ( response.data.CheckoutMethodOfPaymentRedirectURL != '' )
@@ -313,7 +314,35 @@
                             } )
                             .show();
                     }
-                } );
+                } )
+                .fail( function( jqXHR ) {
+                    try
+                    {
+                        var response = $.parseJSON( jqXHR.responseText );
+
+                        // append info link to error code 1
+                        for( var i = 0; i < response.error.error_stack.length; i++ )
+                        {
+                            var currentError = response.error.error_stack[i];
+                            if( currentError.code == 1 )
+                            {
+                                currentError.message += '<br><a href="#">' + pm.translate('more information') + '</a>';
+                                response.error.error_stack[i] = currentError;
+                                break;
+                            }
+                        }
+                        UI.printErrors( response.error.error_stack );
+                        $('[data-plenty-error-code="1"] a' ).click(function( e ) {
+                            e.preventDefault();
+                            pm.partials.Error.hideAll();
+                            Modal.prepare( '[data-plenty-checkout="atrigaPaymaxInformation"]' ).show();
+                        });
+                    }
+                    catch ( e )
+                    {
+                        UI.throwError( jqXHR.status, jqXHR.statusText );
+                    }
+                });
 
         }
 
@@ -325,9 +354,9 @@
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
          *     Object</a>
          */
-        function setMethodOfPayment( paymentID, atrigaPaymaxConfirmed )
+        function setMethodOfPayment( paymentID )
         {
-
+            /*
             var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
             var methodOfPayment;
             for( var i = 0; i < methodsOfPaymentList.length; i++ )
@@ -338,52 +367,16 @@
                     break;
                 }
             }
+            */
+            Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
+            delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
+            delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-            if( methodOfPayment.MethodOfPaymentAtrigapaymaxActive && atrigaPaymaxConfirmed || !methodOfPayment.MethodOfPaymentAtrigapaymaxActive )
-            {
-                Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
-                delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
-                delete Checkout.getCheckout().CheckoutShippingProfileID;
-
-                return Checkout.setCheckout()
-                    .done( function()
-                    {
-                        Checkout.reloadContainer( 'ShippingProfilesList' );
-                    } );
-
-                return API.put( '/rest/checkout', {
-                    CheckoutMethodOfPaymentID: paymentID
-                }, true )
-                    .done( function() {
-                        Checkout.reloadContainer( 'ShippingProfilesList' );
-                    })
-                    .fail( function( jqXHR ) {
-                        // do not handle error with code '1'
-                        try
-                        {
-                            var response = $.parseJSON( jqXHR.responseText );
-                            for( var i = 0; i < response.error.error_stack.length; i++ )
-                            {
-                                var currentError = response.error.error_stack[i];
-                                if( currentError.code == 1 )
-                                {
-                                    //TODO: append popup link to error message
-                                }
-                            }
-                            if( response.error.error_stack[0].code == 1 ) {
-                                UI.printErrors( response.error.error_stack );
-                            }
-                        }
-                        catch( e )
-                        {
-                            UI.throwError( jqXHR.status, jqXHR.statusText );
-                        }
-                    });
-            }
-            else
-            {
-                return API.idle();
-            }
+            return Checkout.setCheckout()
+                .done( function()
+                {
+                    Checkout.reloadContainer( 'ShippingProfilesList' );
+                } );
         }
 
         /**
