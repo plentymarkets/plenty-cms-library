@@ -132,7 +132,7 @@
                     }
                     else if ( shippingAddress.Street == "POSTFILIALE" )
                     {
-                        shippingAddress.isPostfiliale = 1;
+                        shippingAddress.IsPostfiliale = 1;
                         shippingAddress.PostfilialNo  = shippingAddress.HouseNo;
                     }
 
