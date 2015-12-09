@@ -11,8 +11,7 @@
         {
             $( popup ).find( '.close' ).click( function()
             {
-                popup.hide();
-                popup.find( '.plentyErrorBoxInner' ).html( '' );
+                pm.partials.Error.hideAll();
             } );
         },
 
@@ -38,6 +37,11 @@
         show: function( popup )
         {
             $( popup ).show();
+        },
+
+        hideAll: function() {
+            $( '#CheckoutErrorPane' ).hide();
+            $( '#CheckoutErrorPane' ).find( '.plentyErrorBoxInner' ).html( '' );
         }
 
     }
