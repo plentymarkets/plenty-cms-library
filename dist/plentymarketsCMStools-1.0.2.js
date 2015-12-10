@@ -271,11 +271,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         components.directives[directiveName] = {
             name        : directiveName,
             dependencies: dependencies,
-            compile     : function()
-            {
-                var params                                = PlentyFramework.resolveServices( dependencies );
-                PlentyFramework.directives[directiveName] = directiveFunctions.apply( null, params );
-            }
+            setup       : directiveFunctions
         };
     };
 
@@ -545,48 +541,9 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         components.services[serviceName] = {
             name        : serviceName,
             dependencies: dependencies,
-            compile     : function()
-            {
-                var params                             = PlentyFramework.resolveFactories( dependencies );
-                PlentyFramework.prototype[serviceName] = serviceFunctions.apply( null, params );
-            }
+            setup       : serviceFunctions
         };
 
-    };
-
-    /**
-     * Returns an array containing required factories given by string identifier
-     * @function resolveServices
-     * @static
-     * @private
-     * @param  {Array} dependencies    Names of required factories
-     * @return {Array}                 Objects to apply to callback function
-     */
-    PlentyFramework.resolveServices = function( dependencies )
-    {
-        var compiledServices = [];
-
-        $.each( dependencies, function( j, dependency )
-        {
-
-            // factory not found: try to compile dependent factory first
-            if ( !PlentyFramework.prototype.hasOwnProperty( dependency ) )
-            {
-                if ( components.services.hasOwnProperty( dependency ) )
-                {
-                    components.services[dependency].compile();
-                }
-                else
-                {
-                    console.error( 'Cannot inject Service "' + dependency + '": Service not found.' );
-                    return false;
-                }
-            }
-            var service = PlentyFramework.prototype[dependency];
-            compiledServices.push( service );
-        } );
-
-        return compiledServices;
     };
 
     /**
@@ -626,48 +583,9 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         components.factories[factoryName] = {
             name        : factoryName,
             dependencies: dependencies,
-            compile     : function()
-            {
-                var params                             = PlentyFramework.resolveFactories( dependencies );
-                PlentyFramework.factories[factoryName] = factoryFunctions.apply( null, params );
-            }
-        };
+            setup       : factoryFunctions
+        }
 
-    };
-
-    /**
-     * Returns an array containing required factories given by string identifier
-     * @function resolveFactories
-     * @static
-     * @private
-     * @param  {Array}   dependencies  Names of required factories
-     * @return {Array}                 Objects to apply to callback function
-     */
-    PlentyFramework.resolveFactories = function( dependencies )
-    {
-        var compiledFactories = [];
-
-        $.each( dependencies, function( j, dependency )
-        {
-
-            // factory not found: try to compile dependent factory first
-            if ( !PlentyFramework.factories.hasOwnProperty( dependency ) )
-            {
-                if ( components.factories.hasOwnProperty( dependency ) )
-                {
-                    components.factories[dependency].compile();
-                }
-                else
-                {
-                    console.error( 'Cannot inject Factory "' + dependency + '": Factory not found.' );
-                    return false;
-                }
-            }
-            var factory = PlentyFramework.factories[dependency];
-            compiledFactories.push( factory );
-        } );
-
-        return compiledFactories;
     };
 
     /**
@@ -766,7 +684,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         {
             if ( !PlentyFramework.factories.hasOwnProperty( factory ) )
             {
-                components.factories[factory].compile();
+                //components.factories[factory].compile();
+                compileComponent( components.factories[factory], 3 );
             }
         }
 
@@ -774,7 +693,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         {
             if ( !PlentyFramework.prototype.hasOwnProperty( service ) )
             {
-                components.services[service].compile();
+                //components.factories[factory].compile();
+                compileComponent( components.services[service], 2 );
             }
         }
 
@@ -782,7 +702,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         {
             if ( !PlentyFramework.directives.hasOwnProperty( directive ) )
             {
-                components.directives[directive].compile();
+                //components.factories[factory].compile();
+                compileComponent( components.directives[directive], 1 );
             }
         }
 
@@ -793,6 +714,80 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         }
 
     };
+
+    // Level: 1 = directive, 2 = service, 3 = factory
+    function compileComponent( component, componentLevel, dependencyStack )
+    {
+        dependencyStack = dependencyStack || [];
+
+        // resolve dependencies
+        var compiledDependencies = [];
+        for( var i = 0; i < component.dependencies.length; i++ )
+        {
+            var dependency = component.dependencies[i];
+            if ( $.inArray( dependency, dependencyStack ) < 0 )
+            {
+                // add dependency to stack to avoid cyclic injection
+                dependencyStack.push( dependency );
+
+                if ( components.factories.hasOwnProperty( dependency ) )
+                {
+                    // required dependency is a factory
+                    if ( !PlentyFramework.factories.hasOwnProperty( dependency ) )
+                    {
+                        // factory is not compiled yet
+                        compileComponent( components.factories[dependency], 3, dependencyStack );
+                    }
+                    compiledDependencies.push( PlentyFramework.factories[dependency] );
+                    continue;
+                }
+
+                if ( componentLevel <= 2 && components.services.hasOwnProperty( dependency ) )
+                {
+                    // required dependency is a service
+                    if ( !PlentyFramework.prototype.hasOwnProperty( dependency ) )
+                    {
+                        // service is not compiled yet
+                        compileComponent( components.services[dependency], 2, dependencyStack );
+                    }
+                    compiledDependencies.push( PlentyFramework.prototype[dependency] );
+                    continue;
+                }
+
+                if ( componentLevel <= 1 && components.directives.hasOwnProperty( dependency ) )
+                {
+                    // required dependency is a directive
+                    if ( !PlentyFramework.directives.hasOwnProperty( dependency ) )
+                    {
+                        // directive is not compiled yet
+                        compileComponent( components.directives[dependency], 1, dependencyStack );
+                    }
+                    compiledDependencies.push( PlentyFramework.directives[dependency] );
+                    continue;
+                }
+
+                console.error( 'Cannot inject dependency "' + dependency + '": Object not found.' );
+            }
+            else
+            {
+                console.error( 'Cyclic dependency injection: ' + dependencyStack.join( ' -> ' ) + ' -> ' + dependency );
+            }
+        }
+
+        // compile component
+        if( componentLevel == 3 )
+        {
+            PlentyFramework.factories[component.name] = component.setup.apply( null, compiledDependencies );
+        }
+        else if( componentLevel == 2 )
+        {
+            PlentyFramework.prototype[component.name] = component.setup.apply( null, compiledDependencies );
+        }
+        else if( componentLevel == 1 )
+        {
+            PlentyFramework.directives[component.name] = component.setup.apply( null, compiledDependencies );
+        }
+    }
 
 }( jQuery ));
 
@@ -3298,7 +3293,7 @@ PlentyFramework.cssClasses = {
                 {
                     if ( shippingAddress.Street == "PACKSTATION" )
                     {
-                        shippingAddress.isPackstation = 1;
+                        shippingAddress.IsPackstation = 1;
                         shippingAddress.PackstationNo = shippingAddress.HouseNo;
                     }
                     else if ( shippingAddress.Street == "POSTFILIALE" )
@@ -3754,6 +3749,133 @@ PlentyFramework.cssClasses = {
 
     }, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));
+/**
+ * Licensed under AGPL v3
+ * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
+ * =====================================================================================
+ * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
+ * @author      Felix Dausch <felix.dausch@plentymarkets.com>
+ * =====================================================================================
+ */
+
+/**
+ * @module Services
+ */
+(function($, pm) {
+
+    pm.service('FeedbackService', function( API ) {
+
+        return {
+            getFeedbacks: getFeedbacks,
+            addFeedback: addFeedback,
+            ArticleTypes: articleTypes(),
+            FeedbackTypes: feedbackTypes()
+        };
+
+        /*
+         FeedbackService
+         .getFeedbacks().between('2014-12-03', '2015-07-01')
+         .for( FeedbackService.ArticleTypes.ITEM, 2732, FeedbackService.FeedbackTypes.COMMENTS_ONLY );
+         */
+        function getFeedbacks() {
+            var feedbackInterval = {
+                dateStart: null,
+                dateEnd: null
+            };
+
+            return {
+                between: setFeedbackInterval,
+                for: listFeedbacks
+            };
+
+            function setFeedbackInterval( start, end ) {
+                feedbackInterval.dateStart = start;
+                feedbackInterval.dateEnd = end;
+                return this;
+            }
+
+            function listFeedbacks( articleType, referenceId, feedbackType ) {
+
+                var params = {
+                    ReferenceId: referenceId,
+                    FromDate: feedbackInterval.dateStart,
+                    ToDate: feedbackInterval.dateEnd,
+                    FeedbackType: feedbackType || feedbackTypes().COMMENTS_AND_RATINGS
+                };
+                return API.get( '/rest/feedback/'+articleType+'/', params );
+
+            }
+        }
+
+        /*
+         FeedbackService
+         .addFeedback()
+         .withRating( 5 )
+         .withComment( 'Hallo' )
+         .withAuthor( 'Felix', 'felix.dausch@plentymarkets.com', 123456 )
+         .to( FeedbackService.ArticleTypes.ITEM, 2732 );
+         */
+        function addFeedback() {
+
+            var params = {
+                Rating: 1.0,
+                Text: '',
+                Author: '',
+                Email: '',
+                CustomerId: 0
+            };
+
+            return {
+                withRating: withRating,
+                withComment: withComment,
+                withAuthor: withAuthor,
+                to: sendFeedback
+            };
+
+            function withRating( rating ) {
+                params.Rating = rating;
+                return this;
+            }
+
+            function withComment( comment ) {
+                params.Text = comment;
+                return this;
+            }
+
+            function withAuthor( author, mail, customerID ) {
+                params.Author = author;
+                if( !!mail ) params.Email = mail;
+                if( !!customerID ) params.CustomerId = customerID;
+                return this;
+            }
+
+            function sendFeedback( articleType, referenceId ) {
+                return API.post( '/rest/feedback/'+articleType+'/', params );
+
+            }
+
+        }
+
+        function feedbackTypes() {
+            return {
+                COMMENTS_ONLY:          'comments_only',
+                RATINGS_ONLY:           'ratings_only',
+                COMMENTS_AND_RATINGS:   'comments_with_ratings'
+            }
+        }
+
+        function articleTypes() {
+            return {
+                ITEM:       'item',
+                CATEGORY:   'category',
+                BLOG:       'blog'
+            }
+        }
+
+
+
+    }, ['APIFactory']);
+}(jQuery, PlentyFramework));
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
