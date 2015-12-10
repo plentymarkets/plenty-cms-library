@@ -3253,12 +3253,12 @@ PlentyFramework.cssClasses = {
                 {
                     if ( shippingAddress.Street == "PACKSTATION" )
                     {
-                        shippingAddress.isPackstation = 1;
+                        shippingAddress.IsPackstation = 1;
                         shippingAddress.PackstationNo = shippingAddress.HouseNo;
                     }
                     else if ( shippingAddress.Street == "POSTFILIALE" )
                     {
-                        shippingAddress.isPostfiliale = 1;
+                        shippingAddress.IsPostfiliale = 1;
                         shippingAddress.PostfilialNo  = shippingAddress.HouseNo;
                     }
 
