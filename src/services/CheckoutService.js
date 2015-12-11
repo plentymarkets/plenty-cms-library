@@ -37,6 +37,7 @@
             loadAddressSuggestion : loadAddressSuggestion,
             preparePayment        : preparePayment,
             setMethodOfPayment    : setMethodOfPayment,
+            confirmAtrigaPaymax   : confirmAtrigaPaymax,
             editBankDetails       : editBankDetails,
             editCreditCard        : editCreditCard,
             placeOrder            : placeOrder
@@ -115,9 +116,9 @@
             var values            = form.getFormValues();
             var shippingAddressID = $( '[name="shippingAddressID"]:checked' ).val();
 
-            // DONE: move bootstrap specific function
-            //$( '#shippingAdressSelect' ).modal( 'hide' );
-            Modal.prepare( '#shippingAdressSelect' ).hide();
+            // TODO: move bootstrap specific function
+            $( '#shippingAdressSelect' ).modal( 'hide' );
+            //Modal.prepare( '#shippingAdressSelect' ).hide();
 
             if ( shippingAddressID < 0 )
             {
@@ -324,7 +325,7 @@
                         for( var i = 0; i < response.error.error_stack.length; i++ )
                         {
                             var currentError = response.error.error_stack[i];
-                            if( currentError.code == 1 )
+                            if( currentError.code == 651 )
                             {
                                 currentError.message += '<br><a href="#">' + pm.translate('more information') + '</a>';
                                 response.error.error_stack[i] = currentError;
@@ -332,10 +333,10 @@
                             }
                         }
                         UI.printErrors( response.error.error_stack );
-                        $('[data-plenty-error-code="1"] a' ).click(function( e ) {
+                        $('[data-plenty-error-code="651"] a' ).click(function( e ) {
                             e.preventDefault();
                             pm.partials.Error.hideAll();
-                            Modal.prepare( '[data-plenty-checkout="atrigaPaymaxInformation"]' ).show();
+                            Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
                         });
                     }
                     catch ( e )
@@ -377,6 +378,15 @@
                 {
                     Checkout.reloadContainer( 'ShippingProfilesList' );
                 } );
+        }
+
+        function confirmAtrigaPaymax( atrigaPaymaxChecked )
+        {
+            Checkout.getCheckout().CheckoutAtrigapaymaxChecked = !!atrigaPaymaxChecked;
+            return API.put('/rest/checkout', {
+                CheckoutAtrigapaymaxChecked: !!atrigaPaymaxChecked
+            });
+            //return Checkout.setCheckout();
         }
 
         /**
