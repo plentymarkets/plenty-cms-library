@@ -146,24 +146,28 @@
             var $elem = $( elem );
             var $elemParent = $elem.parent();
 
-            $elemParent.addClass( 'animating' );
-            $elem.siblings( 'ul' ).slideToggle( 400, function()
+            // size interval query is required since function is used on document ready to initial open active navigation (on small devices)
+            if ( MediaSize.isInterval('xs, sm') )
             {
-                if ( $elemParent.is( '.open' ) )
+                $elemParent.addClass( 'animating' );
+                $elem.siblings( 'ul' ).slideToggle( 400, function()
                 {
-                    $elemParent.removeClass( 'open' );
-                }
-                else
-                {
-                    $elemParent.addClass( 'open' );
-                    if( $.inArray( $elemParent[0], dropdownElements) < 0 )
+                    if ( $elemParent.is( '.open' ) )
                     {
-                        dropdownElements.push( $elemParent[0] );
+                        $elemParent.removeClass( 'open' );
                     }
-                }
-                $elem.siblings( 'ul' ).removeAttr( 'style' );
-                $elemParent.removeClass( 'animating' );
-            } );
+                    else
+                    {
+                        $elemParent.addClass( 'open' );
+                        if( $.inArray( $elemParent[0], dropdownElements) < 0 )
+                        {
+                            dropdownElements.push( $elemParent[0] );
+                        }
+                    }
+                    $elem.siblings( 'ul' ).removeAttr( 'style' );
+                    $elemParent.removeClass( 'animating' );
+                } );
+            }
         }
 
     }, ['MediaSizeService'] );
