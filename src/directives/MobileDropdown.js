@@ -23,37 +23,41 @@
 
         return {
             initDropdowns: initDropdowns,
-            openDropdown: openDropdown,
+            openDropdown : openDropdown,
             slideDropdown: slideDropdown
         };
 
         function initDropdowns()
         {
-            $(window).on('orientationchange sizeChange', function() {
+            $( window ).on( 'orientationchange sizeChange', function()
+            {
                 resetDropdowns( dropdownElements );
                 resetDropdowns( closableDropdownElements );
-            });
+            } );
 
-            $( 'html' ).click( function( e ) {
-                resetDropdowns( closableDropdownElements, e );
-            });
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", function( event )
+            {
+                resetDropdowns( closableDropdownElements, event );
+            } );
         }
 
         function resetDropdowns( dropdownList, event )
         {
-
-            for( var i = 0; i < dropdownList.length; i++ )
+            var $current;
+            for ( var i = 0; i < dropdownList.length; i++ )
             {
-                if ( !! event )
+                $current = $( dropdownList[i] );
+                if ( !!event )
                 {
-                    if ( ! $( dropdownList[i] ).is( $(event.target).closest('li') ) )
+                    if ( $current.find( $( event.target ) ).length === 0 )
                     {
-                        $( dropdownList[i] ).removeClass('open');
+                        $current.removeClass( 'open' );
                     }
                 }
                 else
                 {
-                    $( dropdownList[i] ).removeClass('open');
+                    $current.removeClass( 'open' );
                 }
             }
 
@@ -61,27 +65,27 @@
 
         function openDropdown( elem, alwaysClickable )
         {
-
-            var $elem = $( elem );
+            var $elem   = $( elem );
             var $parent = $elem.parent();
 
-            // case 1: xs || sm || ( touch && ( md || lg ) ) -> open/close via click on small devices, open/close via css-hover on desktop, open/close via click on touch-desktop (e.g. top navigation)
+            // case 1: xs || sm || ( touch && ( md || lg ) ) -> open/close via click on small devices, open/close via
+            // css-hover on desktop, open/close via click on touch-desktop (e.g. top navigation)
 
-            if ( !! alwaysClickable && ( MediaSize.isInterval('xs, sm') || ( Modernizr.touch && MediaSize.isInterval('md, lg') ) ) )
+            if ( !!alwaysClickable && ( MediaSize.isInterval( 'xs, sm' ) || ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) ) )
             {
-                if ( ! $parent.is('.open') )
+                if ( !$parent.is( '.open' ) )
                 {
-                    showDropdownHideOthers ( $elem, $parent );
+                    showDropdownHideOthers( $elem, $parent );
 
                     // if href
-                    if ( ! $elem.attr('href') )
+                    if ( !$elem.attr( 'href' ) )
                     {
-                        avoidRedirectinStopPropagation ( $parent.not($elem) );
+                        avoidRedirectinStopPropagation( $parent.not( $elem ) );
                     }
                 }
                 else
                 {
-                    if ( ! $elem.attr('href') )
+                    if ( !$elem.attr( 'href' ) )
                     {
                         // hide dropdown
                         $parent.removeClass( 'open' );
@@ -91,13 +95,13 @@
 
             // case 2: touch && ( md || lg ) -> open via 1st click on touch-desktop, return false (e.g. main navigation)
 
-            if ( ! alwaysClickable && ( Modernizr.touch && MediaSize.isInterval('md, lg') ) )
+            if ( !alwaysClickable && ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) )
             {
-                if ( ! $parent.is('.open') )
+                if ( !$parent.is( '.open' ) )
                 {
-                    showDropdownHideOthers ( $elem, $parent );
+                    showDropdownHideOthers( $elem, $parent );
 
-                    avoidRedirectinStopPropagation ( $parent );
+                    avoidRedirectinStopPropagation( $parent );
                 }
                 else
                 {
@@ -105,12 +109,10 @@
                     // do nothing
                 }
             }
-
         }
 
-        function showDropdownHideOthers ( elem, parent )
+        function showDropdownHideOthers( elem, parent )
         {
-            var $elem = $( elem );
             var $parent = $( parent );
 
             // hide other dropdowns
@@ -126,7 +128,7 @@
             $parent.addClass( 'open' );
         }
 
-        function avoidRedirectinStopPropagation ( elem )
+        function avoidRedirectinStopPropagation( elem )
         {
             var $elem = $( elem );
 
@@ -143,11 +145,12 @@
 
         function slideDropdown( elem )
         {
-            var $elem = $( elem );
+            var $elem       = $( elem );
             var $elemParent = $elem.parent();
 
-            // size interval query is required since function is used on document ready to initial open active navigation (on small devices)
-            if ( MediaSize.isInterval('xs, sm') )
+            // size interval query is required since function is used on document ready to initial open active
+            // navigation (on small devices)
+            if ( MediaSize.isInterval( 'xs, sm' ) )
             {
                 $elemParent.addClass( 'animating' );
                 $elem.siblings( 'ul' ).slideToggle( 400, function()
@@ -159,7 +162,7 @@
                     else
                     {
                         $elemParent.addClass( 'open' );
-                        if( $.inArray( $elemParent[0], dropdownElements) < 0 )
+                        if ( $.inArray( $elemParent[0], dropdownElements ) < 0 )
                         {
                             dropdownElements.push( $elemParent[0] );
                         }
