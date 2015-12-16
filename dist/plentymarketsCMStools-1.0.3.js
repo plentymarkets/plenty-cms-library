@@ -271,11 +271,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         components.directives[directiveName] = {
             name        : directiveName,
             dependencies: dependencies,
-            compile     : function()
-            {
-                var params                                = PlentyFramework.resolveServices( dependencies );
-                PlentyFramework.directives[directiveName] = directiveFunctions.apply( null, params );
-            }
+            setup       : directiveFunctions
         };
     };
 
@@ -299,6 +295,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 // continue
                 return;
             }
+
+            addCustomEvents( element );
 
             for ( var i = 0; i < directives.length; i++ )
             {
@@ -389,6 +387,49 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             eventStack.push( event );
             return callback.apply( null, params );
         } );
+    }
+
+    function addCustomEvents( element )
+    {
+
+        var $elem = $( element );
+
+        if( $elem.is('input[type="checkbox"]') )
+        {
+            $elem.on('change', function() {
+
+                if( $elem.is(':checked') )
+                {
+                    $elem.trigger('check');
+                }
+                else
+                {
+                    $elem.trigger('uncheck');
+                }
+            });
+        }
+
+        if( $elem.is('input[type="radio"]') )
+        {
+            $elem.on('change', function() {
+
+                var radioGroup = $elem.attr('name');
+
+                $( 'input[type="radio"][name="' + radioGroup + '"]' ).each(function( i, radio ) {
+                    var $radio = $( radio );
+                    if( $radio.is(':checked') )
+                    {
+                        $radio.trigger('check');
+                    }
+                    else
+                    {
+                        $radio.trigger('uncheck');
+                    }
+
+                });
+
+            });
+        }
     }
 
     function parseDirectives( input, thisValue )
@@ -500,48 +541,9 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         components.services[serviceName] = {
             name        : serviceName,
             dependencies: dependencies,
-            compile     : function()
-            {
-                var params                             = PlentyFramework.resolveFactories( dependencies );
-                PlentyFramework.prototype[serviceName] = serviceFunctions.apply( null, params );
-            }
+            setup       : serviceFunctions
         };
 
-    };
-
-    /**
-     * Returns an array containing required factories given by string identifier
-     * @function resolveServices
-     * @static
-     * @private
-     * @param  {Array} dependencies    Names of required factories
-     * @return {Array}                 Objects to apply to callback function
-     */
-    PlentyFramework.resolveServices = function( dependencies )
-    {
-        var compiledServices = [];
-
-        $.each( dependencies, function( j, dependency )
-        {
-
-            // factory not found: try to compile dependent factory first
-            if ( !PlentyFramework.prototype.hasOwnProperty( dependency ) )
-            {
-                if ( components.services.hasOwnProperty( dependency ) )
-                {
-                    components.services[dependency].compile();
-                }
-                else
-                {
-                    console.error( 'Cannot inject Service "' + dependency + '": Service not found.' );
-                    return false;
-                }
-            }
-            var service = PlentyFramework.prototype[dependency];
-            compiledServices.push( service );
-        } );
-
-        return compiledServices;
     };
 
     /**
@@ -581,48 +583,9 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         components.factories[factoryName] = {
             name        : factoryName,
             dependencies: dependencies,
-            compile     : function()
-            {
-                var params                             = PlentyFramework.resolveFactories( dependencies );
-                PlentyFramework.factories[factoryName] = factoryFunctions.apply( null, params );
-            }
-        };
+            setup       : factoryFunctions
+        }
 
-    };
-
-    /**
-     * Returns an array containing required factories given by string identifier
-     * @function resolveFactories
-     * @static
-     * @private
-     * @param  {Array}   dependencies  Names of required factories
-     * @return {Array}                 Objects to apply to callback function
-     */
-    PlentyFramework.resolveFactories = function( dependencies )
-    {
-        var compiledFactories = [];
-
-        $.each( dependencies, function( j, dependency )
-        {
-
-            // factory not found: try to compile dependent factory first
-            if ( !PlentyFramework.factories.hasOwnProperty( dependency ) )
-            {
-                if ( components.factories.hasOwnProperty( dependency ) )
-                {
-                    components.factories[dependency].compile();
-                }
-                else
-                {
-                    console.error( 'Cannot inject Factory "' + dependency + '": Factory not found.' );
-                    return false;
-                }
-            }
-            var factory = PlentyFramework.factories[dependency];
-            compiledFactories.push( factory );
-        } );
-
-        return compiledFactories;
     };
 
     /**
@@ -721,7 +684,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         {
             if ( !PlentyFramework.factories.hasOwnProperty( factory ) )
             {
-                components.factories[factory].compile();
+                //components.factories[factory].compile();
+                compileComponent( components.factories[factory], 3 );
             }
         }
 
@@ -729,7 +693,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         {
             if ( !PlentyFramework.prototype.hasOwnProperty( service ) )
             {
-                components.services[service].compile();
+                //components.factories[factory].compile();
+                compileComponent( components.services[service], 2 );
             }
         }
 
@@ -737,7 +702,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         {
             if ( !PlentyFramework.directives.hasOwnProperty( directive ) )
             {
-                components.directives[directive].compile();
+                //components.factories[factory].compile();
+                compileComponent( components.directives[directive], 1 );
             }
         }
 
@@ -748,6 +714,80 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         }
 
     };
+
+    // Level: 1 = directive, 2 = service, 3 = factory
+    function compileComponent( component, componentLevel, dependencyStack )
+    {
+        dependencyStack = dependencyStack || [];
+
+        // resolve dependencies
+        var compiledDependencies = [];
+        for( var i = 0; i < component.dependencies.length; i++ )
+        {
+            var dependency = component.dependencies[i];
+            if ( $.inArray( dependency, dependencyStack ) < 0 )
+            {
+                // add dependency to stack to avoid cyclic injection
+                dependencyStack.push( dependency );
+
+                if ( components.factories.hasOwnProperty( dependency ) )
+                {
+                    // required dependency is a factory
+                    if ( !PlentyFramework.factories.hasOwnProperty( dependency ) )
+                    {
+                        // factory is not compiled yet
+                        compileComponent( components.factories[dependency], 3, dependencyStack );
+                    }
+                    compiledDependencies.push( PlentyFramework.factories[dependency] );
+                    continue;
+                }
+
+                if ( componentLevel <= 2 && components.services.hasOwnProperty( dependency ) )
+                {
+                    // required dependency is a service
+                    if ( !PlentyFramework.prototype.hasOwnProperty( dependency ) )
+                    {
+                        // service is not compiled yet
+                        compileComponent( components.services[dependency], 2, dependencyStack );
+                    }
+                    compiledDependencies.push( PlentyFramework.prototype[dependency] );
+                    continue;
+                }
+
+                if ( componentLevel <= 1 && components.directives.hasOwnProperty( dependency ) )
+                {
+                    // required dependency is a directive
+                    if ( !PlentyFramework.directives.hasOwnProperty( dependency ) )
+                    {
+                        // directive is not compiled yet
+                        compileComponent( components.directives[dependency], 1, dependencyStack );
+                    }
+                    compiledDependencies.push( PlentyFramework.directives[dependency] );
+                    continue;
+                }
+
+                console.error( 'Cannot inject dependency "' + dependency + '": Object not found.' );
+            }
+            else
+            {
+                console.error( 'Cyclic dependency injection: ' + dependencyStack.join( ' -> ' ) + ' -> ' + dependency );
+            }
+        }
+
+        // compile component
+        if( componentLevel == 3 )
+        {
+            PlentyFramework.factories[component.name] = component.setup.apply( null, compiledDependencies );
+        }
+        else if( componentLevel == 2 )
+        {
+            PlentyFramework.prototype[component.name] = component.setup.apply( null, compiledDependencies );
+        }
+        else if( componentLevel == 1 )
+        {
+            PlentyFramework.directives[component.name] = component.setup.apply( null, compiledDependencies );
+        }
+    }
 
 }( jQuery ));
 
@@ -3721,6 +3761,133 @@ PlentyFramework.cssClasses = {
 /**
  * @module Services
  */
+(function($, pm) {
+
+    pm.service('FeedbackService', function( API ) {
+
+        return {
+            getFeedbacks: getFeedbacks,
+            addFeedback: addFeedback,
+            ArticleTypes: articleTypes(),
+            FeedbackTypes: feedbackTypes()
+        };
+
+        /*
+         FeedbackService
+         .getFeedbacks().between('2014-12-03', '2015-07-01')
+         .for( FeedbackService.ArticleTypes.ITEM, 2732, FeedbackService.FeedbackTypes.COMMENTS_ONLY );
+         */
+        function getFeedbacks() {
+            var feedbackInterval = {
+                dateStart: null,
+                dateEnd: null
+            };
+
+            return {
+                between: setFeedbackInterval,
+                for: listFeedbacks
+            };
+
+            function setFeedbackInterval( start, end ) {
+                feedbackInterval.dateStart = start;
+                feedbackInterval.dateEnd = end;
+                return this;
+            }
+
+            function listFeedbacks( articleType, referenceId, feedbackType ) {
+
+                var params = {
+                    ReferenceId: referenceId,
+                    FromDate: feedbackInterval.dateStart,
+                    ToDate: feedbackInterval.dateEnd,
+                    FeedbackType: feedbackType || feedbackTypes().COMMENTS_AND_RATINGS
+                };
+                return API.get( '/rest/feedback/'+articleType+'/', params );
+
+            }
+        }
+
+        /*
+         FeedbackService
+         .addFeedback()
+         .withRating( 5 )
+         .withComment( 'Hallo' )
+         .withAuthor( 'Felix', 'felix.dausch@plentymarkets.com', 123456 )
+         .to( FeedbackService.ArticleTypes.ITEM, 2732 );
+         */
+        function addFeedback() {
+
+            var params = {
+                Rating: 1.0,
+                Text: '',
+                Author: '',
+                Email: '',
+                CustomerId: 0
+            };
+
+            return {
+                withRating: withRating,
+                withComment: withComment,
+                withAuthor: withAuthor,
+                to: sendFeedback
+            };
+
+            function withRating( rating ) {
+                params.Rating = rating;
+                return this;
+            }
+
+            function withComment( comment ) {
+                params.Text = comment;
+                return this;
+            }
+
+            function withAuthor( author, mail, customerID ) {
+                params.Author = author;
+                if( !!mail ) params.Email = mail;
+                if( !!customerID ) params.CustomerId = customerID;
+                return this;
+            }
+
+            function sendFeedback( articleType, referenceId ) {
+                return API.post( '/rest/feedback/'+articleType+'/', params );
+
+            }
+
+        }
+
+        function feedbackTypes() {
+            return {
+                COMMENTS_ONLY:          'comments_only',
+                RATINGS_ONLY:           'ratings_only',
+                COMMENTS_AND_RATINGS:   'comments_with_ratings'
+            }
+        }
+
+        function articleTypes() {
+            return {
+                ITEM:       'item',
+                CATEGORY:   'category',
+                BLOG:       'blog'
+            }
+        }
+
+
+
+    }, ['APIFactory']);
+}(jQuery, PlentyFramework));
+/**
+ * Licensed under AGPL v3
+ * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
+ * =====================================================================================
+ * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
+ * @author      Felix Dausch <felix.dausch@plentymarkets.com>
+ * =====================================================================================
+ */
+
+/**
+ * @module Services
+ */
 (function( $, pm )
 {
 
@@ -5335,101 +5502,154 @@ PlentyFramework.cssClasses = {
 
         return {
             initDropdowns: initDropdowns,
-            openDropdown: openDropdown,
+            openDropdown : openDropdown,
             slideDropdown: slideDropdown
         };
 
         function initDropdowns()
         {
-            $(window).on('orientationchange sizeChange', function() {
+            $( window ).on( 'orientationchange sizeChange', function()
+            {
                 resetDropdowns( dropdownElements );
-            });
-
-            $( 'html' ).click( function( e ) {
                 resetDropdowns( closableDropdownElements );
-            });
+            } );
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", function( event )
+            {
+                resetDropdowns( closableDropdownElements, event );
+            } );
         }
 
-        function resetDropdowns( dropdownList )
+        function resetDropdowns( dropdownList, event )
         {
-
-            for( var i = 0; i < dropdownList.length; i++ )
+            var $current;
+            for ( var i = 0; i < dropdownList.length; i++ )
             {
-                $( dropdownList[i] ).removeClass('open');
+                $current = $( dropdownList[i] );
+                if ( !!event )
+                {
+                    if ( $current.find( $( event.target ) ).length === 0 )
+                    {
+                        $current.removeClass( 'open' );
+                    }
+                }
+                else
+                {
+                    $current.removeClass( 'open' );
+                }
             }
 
         }
 
-        function openDropdown( elem, closable )
+        function openDropdown( elem, alwaysClickable )
         {
-
-            var $elem = $( elem );
+            var $elem   = $( elem );
             var $parent = $elem.parent();
 
-            if( Modernizr.touch )
+            // case 1: xs || sm || ( touch && ( md || lg ) ) -> open/close via click on small devices, open/close via
+            // css-hover on desktop, open/close via click on touch-desktop (e.g. top navigation)
+
+            if ( !!alwaysClickable && ( MediaSize.isInterval( 'xs, sm' ) || ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) ) )
             {
-                if ( MediaSize.isInterval('md, lg') && !$parent.is( '.open' ) )
+                if ( !$parent.is( '.open' ) )
                 {
+                    showDropdownHideOthers( $elem, $parent );
 
-                    // avoid redirecting
-                    pm.getRecentEvent().preventDefault();
-
-                    // hide other dropdowns
-                    resetDropdowns( dropdownElements );
-
-                    // show dropdown
-                    $parent.addClass( 'open' );
-
-                    if ( $.inArray( $parent[0], dropdownElements ) < 0 )
+                    // if href
+                    if ( !$elem.attr( 'href' ) )
                     {
-                        dropdownElements.push( $parent[0] );
+                        avoidRedirectinStopPropagation( $parent.not( $elem ) );
                     }
-
-                    if ( !!closable && $.inArray( $parent[0], closableDropdownElements ) < 0 )
-                    {
-                        closableDropdownElements.push( $parent[0] );
-                    }
-
-                    // avoid closing popup by clicking itself
-                    $parent.off( 'click' );
-                    $parent.on( 'click', function( e )
-                    {
-                        e.stopPropagation();
-                    } );
                 }
-
+                else
+                {
+                    if ( !$elem.attr( 'href' ) )
+                    {
+                        // hide dropdown
+                        $parent.removeClass( 'open' );
+                    }
+                }
             }
-            else
+
+            // case 2: touch && ( md || lg ) -> open via 1st click on touch-desktop, return false (e.g. main navigation)
+
+            if ( !alwaysClickable && ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) )
             {
-                // redirect to href
-                // do nothing
+                if ( !$parent.is( '.open' ) )
+                {
+                    showDropdownHideOthers( $elem, $parent );
+
+                    avoidRedirectinStopPropagation( $parent );
+                }
+                else
+                {
+                    // redirect to href if dropdown is already open
+                    // do nothing
+                }
+            }
+        }
+
+        function showDropdownHideOthers( elem, parent )
+        {
+            var $parent = $( parent );
+
+            // hide other dropdowns
+            resetDropdowns( closableDropdownElements );
+
+            // remember opened dropdown
+            if ( $.inArray( $parent[0], closableDropdownElements ) < 0 )
+            {
+                closableDropdownElements.push( $parent[0] );
             }
 
+            // show dropdown
+            $parent.addClass( 'open' );
+        }
+
+        function avoidRedirectinStopPropagation( elem )
+        {
+            var $elem = $( elem );
+
+            // avoid redirecting
+            pm.getRecentEvent().preventDefault();
+
+            // avoid closing popup by clicking itself
+            $elem.off( 'click' );
+            $elem.on( 'click', function( e )
+            {
+                e.stopPropagation();
+            } );
         }
 
         function slideDropdown( elem )
         {
-            var $elem = $( elem );
+            var $elem       = $( elem );
             var $elemParent = $elem.parent();
 
-            $elemParent.addClass( 'animating' );
-            $elem.siblings( 'ul' ).slideToggle( 200, function()
+            // size interval query is required since function is used on document ready to initial open active
+            // navigation (on small devices)
+            if ( MediaSize.isInterval( 'xs, sm' ) )
             {
-                if ( $elemParent.is( '.open' ) )
+                $elemParent.addClass( 'animating' );
+                $elem.siblings( 'ul' ).slideToggle( 400, function()
                 {
-                    $elemParent.removeClass( 'open' );
-                }
-                else
-                {
-                    $elemParent.addClass( 'open' );
-                    if( $.inArray( $elemParent[0], dropdownElements) < 0 )
+                    if ( $elemParent.is( '.open' ) )
                     {
-                        dropdownElements.push( $elemParent[0] );
+                        $elemParent.removeClass( 'open' );
                     }
-                }
-                $elem.siblings( 'ul' ).removeAttr( 'style' );
-                $elemParent.removeClass( 'animating' );
-            } );
+                    else
+                    {
+                        $elemParent.addClass( 'open' );
+                        if ( $.inArray( $elemParent[0], dropdownElements ) < 0 )
+                        {
+                            dropdownElements.push( $elemParent[0] );
+                        }
+                    }
+                    $elem.siblings( 'ul' ).removeAttr( 'style' );
+                    $elemParent.removeClass( 'animating' );
+                } );
+            }
         }
 
     }, ['MediaSizeService'] );
@@ -5698,9 +5918,14 @@ PlentyFramework.cssClasses = {
             initToTop           : initToTop,
             initLazyload        : initLazyload,
             initSlideToggle     : initSlideToggle,
+            slideDown           : slideDown,
+            slideUp             : slideUp,
+            slideToggle         : slideToggle,
             toggleHideShow      : toggleHideShow,
             toggleSocialShare   : toggleSocialShare,
-            toggleClass         : toggleClass
+            toggleClass         : toggleClass,
+            addClass            : addClass,
+            removeClass         : removeClass
         };
 
         function initUIWindowEvents()
@@ -5938,6 +6163,30 @@ PlentyFramework.cssClasses = {
             }
         }
 
+        function slideDown( target, duration )
+        {
+            slideAction($( target ), duration, 'slideDown');
+        }
+
+        function slideUp( target, duration )
+        {
+            slideAction($( target ), duration, 'slideUp');
+        }
+
+        function slideToggle( target, duration )
+        {
+            slideAction($( target ), duration, 'slideToggle');
+        }
+
+        function slideAction ($target, duration, callbackString) {
+            duration = duration || 400;
+            $target.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+            $target[callbackString]( duration, function()
+            {
+                fireEqualHeight();
+            } );
+        }
+
         /**
          * TODO check comment
          * Social Share Activation
@@ -6018,13 +6267,69 @@ PlentyFramework.cssClasses = {
          */
         function toggleClass( cssClass, target, interval )
         {
+            var $target = $( target );
+            /* FIXME
+             * Callisto 3.1 Design adaption:
+             * NavigationCategoriesList
+             * Line 8
+             * BEFORE:
+             * <li class="cat-$CategoryId{% if $CategoryLevel == 1 && $SubCategoryExists %} dropdown{% endif %}{% if $SubCategoryExists %} hasSublevel{% endif %}{% if $CategoryLevel == 1 && in_array($CategoryId, $_useBigMenu) %} bigmenu{% endif %}{% if $CategoryIsOpen || $CategoryIsCurrent %} active{% endif %}"{% if $CategoryIsOpen || $CategoryIsCurrent %} data-plenty="UI.toggleClass('open', this, 'xs, sm')"{% endif %}>
+             * AFTER:
+             * <li class="cat-$CategoryId{% if $CategoryLevel == 1 && $SubCategoryExists %} dropdown{% endif %}{% if $SubCategoryExists %} hasSublevel{% endif %}{% if $CategoryLevel == 1 && in_array($CategoryId, $_useBigMenu) %} bigmenu{% endif %}{% if $CategoryIsOpen || $CategoryIsCurrent %} active{% endif %}">
+             *
+             * Line 10
+             * BEFORE:
+             * <span class="openCloseToggle" data-plenty="click:MobileDropdown.slideDropdown(this)"></span>
+             * AFTER:
+             * <span class="openCloseToggle" data-plenty="{% if $CategoryIsOpen || $CategoryIsCurrent %}MobileDropdown.slideDropdown(this); {% endif %}click:MobileDropdown.slideDropdown(this)"></span>
+             *
+             * */
+            if ( $target.parents( ".navbar-main" ).length > 0 )
+            {
+                var $elem = $target.children( "span" );
+                pm.directives["MobileDropdown"].slideDropdown( $elem );
+                return true;
+            }
 
             if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
             {
                 var e = pm.getRecentEvent();
-                if( !!e ) e.preventDefault();
-                var $elem = $( target );
-                $elem.toggleClass( cssClass );
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
+
+                $target.toggleClass( cssClass );
+                return false;
+            }
+        }
+
+        function addClass( cssClass, target, interval )
+        {
+            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
+            {
+                var e = pm.getRecentEvent();
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
+
+                $( target ).addClass( cssClass );
+                return false;
+            }
+        }
+
+        function removeClass( cssClass, target, interval )
+        {
+            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
+            {
+                var e = pm.getRecentEvent();
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
+
+                $( target ).removeClass( cssClass );
                 return false;
             }
         }
