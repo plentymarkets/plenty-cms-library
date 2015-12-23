@@ -25,7 +25,7 @@
      * @class CheckoutService
      * @static
      */
-    pm.service( 'CheckoutService', function( API, CMS, Checkout, Modal )
+    pm.service( 'CheckoutService', function( API, CMS, Checkout, Checkout2, Modal )
     {
 
         return {
@@ -49,6 +49,7 @@
         function init()
         {
             Checkout.loadCheckout( true );
+            Checkout2.init();
         }
 
         /**
@@ -64,6 +65,7 @@
             var values = form.getFormValues();
 
             // initialize CustomerSign & InfoText to avoid updating empty values
+            /*
             if ( !Checkout.getCheckout().CheckoutCustomerSign )
             {
                 Checkout.getCheckout().CheckoutCustomerSign = "";
@@ -88,6 +90,12 @@
                 // No changes detected -> Do nothing
                 return API.idle();
             }
+            */
+
+            return Checkout2.setCheckout({
+                CheckoutCustomerSign: values.CustomerSign,
+                CheckoutOrderInfoText: values.OrderInfoText
+            });
         }
 
         /**
@@ -123,6 +131,7 @@
                 // save separate
                 var shippingAddress = values;
 
+                /*
                 if ( !addressesAreEqual( shippingAddress, Checkout.getCheckout().CustomerShippingAddress ) )
                 {
                     if ( shippingAddress.Street == "PACKSTATION" )
@@ -162,10 +171,25 @@
                     // no changes detected
                     return API.idle();
                 }
+                */
+
+                if ( shippingAddress.Street == "PACKSTATION" )
+                {
+                    shippingAddress.IsPackstation = 1;
+                    shippingAddress.PackstationNo = shippingAddress.HouseNo;
+                }
+                else if ( shippingAddress.Street == "POSTFILIALE" )
+                {
+                    shippingAddress.IsPostfiliale = 1;
+                    shippingAddress.PostfilialNo  = shippingAddress.HouseNo;
+                }
+
+                return Checkout2.setShippingAddress( shippingAddress );
 
             }
             else
             {
+                /*
                 if ( shippingAddressID != Checkout.getCheckout().CheckoutCustomerShippingAddressID )
                 {
                     // change shipping address id
@@ -187,7 +211,12 @@
                 {
                     return API.idle();
                 }
+                */
+                return Checkout2.setCheckout({
+                    CheckoutCustomerShippingAddressID: shippingAddressID
+                });
             }
+            // TODO: register  watcher to reload method of payment and shipping profile container
         }
 
         /**
@@ -214,6 +243,7 @@
                 } );
             } );
 
+            /*
             if ( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) )
             {
                 return API.post( "/rest/checkout/customerinvoiceaddress/", invoiceAddress )
@@ -231,6 +261,11 @@
             {
                 return saveShippingAddress();
             }
+            */
+            return Checkout2.setInvoiceAddress( invoiceAddress )
+                .done(function(){
+                    saveShippingAddress();
+                });
         }
 
         /**
@@ -241,6 +276,7 @@
          * @param {object} address2
          * @returns {boolean}
          */
+        /*
         function addressesAreEqual( address1, address2 )
         {
             for ( var key in address1 )
@@ -252,6 +288,7 @@
             }
             return true;
         }
+        */
 
         /**
          * Set the shipping profile used for this order and update checkout. Selected shipping profile will be
@@ -265,6 +302,7 @@
 
             var values = $( '[data-plenty-checkout-form="shippingProfileSelect"]' ).getFormValues();
 
+            /*
             Checkout.getCheckout().CheckoutShippingProfileID = values.ShippingProfileID;
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
@@ -274,7 +312,11 @@
                 {
                     Checkout.reloadContainer( 'MethodsOfPaymentList' );
                 } );
-
+                */
+            return Checkout2.setCheckout({
+                CheckoutShippingProfileID: values.ShippingProfileID
+            });
+            // TODO: add watcher to reload container;
         }
 
         /**
@@ -330,6 +372,7 @@
 
             paymentID = paymentID || $( '[data-plenty-checkout-form="methodOfPayment"]' ).getFormValues().MethodOfPaymentID;
 
+            /*
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutShippingProfileID;
@@ -339,6 +382,10 @@
                 {
                     Checkout.reloadContainer( 'ShippingProfilesList' );
                 } );
+                */
+            return Checkout2.setCheckout({
+                CheckoutMethodOfPaymentID: paymentID
+            });
         }
 
         /**
@@ -398,6 +445,7 @@
                     CustomerBIC          : values.bic
                 };
 
+                /*
                 API.post( "/rest/checkout/paymentinformationbankdetails/", bankDetails )
                     .done( function()
                     {
@@ -407,6 +455,8 @@
                             Checkout.reloadContainer( 'MethodsOfPaymentList' );
                         } );
                     } );
+                    */
+                Checkout2.setBankDetails( bankDetails );
                 return true;
             }
             else
@@ -472,11 +522,14 @@
                     Provider: values.provider
                 };
 
+                /*
                 API.post( '/rest/checkout/paymentinformationcreditcard/', creditCard )
                     .done( function()
                     {
                         Checkout.loadCheckout();
                     } );
+                    */
+                Checkout2.setCreditCardInformation( creditCard );
                 return true;
             }
             else
@@ -547,7 +600,7 @@
                     PayoneInvoiceCheck           : values.payoneInvoiceCheck || 0
                 };
 
-                return API.post( "/rest/checkout/placeorder/", params )
+                return Checkout2.placeOrder( params )
                     .done( function( response )
                     {
                         if ( response.data.MethodOfPaymentRedirectURL != '' )
@@ -581,5 +634,5 @@
             }
         }
 
-    }, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
+    }, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'CheckoutFactory2', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));

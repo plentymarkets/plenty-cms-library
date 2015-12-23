@@ -257,8 +257,12 @@
          * @returns {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery
          *     deferred Object</a>
          */
-        function _idle()
+        function _idle( data )
         {
+            if( !!data )
+            {
+                return $.Deferred().resolveWith( null, [{data: data}] );
+            }
             return $.Deferred().resolve();
         }
 

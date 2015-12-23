@@ -9,7 +9,7 @@
       "libs/jquery.touchSwipe.min.js",
       "libs/jquery.ui.touch-punch.min.js",
       "plenty/plenty-2.js",
-      "plenty/plentymarketsCMStools-1.0.1.js"
+      "plenty/plentymarketsCMStools-1.0.3.js"
     ]
   },
   "PageDesignContent": {

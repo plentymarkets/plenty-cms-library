@@ -1,197 +1,272 @@
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-/**
- * @module Factories
- */
-(function( pm )
+(function( $, pm )
 {
 
-    /**
-     * Holds checkout data for global access and provides methods
-     * for reloading content dynamically-<br>
-     * <b>Requires:</b>
-     * <ul>
-     *     <li>{{#crossLink "APIFactory"}}APIFactory{{/crossLink}}</li>
-     *     <li>{{#crossLink "CMSFactory"}}CMSFactory{{/crossLink}}</li>
-     *     <li>{{#crossLink "UIFactory"}}UIFactory{{/crossLink}}</li>
-     * </ul>
-     * @class CheckoutFactory
-     * @static
-     */
-    pm.factory( 'CheckoutFactory', function( API, CMS, UI )
+    pm.factory( 'CheckoutFactory2', function( API )
     {
 
-        // data received from ReST API
-        var checkoutData;
-
-        // instance wrapped checkout object for global access
-        var checkout;
+        var watcherList = {};
+        var checkout    = null;
 
         return {
-            getCheckout        : getCheckout,
-            setCheckout        : setCheckout,
-            loadCheckout       : loadCheckout,
-            reloadContainer    : reloadContainer,
-            reloadCatContent   : reloadCatContent,
-            reloadItemContainer: reloadItemContainer
+            init : init,
+            watch: watch,
+            getCheckout: getCheckout,
+            setCheckout: setCheckout,
+            getInvoiceAddress: getInvoiceAddress,
+            setInvoiceAddress: setInvoiceAddress,
+            getShippingAddress: getShippingAddress,
+            setShippingAddress: setShippingAddress,
+            getBankDetails: getBankDetails,
+            setBankDetails: setBankDetails,
+            getCreditCardInformation: getCreditCardInformation,
+            setCreditCardInformation: setCreditCardInformation,
+            getBasketItemsList: getBasketItemsList,
+            setBasketItemsList: setBasketItemsList,
+            placeOrder: placeOrder
         };
 
-        function Checkout()
+        function init()
         {
-            return checkoutData;
+            return API.get( '/rest/checkout/' ).done(function(response) {
+                checkout = response.data;
+            });
         }
 
-        /**
-         * Returns instance of wrapped checkout object
-         * @function getCheckout
-         * @returns {Checkout} Instance of checkout object
-         */
-        function getCheckout( copy )
+        function watch( propertyName, callback )
         {
-            if ( !checkout || !checkoutData )
+            if ( !watcherList.hasOwnProperty( propertyName ) )
             {
-                loadCheckout( true );
+                watcherList[propertyName] = [];
             }
 
-            if ( !!copy )
+            watcherList[propertyName].push( callback );
+        }
+
+        function notify( propertyName, args )
+        {
+            if ( watcherList.hasOwnProperty( propertyName ) )
             {
-                return $.extend( true, {}, checkoutData );
+                for ( var i = 0; i < watcherList[propertyName].length; i++ )
+                {
+                    watcherList[propertyName][i].apply( null, args );
+                }
             }
+        }
+
+        function syncCheckout( remoteData, localData, parentPropertyName )
+        {
+            localData = localData || checkout;
+            parentPropertyName = parentPropertyName || 'Checkout';
+            var hasChanges = false;
+
+            for( var key in remoteData )
+            {
+                if( !localData.hasOwnProperty( key ) )
+                {
+                    console.error( 'Property "' + key + '" does not exist in "' + parentPropertyName + '"');
+                    break;
+                }
+
+                if( typeof( remoteData[key] ) === "object" )
+                {
+                    syncCheckout( remoteData[key], localData[key], parentPropertyName + "." + key );
+                    continue;
+                }
+
+                if( remoteData[key] !== localData[key] )
+                {
+                    // property has changed
+                    notify(
+                        parentPropertyName + "." + key,
+                        [
+                            localData[key],
+                            remoteData[key]
+                        ]
+                    );
+                    localData[key] = remoteData[key];
+                    hasChanges = true;
+                    continue;
+                }
+            }
+
+            if( hasChanges )
+            {
+                notify(
+                    parentPropertyName,
+                    [
+                        localData,
+                        remoteData
+                    ]
+                )
+            }
+        }
+
+        function compareToLocal( remoteData, localData, flat )
+        {
+            flat = !!flat;
+
+            if( remoteData === localData || parseFloat( remoteData ) === localData )
+            {
+                return true;
+            }
+
+            for( var key in remoteData )
+            {
+                if( !remoteData.hasOwnProperty( key ) )
+                {
+                    continue;
+                }
+
+                if( !localData.hasOwnProperty( key ) )
+                {
+                    return false;
+                }
+
+                if( remoteData[key] === localData[key] || parseFloat( remoteData[key] ) === localData[key] )
+                {
+                    continue;
+                }
+
+                if( !remoteData[key] && !localData[key] )
+                {
+                    // falsy values should be equal (null == undefined)
+                    continue;
+                }
+
+                if( !flat && typeof(remoteData[key]) !== "object" )
+                {
+                    return false;
+                }
+
+                if( !flat && !compareToLocal(remoteData, remoteData) )
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function getCheckout()
+        {
             return checkout;
         }
 
-        /**
-         * Receive global checkout data from ReST-API
-         * @function loadCheckout
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
-         *     Object</a>
-         */
-        function loadCheckout( sync )
+        function setCheckout( data )
         {
-
-            return API.get( '/rest/checkout/', null, false, false, sync )
-                .done( function( response )
+            if( !compareToLocal( data, checkout ) )
+            {
+                return API.put( '/rest/checkout/', data ).done( function( response )
                 {
-                    if ( !!response )
-                    {
-                        checkoutData = response.data;
-                        checkout     = new Checkout();
-                    }
-                    else
-                    {
-                        UI.throwError( 0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]' );
-                    }
+                    // detect changed data and notify watchers
+                    syncCheckout( response.data );
                 } );
+            }
+
+            return API.idle( checkout );
         }
 
-        /**
-         * Update checkout data on server
-         * @function setCheckout
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
-         *     Object</a>
-         */
-        function setCheckout()
+        function getInvoiceAddress()
         {
-
-            return API.put( '/rest/checkout', checkout )
-                .done( function( response )
-                {
-                    if ( !!response )
-                    {
-                        checkoutData = response.data;
-                        checkout     = new Checkout();
-                    }
-                    else
-                    {
-                        UI.throwError( 0, 'Could not receive checkout data [GET "/rest/checkout/" receives null value]' );
-                    }
-                } );
-
+            return checkout.CustomerInvoiceAddress;
         }
 
-        /**
-         * Get layout container from server and replace received HTML
-         * in containers marked with <b>data-plenty-checkout-template="..."</b>
-         * @function reloadContainer
-         * @param  {string} container Name of the template to load from server
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
-         *     Object</a>
-         */
-        function reloadContainer( container )
+        function setInvoiceAddress( invoiceAddress )
         {
+            if( !compareToLocal( invoiceAddress, checkout.CustomerInvoiceAddress ) )
+            {
+                return API.pos( '/rest/checkout/customerinvoiceaddress/', invoiceAddress )
+                    .done( function( response ) {
+                        syncCheckout({
+                           CustomerInvoiceAddress: response.data
+                        });
+                    });
+            }
 
-            return CMS.getContainer( "checkout" + container ).from( 'checkout' )
-                .done( function( response )
-                {
-                    $( '[data-plenty-checkout-template="' + container + '"]' )
-                        .each( function( i, elem )
-                        {
-                            $( elem ).html( response.data[0] );
-                            pm.getInstance().bindDirectives( elem );
-                            $( window ).trigger( 'contentChanged' );
-                        } );
-                } );
+            return API.idle( checkout.CustomerInvoiceAddress );
         }
 
-        /**
-         * Get category content from server and replace received HTML
-         * in containers marked with <b>data-plenty-checkout-catcontent="..."</b>
-         * @function reloadCatContent
-         * @param    {number} catId    ID of the category to load content (description 1) from server
-         * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
-         *     Object</a>
-         * @deprecated
-         */
-        function reloadCatContent( catId )
+        function getShippingAddress()
         {
-
-            return CMS.getCategoryContent( catId )
-                .done( function( response )
-                {
-                    $( '[data-plenty-checkout-catcontent="' + catId + '"]' )
-                        .each( function( i, elem )
-                        {
-                            $( elem ).html( response.data[0] );
-                            pm.getInstance().bindDirectives( elem );
-                            $( window ).trigger( 'contentChanged' );
-
-                        } );
-                } );
-
+            return checkout.CustomerShippingAddress;
         }
 
-        /**
-         * Get layout container from server and replace received HTML
-         * in containers marked with <b>data-plenty-itemview-template="..."</b>
-         * @function reloadItemContainer
-         * @param    {string} container    Name of the (item view) template to load from server
-         * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
-         *     Object</a>
-         */
-        function reloadItemContainer( container )
+        function setShippingAddress( shippingAddress )
         {
+            if( !compareToLocal( shippingAddress, checkout.CustomerShippingAddress ) )
+            {
+                return API.post( '/rest/checkout/customershippingaddress/', shippingAddress )
+                    .done( function( response ) {
+                        syncCheckout( {
+                            CustomerShippingAddress: response.data
+                        });
+                    });
+            }
 
-            return CMS.getContainer( 'itemview' + container ).from( 'itemview' )
-                .done( function( response )
-                {
-                    $( '[data-plenty-itemview-template="' + container + '"]' )
-                        .each( function( i, elem )
-                        {
-                            $( elem ).html( response.data[0] );
-                            pm.getInstance().bindDirectives( elem );
-                            $( window ).trigger( 'contentChanged' );
-
-                        } );
-                } );
-
+            return API.idle( checkout.CustomerShippingAddress );
         }
 
-    }, ['APIFactory', 'CMSFactory', 'UIFactory'] );
-}( PlentyFramework ));
+        function getBankDetails()
+        {
+            return checkout.PaymentInformationBankDetails;
+        }
+
+        function setBankDetails( bankDetails )
+        {
+            if( !compareToLocal( bankDetails, checkout.PaymentInformationBankDetails ) )
+            {
+                return API.post( '/rest/checkout/paymentinformationbankdetails', bankDetails )
+                    .done( function( response ) {
+                        syncCheckout({
+                            PaymentInformationBankDetails: response.data
+                        });
+                    });
+            }
+
+            return API.idle( checkout.PaymentInformationBankDetails );
+        }
+
+        function getCreditCardInformation()
+        {
+            return checkout.PaymentInformationBankDetails;
+        }
+
+        function setCreditCardInformation( creditCardInformation )
+        {
+            if( !compareToLocal( creditCardInformation, checkout.PaymentInformationCreditCard ) )
+            {
+                return API.post( '/rest/checkout/paymentinformationcreditcard', creditCardInformation )
+                    .done( function( response ) {
+                        syncCheckout({
+                            PaymentInformationCreditCard: response.data
+                        });
+                    });
+            }
+
+            return API.idle( checkout.PaymentInformationCreditCard );
+        }
+
+        function getBasketItemsList()
+        {
+            return checkout.BasketItemsList;
+        }
+
+        function setBasketItemsList( basketItemsList )
+        {
+            if( !compareToLocal( basketItemsList, checkout.BasketItemsList ) )
+            {
+                return API.post( '/rest/checkout/basketitemslist/', basketItemsList )
+                    .done(function( response ) {
+                        syncCheckout( response.data, checkout.BasketItemsList );
+                    } );
+            }
+        }
+
+        function placeOrder( params )
+        {
+            return API.post( '/rest/checkout/placeorder', params );
+        }
+
+    }, ['APIFactory'] );
+
+})( jQuery, PlentyFramework );
