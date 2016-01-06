@@ -21,33 +21,15 @@
 
             CheckoutFactory.init();
             CheckoutFactory.watch( 'Checkout', function() {
-                reloadContainer( "MethodsOfPaymentList" );
-                reloadContainer( "ShippingProfileList" );
+                CMSFactory.reloadContainer( "MethodsOfPaymentList" );
+                CMSFactory.reloadContainer( "ShippingProfileList" );
 
-                if( CheckoutFactory.getCheckout.CustomerInvoiceAddress.LoginType == 2 )
+                if( CheckoutFactory.getCheckout.CustomerInvoiceAddress.LoginType == CheckoutFactory.LoginType.CUSTOMER )
                 {
-                    reloadContainer( "CustomerShippingAddress" );
+                    CMSFactory.reloadContainer( "CustomerShippingAddress" );
                 }
             });
 
-        }
-
-        function reloadContainer( container )
-        {
-            if( $( '[data-plenty-checkout-template="' + container + '"]:visible' ).length > 0 )
-            {
-                CMSFactory.getContainer( "checkout" + container ).from( 'checkout' )
-                    .done( function( response )
-                    {
-                        $( '[data-plenty-checkout-template="' + container + '"]' )
-                            .each( function( i, elem )
-                            {
-                                $( elem ).html( response.data[0] );
-                                pm.getInstance().bindDirectives( elem );
-                                $( window ).trigger( 'contentChanged' );
-                            } );
-                    } );
-            }
         }
 
         function saveOrderDetails()
@@ -259,5 +241,5 @@
                     }
                 } );
         }
-    }, ['CheckoutFactory2', 'ModalFactory', 'CMSFactory'] );
+    }, ['CheckoutFactory', 'ModalFactory', 'CMSFactory'] );
 })(jQuery, PlentyFramework);

@@ -28,8 +28,11 @@
 
         return {
             getContainer      : getContainer,
+            reloadContainer   : reloadContainer,
+            reloadItemContainer:reloadItemContainer,
             getParams         : getParams,
-            getCategoryContent: getCategoryContent
+            getCategoryContent: getCategoryContent,
+            reloadCatContent  : reloadCatContent
         };
 
         /**
@@ -58,6 +61,56 @@
             return {
                 from: from
             }
+
+        }
+
+        /**
+         * Get layout container from server and replace received HTML
+         * in containers marked with <b>data-plenty-checkout-template="..."</b>
+         * @function reloadContainer
+         * @param  {string} container Name of the template to load from server
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
+         */
+        function reloadContainer( container )
+        {
+
+            return getContainer( "checkout" + container ).from( 'checkout' )
+                .done( function( response )
+                {
+                    $( '[data-plenty-checkout-template="' + container + '"]' )
+                        .each( function( i, elem )
+                        {
+                            $( elem ).html( response.data[0] );
+                            pm.getInstance().bindDirectives( elem );
+                            $( window ).trigger( 'contentChanged' );
+                        } );
+                } );
+        }
+
+        /**
+         * Get layout container from server and replace received HTML
+         * in containers marked with <b>data-plenty-itemview-template="..."</b>
+         * @function reloadItemContainer
+         * @param    {string} container    Name of the (item view) template to load from server
+         * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
+         */
+        function reloadItemContainer( container )
+        {
+
+            return getContainer( 'itemview' + container ).from( 'itemview' )
+                .done( function( response )
+                {
+                    $( '[data-plenty-itemview-template="' + container + '"]' )
+                        .each( function( i, elem )
+                        {
+                            $( elem ).html( response.data[0] );
+                            pm.getInstance().bindDirectives( elem );
+                            $( window ).trigger( 'contentChanged' );
+
+                        } );
+                } );
 
         }
 
@@ -100,6 +153,32 @@
         {
 
             return API.get( '/rest/categoryview/categorycontentbody/?categoryID=' + categoryID );
+        }
+
+        /**
+         * Get category content from server and replace received HTML
+         * in containers marked with <b>data-plenty-checkout-catcontent="..."</b>
+         * @function reloadCatContent
+         * @param    {number} catId    ID of the category to load content (description 1) from server
+         * @return  {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
+         */
+        function reloadCatContent( catId )
+        {
+
+            return getCategoryContent( catId )
+                .done( function( response )
+                {
+                    $( '[data-plenty-checkout-catcontent="' + catId + '"]' )
+                        .each( function( i, elem )
+                        {
+                            $( elem ).html( response.data[0] );
+                            pm.getInstance().bindDirectives( elem );
+                            $( window ).trigger( 'contentChanged' );
+
+                        } );
+                } );
+
         }
 
     }, ['APIFactory'] );

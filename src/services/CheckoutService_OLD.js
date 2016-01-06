@@ -25,7 +25,7 @@
      * @class CheckoutService
      * @static
      */
-    pm.service( 'CheckoutService', function( API, CMS, Checkout, Checkout2, Modal )
+    pm.service( 'CheckoutService-OLD', function( API, CMS, Checkout, Modal )
     {
 
         return {
@@ -634,5 +634,5 @@
             }
         }
 
-    }, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'CheckoutFactory2', 'ModalFactory'] );
+    }, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));

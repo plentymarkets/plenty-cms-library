@@ -78,7 +78,8 @@
 
                 $elem.data( 'timeout', timeout );
             }
-            else {
+            else
+            {
                 if ( (value + '').length <= maxLength && value >= 1 )
                 {
                     $quantityInput.val( value );

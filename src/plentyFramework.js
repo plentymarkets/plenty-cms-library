@@ -625,7 +625,7 @@
                     continue;
                 }
 
-                console.error( 'Cannot inject dependency "' + dependency + '": Object not found.' );
+                console.error( 'Cannot inject dependency "' + dependency + '" in ' + component.name + ': Object not found.' );
             }
             else
             {

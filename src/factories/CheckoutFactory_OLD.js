@@ -25,7 +25,7 @@
      * @class CheckoutFactory
      * @static
      */
-    pm.factory( 'CheckoutFactory', function( API, CMS, UI )
+    pm.factory( 'CheckoutFactory-OLD', function( API, CMS, UI )
     {
 
         // data received from ReST API

@@ -32,7 +32,7 @@
         return {
             addItem           : addBasketItem,
             removeItem        : removeBasketItem,
-            getItem           : getBasketItem,
+            getItem           : getItem,
             setItemQuantity   : setItemQuantity,
             editItemAttributes: editItemAttributes,
             editOrderParams   : editOrderParams,
@@ -58,7 +58,8 @@
                     {
                         itemID  : article[0].BasketItemItemID,
                         quantity: article[0].BasketItemQuantity
-                    }, false, true ).done( function( resp )
+                    }, false, true )
+                    .done( function( resp )
                 {
                     // checking for order params!
                     if ( resp.data[0].indexOf( "form-group" ) > 0 )
@@ -150,6 +151,24 @@
 
         function addArticle( article )
         {
+
+            Checkout.setBasketItemsList( article )
+                .done( function()
+                {
+                    // TODO: move to checkout watcher
+                    refreshBasketPreview();
+                    // Show confirmation popup
+                    CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', {ArticleID: article[0].BasketItemItemID} ).from( 'ItemView' )
+                        .done( function( response )
+                        {
+                            Modal.prepare()
+                                .setContent( response.data[0] )
+                                .setTimeout( 5000 )
+                                .show();
+                        } );
+                } );
+
+            /*
             API.post( '/rest/checkout/basketitemslist/', article, true )
                 .done( function()
                 {
@@ -173,15 +192,18 @@
                 // some other error occured
                 UI.printErrors( JSON.parse( jqXHR.responseText ).error.error_stack );
             } );
+            */
         }
 
         function updateArticle( article )
         {
+
+
             API.put( '/rest/checkout/basketitemslist/', article )
                 .done( function()
                 {
                     // Item has no OrderParams -> Refresh Checkout & BasketPreview
-                    Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
+                    CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
                     Checkout.loadCheckout()
                         .done( function()
                         {
@@ -340,18 +362,9 @@
             } );
         }
 
-        function getBasketItem( BasketItemID )
+        function getItem( BasketItemID )
         {
-            var basketItems = Checkout.getCheckout().BasketItemsList;
-            for ( var i = 0; i < basketItems.length; i++ )
-            {
-                if ( basketItems[i].BasketItemID == BasketItemID )
-                {
-                    return basketItems[i];
-                }
-            }
-
-            return null;
+            return Checkout.getBasketItem( BasketItemID );
         }
 
         /**
@@ -367,31 +380,28 @@
             var deferred = $.Deferred();
 
             // get item name
-            var itemName = getBasketItem( BasketItemID ).BasketItemNameMap[1];
+            var itemName = Checkout.getBasketItem( BasketItemID ).BasketItemNameMap[1];
 
             // calling the delete request
             function doDelete()
             {
-                API.delete( '/rest/checkout/basketitemslist/?basketItemIdsList[0]=' + BasketItemID )
+                Checkout.deleteBasketItem( BasketItemID )
                     .done( function()
                     {
-                        Checkout.loadCheckout().done( function()
+                        $( '[data-basket-item-id="' + BasketItemID + '"]' ).remove();
+
+                        if ( !Checkout.getCheckout().BasketItemsList || Checkout.getCheckout().BasketItemsList.length <= 0 )
                         {
-                            $( '[data-basket-item-id="' + BasketItemID + '"]' ).remove();
+                            CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
+                        }
+                        else
+                        {
+                            CMS.reloadContainer( 'Totals' );
+                        }
 
-                            if ( !Checkout.getCheckout().BasketItemsList || Checkout.getCheckout().BasketItemsList.length <= 0 )
-                            {
-                                Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
-                            }
-                            else
-                            {
-                                Checkout.reloadContainer( 'Totals' );
-                            }
+                        refreshBasketPreview();
 
-                            refreshBasketPreview();
-
-                            deferred.resolve();
-                        } );
+                        deferred.resolve();
                     } );
             }
 
@@ -462,7 +472,7 @@
                     {
                         Checkout.setCheckout().done( function()
                         {
-                            Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
+                            CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
                             refreshBasketPreview();
                             deferred.resolve();
                         } );
@@ -480,7 +490,7 @@
         function refreshBasketPreview()
         {
 
-            Checkout.reloadItemContainer( 'BasketPreviewList' )
+            CMS.reloadItemContainer( 'BasketPreviewList' )
                 .done( function()
                 {
 
@@ -501,7 +511,7 @@
 
             //update quantity
             var itemQuantityTotal = 0;
-            $.each( Checkout.getCheckout().BasketItemsList, function( i, basketItem )
+            $.each( Checkout.getBasketItemsList(), function( i, basketItem )
             {
                 itemQuantityTotal += basketItem.BasketItemQuantity;
             } );
@@ -563,11 +573,11 @@
         // update container
         function updateContainer()
         {
-            Checkout.reloadContainer( 'Coupon' );
+            CMS.reloadContainer( 'Coupon' );
             // reload totals, if we are at basket
             if ( $( '[data-plenty-checkout-template="Totals"]' ).length > 0 )
             {
-                Checkout.reloadContainer( 'Totals' );
+                CMS.reloadContainer( 'Totals' );
             }
         }
 
