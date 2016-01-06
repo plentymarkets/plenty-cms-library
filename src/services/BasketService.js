@@ -29,6 +29,20 @@
     pm.service( 'BasketService', function( API, UI, CMS, Checkout, Modal )
     {
 
+        Checkout.watch('Checkout.BasketItemsList', function() {
+
+            if ( !Checkout.getCheckout().BasketItemsList || Checkout.getCheckout().BasketItemsList.length <= 0 )
+            {
+                CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
+            }
+            else
+            {
+                CMS.reloadContainer( 'Totals' );
+            }
+
+            refreshBasketPreview();
+        });
+
         return {
             addItem           : addBasketItem,
             removeItem        : removeBasketItem,
@@ -43,54 +57,69 @@
         /**
          * Add item to basket. Will fail and show a popup if item has order params
          * @function addBasketItem
-         * @param   {Array}     article         Array containing the item to add
+         * @param   {Array}     basketItemList         Array containing the item to add
          * @param   {boolean}   [isUpdate=false]      Indicating if item's OrderParams are updated
          * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
          *     Object</a>
          */
-        function addBasketItem( article )
+        function addBasketItem( basketItemList )
         {
 
-            if ( !!article )
+            if ( !!basketItemList )
             {
+                CMS.getContainer( 'CheckoutOrderParamsList', {
+                    itemID  : basketItemList[0].BasketItemItemID,
+                    quantity: basketItemList[0].BasketItemQuantity
+                }).from( 'Checkout' ).done( function( response )
+                    {
+                        // checking for order params!
+                        if ( response.data[0].indexOf( "form-group" ) > 0 )
+                        {
+                            Modal.prepare()
+                                .setContent( response.data[0] )
+                                .setTitle( pm.translate( "Select order parameters" ) )
+                                .setLabelConfirm( pm.translate( "Save" ) )
+                                .onConfirm( function()
+                                {
+                                    // validate form
+                                    if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+                                    {
+                                        // save order params
+                                        handleRequest( saveOrderParams( basketItemList ) );
 
-                API.get( '/rest/checkout/container_' + 'CheckoutOrderParamsList'.toLowerCase() + '/',
+                                        // close modal after saving order params
+                                        return true;
+                                    }
+                                    else
+                                    {
+                                        return false;
+                                    }
+                                } )
+                                .show();
+                        }
+                        else
+                        {
+                            handleRequest( basketItemList );
+                        }
+                    } );
+            }
+
+            function handleRequest( basketItemList )
+            {
+                Checkout.setBasketItemsList( basketItemList )
+                    .done( function()
                     {
-                        itemID  : article[0].BasketItemItemID,
-                        quantity: article[0].BasketItemQuantity
-                    }, false, true )
-                    .done( function( resp )
-                {
-                    // checking for order params!
-                    if ( resp.data[0].indexOf( "form-group" ) > 0 )
-                    {
-                        Modal.prepare()
-                            .setContent( resp.data[0] )
-                            .setTitle( pm.translate( "Select order parameters" ) )
-                            .setLabelConfirm( pm.translate( "Save" ) )
-                            .onConfirm( function()
+                        // Show confirmation popup
+                        CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', {ArticleID: basketItemList[0].BasketItemItemID} )
+                            .from( 'ItemView' )
+                            .done( function( response )
                             {
-                                // validate form
-                                if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
-                                {
-                                    // save order params
-                                    addArticle( saveOrderParams( article ) );
-
-                                    // close modal after saving order params
-                                    return true;
-                                }
-                                else
-                                {
-                                    return false;
-                                }
-                            } )
-                            .show();
-                    }
-                    else
-                    {
-                        addArticle( article );
-                    }
-                } );
+                                Modal.prepare()
+                                    .setContent( response.data[0] )
+                                    .setTimeout( 5000 )
+                                    .show();
+                            } );
+                    } );
             }
         }
 
@@ -99,9 +128,9 @@
          * read values in 'addBasketList'. Update item by calling <code>addBasketItem()</code> again
          * @function saveOrderParams
          * @private
-         * @param {Array} articleWithParams Containing the current item to add. Read OrderParams will be injected
+         * @param {Array} itemWithParams Containing the current item to add. Read OrderParams will be injected
          */
-        function saveOrderParams( articleWithParams )
+        function saveOrderParams( itemWithParams )
         {
             //TODO use $("[data-plenty-checkout-form='OrderParamsForm']").serializeArray() to get order params
             var orderParamsForm = $( '[data-plenty-checkout-form="OrderParamsForm"]' );
@@ -113,7 +142,7 @@
             orderParamsForm.find( '[name^="ParamGroup"]' ).each( function()
             {
                 match             = this.name.match( /^ParamGroup\[(\d+)]\[(\d+)]$/ );
-                articleWithParams = addOrderParamValue( articleWithParams, match[1], $( this ).val(), $( this ).val() );
+                itemWithParams = addOrderParamValue( itemWithParams, match[1], $( this ).val(), $( this ).val() );
             } );
 
             //Values
@@ -128,88 +157,35 @@
                 {
 
                     var match = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
-                    articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], $self.val() );
+                    itemWithParams = addOrderParamValue( itemWithParams, match[1], match[2], $self.val() );
 
                 }
                 else if ( attrType == 'file' )
                 {
                     if( $self[0].files && $self[0].files.length > 0 )
                     {
-                        articleWithParams = orderParamFileUpload( $self, articleWithParams );
+                        itemWithParams = orderParamFileUpload( $self, itemWithParams );
                     }
                     else
                     {
                         var match = $self[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
                         var paramValue = $( 'input[type="hidden"][name="ParamValue[' + match[1] + '][' + match[2] + ']"]' ).val();
-                        articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], paramValue );
+                        itemWithParams = addOrderParamValue( itemWithParams, match[1], match[2], paramValue );
                     }
                 }
             } );
 
-            return articleWithParams;
+            return itemWithParams;
         }
 
-        function addArticle( article )
+        function updateBasketItem( basketItem )
         {
-
-            Checkout.setBasketItemsList( article )
-                .done( function()
-                {
-                    // TODO: move to checkout watcher
-                    refreshBasketPreview();
-                    // Show confirmation popup
-                    CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', {ArticleID: article[0].BasketItemItemID} ).from( 'ItemView' )
-                        .done( function( response )
-                        {
-                            Modal.prepare()
-                                .setContent( response.data[0] )
-                                .setTimeout( 5000 )
-                                .show();
-                        } );
-                } );
-
-            /*
-            API.post( '/rest/checkout/basketitemslist/', article, true )
-                .done( function()
-                {
-                    // Item has no OrderParams -> Refresh Checkout & BasketPreview
-                    Checkout.loadCheckout()
-                        .done( function()
-                        {
-                            refreshBasketPreview();
-                            // Show confirmation popup
-                            CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', {ArticleID: article[0].BasketItemItemID} ).from( 'ItemView' )
-                                .done( function( response )
-                                {
-                                    Modal.prepare()
-                                        .setContent( response.data[0] )
-                                        .setTimeout( 5000 )
-                                        .show();
-                                } );
-                        } );
-                } ).fail( function( jqXHR )
-            {
-                // some other error occured
-                UI.printErrors( JSON.parse( jqXHR.responseText ).error.error_stack );
-            } );
-            */
-        }
-
-        function updateArticle( article )
-        {
-
-
-            API.put( '/rest/checkout/basketitemslist/', article )
+            Checkout.updateBasketItemsList( basketItem )
                 .done( function()
                 {
                     // Item has no OrderParams -> Refresh Checkout & BasketPreview
                     CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
-                    Checkout.loadCheckout()
-                        .done( function()
-                        {
-                            refreshBasketPreview();
-                        } );
-                } )
+                } );
         }
 
         function orderParamFileUpload( $input, articleWithParams )
@@ -318,7 +294,7 @@
                     basketItem.BasketItemAttributesList = attributesList;
                 }
                 //update basketItem and refresh previewLists
-                updateArticle( [basketItem] );
+                updateBasketItem( [basketItem] );
 
             } );
         }
@@ -326,40 +302,42 @@
         function editOrderParams( BasketItemID )
         {
 
-            var basketItem = getBasketItem( BasketItemID );
-            // FIX: unset old order params
+            var basketItem = Checkout.getBasketItem( BasketItemID );
 
+            // FIX: unset old order params
             basketItem.BasketItemOrderParamsList = [];
 
-            API.get( '/rest/checkout/container_' + 'CheckoutOrderParamsList'.toLowerCase() + '/', {
+            CMS.getContainer( 'CheckoutOrderParamsList', {
                 itemID      : basketItem.BasketItemItemID,
                 quantity    : basketItem.BasketItemQuantity,
                 basketItemID: BasketItemID
-            } ).done( function( resp )
-            {
-                // checking for order params!
-                Modal.prepare()
-                    .setContent( resp.data[0] )
-                    .setTitle( pm.translate( "Edit order parameters" ) )
-                    .setLabelConfirm( pm.translate( "Save" ) )
-                    .onConfirm( function()
-                    {
-                        // validate form
-                        if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+            } )
+                .from('Checkout')
+                .done( function( resp )
+                {
+                    // checking for order params!
+                    Modal.prepare()
+                        .setContent( resp.data[0] )
+                        .setTitle( pm.translate( "Edit order parameters" ) )
+                        .setLabelConfirm( pm.translate( "Save" ) )
+                        .onConfirm( function()
                         {
-                            // save order params
-                            updateArticle( saveOrderParams( [basketItem] ) );
+                            // validate form
+                            if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+                            {
+                                // save order params
+                                updateBasketItem( saveOrderParams( [basketItem] ) );
 
-                            // close modal after saving order params
-                            return true;
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    } )
-                    .show();
-            } );
+                                // close modal after saving order params
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        } )
+                        .show();
+                } );
         }
 
         function getItem( BasketItemID )
@@ -389,18 +367,6 @@
                     .done( function()
                     {
                         $( '[data-basket-item-id="' + BasketItemID + '"]' ).remove();
-
-                        if ( !Checkout.getCheckout().BasketItemsList || Checkout.getCheckout().BasketItemsList.length <= 0 )
-                        {
-                            CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
-                        }
-                        else
-                        {
-                            CMS.reloadContainer( 'Totals' );
-                        }
-
-                        refreshBasketPreview();
-
                         deferred.resolve();
                     } );
             }
@@ -447,39 +413,11 @@
                 return removeBasketItem( BasketItemID );
             }
 
-            var deferred = $.Deferred();
-            var params   = Checkout.getCheckout().BasketItemsList;
-            var basketItem;
-            var basketItemIndex;
+            var basketItem = Checkout.getBasketItem( BasketItemID );
+            basketItem.BasketItemQuantity = BasketItemQuantity;
 
-            for ( var i = 0; i < params.length; i++ )
-            {
-                if ( params[i].BasketItemID == BasketItemID )
-                {
-                    basketItemIndex = i;
-                    basketItem      = params[i];
-                    break;
+            return Checkout.setBasketItemsList( [basketItem] );
 
-                }
-            }
-
-            if ( !!basketItem && basketItem.BasketItemQuantity != BasketItemQuantity )
-            {
-                params[basketItemIndex].BasketItemQuantity = parseInt( BasketItemQuantity );
-
-                API.post( "/rest/checkout/basketitemslist/", params )
-                    .done( function()
-                    {
-                        Checkout.setCheckout().done( function()
-                        {
-                            CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
-                            refreshBasketPreview();
-                            deferred.resolve();
-                        } );
-                    } );
-            }
-
-            return deferred;
         }
 
         /**

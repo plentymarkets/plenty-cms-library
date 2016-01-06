@@ -22,8 +22,10 @@
             setCreditCardInformation: setCreditCardInformation,
             getBasketItemsList: getBasketItemsList,
             setBasketItemsList: setBasketItemsList,
+            updateBasketItemsList: updateBasketItemsList,
             getBasketItem: getBasketItem,
             addBasketItem: addBasketItem,
+            updateBasketItem: updateBasketItem,
             deleteBasketItem: deleteBasketItem,
             placeOrder: placeOrder,
             loginTypes: {
@@ -51,7 +53,6 @@
 
         function notify( propertyName, args )
         {
-            console.log("notify: " + propertyName );
             if ( watcherList.hasOwnProperty( propertyName ) )
             {
                 for ( var i = 0; i < watcherList[propertyName].length; i++ )
@@ -71,10 +72,6 @@
             for( var key in remoteData )
             {
                 // check for changed data
-
-                if( key == "BasketItemQuantity") {
-                    console.log( remoteData[key] + " " + localData[key] );
-                }
                 if( !localData.hasOwnProperty( key ) )
                 {
                     // new property
@@ -109,7 +106,11 @@
                 if( typeof( remoteData[key] ) === "object" && !!remoteData[key] )
                 {
                     // compare recursive
-                    localData[key] = syncCheckout( remoteData[key], localData[key], parentPropertyName + "." + key );
+                    if( syncCheckout( remoteData[key], localData[key], parentPropertyName + "." + key ) )
+                    {
+                        localData[key] = remoteData[key];
+                        hasChanges = true;
+                    }
                     continue;
                 }
 
@@ -145,7 +146,7 @@
                 checkout = localData;
             }
 
-            return localData;
+            return hasChanges;
         }
 
 
@@ -329,6 +330,21 @@
             return API.idle( checkout.BasketItemsList );
         }
 
+        function updateBasketItemsList( basketItemsList )
+        {
+            if( !compareToLocal( basketItemsList, checkout.BasketItemsList ) )
+            {
+                return API.put( '/rest/checkout/basketitemslist/', basketItemsList )
+                    .done(function( response ) {
+                        syncCheckout( {
+                            BasketItemsList: response.data
+                        } );
+                    } );
+            }
+
+            return API.idle( checkout.BasketItemsList );
+        }
+
         function getBasketItem( BasketItemID )
         {
             var basketItems = checkout.BasketItemsList.length;
@@ -345,17 +361,23 @@
 
         function addBasketItem( BasketItem )
         {
-            return setBasketItemsList([BasketItem]);
+            return setBasketItemsList( [BasketItem] );
+        }
+
+        function updateBasketItem( BasketItem )
+        {
+            return updateBasketItemsList( [BasketItem] );
         }
 
         function deleteBasketItem( BasketItemID )
         {
             return API.delete( '/rest/checkout/basketitemslist/?basketItemIdsList[0]=' + BasketItemID )
-                .done(function( response ) {
+                .done( function( response )
+                {
                     syncCheckout( {
                         BasketItemsList: response.data
                     } );
-                });
+                } );
         }
 
 
