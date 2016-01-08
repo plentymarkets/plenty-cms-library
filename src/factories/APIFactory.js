@@ -23,8 +23,13 @@
      * @class APIFactory
      * @static
      */
-    pm.factory( 'APIFactory', function( UI )
+    pm.factory( 'APIFactory', function( UI, Modal )
     {
+
+        var sessionExpirationTimeout = null;
+        $( document ).ready(function() {
+            renewLoginSession();
+        });
 
         return {
             get   : _get,
@@ -33,6 +38,35 @@
             delete: _delete,
             idle  : _idle
         };
+
+        function renewLoginSession()
+        {
+            if( !!sessionExpirationTimeout )
+            {
+                clearTimeout( sessionExpirationTimeout );
+            }
+
+            sessionExpirationTimeout = setTimeout(function() {
+                $( window ).trigger( 'login-expired' );
+
+                if( pm.getGlobal('PageDesign') === "Checkout" )
+                {
+                    Modal.prepare()
+                        .setTitle( 'Your session has expired.' )
+                        .setContent( 'Please login again to continue shopping.' )
+                        .onConfirm( function()
+                        {
+                            window.location.assign( '/' );
+                        } )
+                        .onDismiss( function()
+                        {
+                            window.location.assign( '/' );
+                        } )
+                        .show();
+                }
+
+            }, pm.getGlobal('LoginSessionExpiration') );
+        }
 
         /**
          * Is called by default if a request failed.<br>
@@ -99,6 +133,7 @@
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -157,6 +192,7 @@
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
         }
 
@@ -202,6 +238,7 @@
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -248,6 +285,7 @@
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -262,5 +300,5 @@
             return $.Deferred().resolve();
         }
 
-    }, ['UIFactory'] );
+    }, ['UIFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));
