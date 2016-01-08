@@ -31,7 +31,7 @@
 
         Checkout.watch('Checkout.BasketItemsList', function() {
 
-            if ( !Checkout.getCheckout().BasketItemsList || Checkout.getCheckout().BasketItemsList.length <= 0 )
+            if ( !Checkout.getBasketItemsList() || Checkout.getBasketItemsList().length <= 0 )
             {
                 CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
             }
@@ -43,9 +43,15 @@
             refreshBasketPreview();
         });
 
+        Checkout.watch('Checkout.Coupon', function() {
+            CMS.reloadContainer( 'Coupon' );
+            CMS.reloadContainer( 'Totals' );
+        });
+
         return {
             addItem           : addBasketItem,
             removeItem        : removeBasketItem,
+            /** @deprecated **/
             getItem           : getItem,
             setItemQuantity   : setItemQuantity,
             editItemAttributes: editItemAttributes,
@@ -180,12 +186,14 @@
 
         function updateBasketItem( basketItem )
         {
-            Checkout.updateBasketItemsList( basketItem )
+            Checkout.updateBasketItemsList( basketItem );
+            /*
                 .done( function()
                 {
                     // Item has no OrderParams -> Refresh Checkout & BasketPreview
                     CMS.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
                 } );
+                */
         }
 
         function orderParamFileUpload( $input, articleWithParams )
@@ -340,6 +348,7 @@
                 } );
         }
 
+        /** @deprecated **/
         function getItem( BasketItemID )
         {
             return Checkout.getBasketItem( BasketItemID );
@@ -413,10 +422,10 @@
                 return removeBasketItem( BasketItemID );
             }
 
-            var basketItem = Checkout.getBasketItem( BasketItemID );
-            basketItem.BasketItemQuantity = BasketItemQuantity;
-
-            return Checkout.setBasketItemsList( [basketItem] );
+            return Checkout.updateBasketItem({
+                BasketItemID: BasketItemID,
+                BasketItemQuantity: BasketItemQuantity
+            });
 
         }
 
@@ -435,7 +444,7 @@
                     $( '[data-plenty-basket-empty]' ).each( function( i, elem )
                     {
                         var toggleClass = $( elem ).attr( 'data-plenty-basket-empty' );
-                        if ( Checkout.getCheckout().BasketItemsList.length <= 0 )
+                        if ( Checkout.getBasketItemsList().length <= 0 )
                         {
                             $( elem ).addClass( toggleClass );
                         }
@@ -467,9 +476,13 @@
          */
         function addCoupon()
         {
+            return Checkout.setCoupon( $( '[data-plenty-checkout-form="couponCode"]' ).val() );
+
+            /*
             var params = {
                 CouponActiveCouponCode: $( '[data-plenty-checkout-form="couponCode"]' ).val()
             };
+
 
             return API.post( "/rest/checkout/coupon/", params )
                 .done( function()
@@ -481,6 +494,7 @@
                             updateContainer();
                         } );
                 } );
+                */
         }
 
         /**
@@ -491,33 +505,9 @@
          */
         function removeCoupon()
         {
-            var params = {
-                CouponActiveCouponCode: Checkout.getCheckout().Coupon.CouponActiveCouponCode
-            };
-
-            return API.delete( "/rest/checkout/coupon/", params )
-                .done( function()
-                {
-                    Checkout.setCheckout()
-                        .done( function()
-                        {
-                            delete Checkout.getCheckout().Coupon;
-
-                            updateContainer();
-                        } );
-                } );
+            return Checkout.deleteCoupon();
         }
 
-        // update container
-        function updateContainer()
-        {
-            CMS.reloadContainer( 'Coupon' );
-            // reload totals, if we are at basket
-            if ( $( '[data-plenty-checkout-template="Totals"]' ).length > 0 )
-            {
-                CMS.reloadContainer( 'Totals' );
-            }
-        }
 
     }, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));

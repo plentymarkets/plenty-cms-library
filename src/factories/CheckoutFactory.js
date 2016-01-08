@@ -27,6 +27,8 @@
             addBasketItem: addBasketItem,
             updateBasketItem: updateBasketItem,
             deleteBasketItem: deleteBasketItem,
+            setCoupon: setCoupon,
+            deleteCoupon: deleteCoupon,
             placeOrder: placeOrder,
             loginTypes: {
                 GUEST: 1,
@@ -67,6 +69,7 @@
             localData = localData || checkout;
             parentPropertyName = parentPropertyName || 'Checkout';
             var hasChanges = false;
+            var oldParent = localData;
 
 
             for( var key in remoteData )
@@ -75,14 +78,15 @@
                 if( !localData.hasOwnProperty( key ) )
                 {
                     // new property
+                    var oldValue = localData[key];
+                    localData[key] = remoteData[key];
                     notify(
                         parentPropertyName + "." + key,
                         [
-                            localData[key],
+                            oldValue,
                             remoteData[key]
                         ]
                     );
-                    localData[key] = remoteData[key];
                     hasChanges = true;
                     continue;
                 }
@@ -91,14 +95,15 @@
                     && remoteData[key].length !== localData[key].length )
                 {
                     // array size changed
+                    var oldValue = localData[key];
+                    localData[key] = remoteData[key];
                     notify(
                         parentPropertyName + "." + key,
                         [
-                            localData[key],
+                            oldValue,
                             remoteData[key]
                         ]
                     );
-                    localData[key] = remoteData[key];
                     hasChanges = true;
                     continue;
                 }
@@ -117,14 +122,15 @@
                 if( remoteData[key] !== localData[key] )
                 {
                     // property has changed
+                    var oldValue = localData[key];
+                    localData[key] = remoteData[key];
                     notify(
                         parentPropertyName + "." + key,
                         [
-                            localData[key],
+                            oldValue,
                             remoteData[key]
                         ]
                     );
-                    localData[key] = remoteData[key];
                     hasChanges = true;
                     continue;
                 }
@@ -135,7 +141,7 @@
                 notify(
                     parentPropertyName,
                     [
-                        localData,
+                        oldParent,
                         remoteData
                     ]
                 );
@@ -361,11 +367,15 @@
 
         function addBasketItem( BasketItem )
         {
+            BasketItem.BasketItemQuantity = BasketItem.BasketItemQuantity || getBasketItem( BasketItem.BasketItemID ).BasketItemQantity;
+            BasketItem.BasketItemPriceID = BasketItem.BasketItemPriceID || getBasketItem( BasketItem.BasketItemID ).BasketItemPriceID;
             return setBasketItemsList( [BasketItem] );
         }
 
         function updateBasketItem( BasketItem )
         {
+            BasketItem.BasketItemQuantity = BasketItem.BasketItemQuantity || getBasketItem( BasketItem.BasketItemID ).BasketItemQantity;
+            BasketItem.BasketItemPriceID = BasketItem.BasketItemPriceID || getBasketItem( BasketItem.BasketItemID ).BasketItemPriceID;
             return updateBasketItemsList( [BasketItem] );
         }
 
@@ -380,7 +390,41 @@
                 } );
         }
 
+        function setCoupon( CouponCode )
+        {
+            if( checkout.Coupon.CouponActiveCouponCode != CouponCode )
+            {
+                return API.post( '/rest/checkout/coupon/', {
+                    CouponActiveCouponCode: CouponCode
+                } ).done( function( response ) {
+                    syncCheckout({
+                        Coupon: response.data
+                    });
+                } );
+            }
+            else
+            {
+                return API.idle( checkout.Coupon );
+            }
+        }
 
+        function deleteCoupon()
+        {
+            if( !!checkout.Coupon.CouponActiveCouponCode )
+            {
+                return API.delete( '/rest/checkout/coupon/', {
+                    CouponActiveCouponCode: checkout.Coupon.CouponActiveCouponCode
+                } ).done( function( response ) {
+                    syncCheckout({
+                        Coupon: response.data
+                    });
+                } );
+            }
+            else
+            {
+                return API.idle( checkout.Coupon );
+            }
+        }
 
         function placeOrder( params )
         {

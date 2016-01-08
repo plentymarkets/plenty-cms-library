@@ -74,18 +74,24 @@
          */
         function reloadContainer( container )
         {
-
-            return getContainer( "checkout" + container ).from( 'checkout' )
-                .done( function( response )
-                {
-                    $( '[data-plenty-checkout-template="' + container + '"]' )
-                        .each( function( i, elem )
-                        {
-                            $( elem ).html( response.data[0] );
-                            pm.getInstance().bindDirectives( elem );
-                            $( window ).trigger( 'contentChanged' );
-                        } );
-                } );
+            if( $( '[data-plenty-checkout-template="' + container + '"]' ).length > 0 )
+            {
+                return getContainer( "checkout" + container ).from( 'checkout' )
+                    .done( function( response )
+                    {
+                        $( '[data-plenty-checkout-template="' + container + '"]' )
+                            .each( function( i, elem )
+                            {
+                                $( elem ).html( response.data[0] );
+                                pm.getInstance().bindDirectives( elem );
+                                $( window ).trigger( 'contentChanged' );
+                            } );
+                    } );
+            }
+            else
+            {
+                return API.idle();
+            }
         }
 
         /**
@@ -98,20 +104,25 @@
          */
         function reloadItemContainer( container )
         {
+            if( $( '[data-plenty-itemview-template="' + container + '"]' ).length > 0 )
+            {
+                return getContainer( 'itemview' + container ).from( 'itemview' )
+                    .done( function( response )
+                    {
+                        $( '[data-plenty-itemview-template="' + container + '"]' )
+                            .each( function( i, elem )
+                            {
+                                $( elem ).html( response.data[0] );
+                                pm.getInstance().bindDirectives( elem );
+                                $( window ).trigger( 'contentChanged' );
 
-            return getContainer( 'itemview' + container ).from( 'itemview' )
-                .done( function( response )
-                {
-                    $( '[data-plenty-itemview-template="' + container + '"]' )
-                        .each( function( i, elem )
-                        {
-                            $( elem ).html( response.data[0] );
-                            pm.getInstance().bindDirectives( elem );
-                            $( window ).trigger( 'contentChanged' );
-
-                        } );
-                } );
-
+                            } );
+                    } );
+            }
+            else
+            {
+                return API.idle();
+            }
         }
 
         /**
@@ -166,18 +177,25 @@
         function reloadCatContent( catId )
         {
 
-            return getCategoryContent( catId )
-                .done( function( response )
-                {
-                    $( '[data-plenty-checkout-catcontent="' + catId + '"]' )
-                        .each( function( i, elem )
-                        {
-                            $( elem ).html( response.data[0] );
-                            pm.getInstance().bindDirectives( elem );
-                            $( window ).trigger( 'contentChanged' );
+            if( $( '[data-plenty-checkout-catcontent="' + catId + '"]' ) )
+            {
+                return getCategoryContent( catId )
+                    .done( function( response )
+                    {
+                        $( '[data-plenty-checkout-catcontent="' + catId + '"]' )
+                            .each( function( i, elem )
+                            {
+                                $( elem ).html( response.data[0] );
+                                pm.getInstance().bindDirectives( elem );
+                                $( window ).trigger( 'contentChanged' );
 
-                        } );
-                } );
+                            } );
+                    } );
+            }
+            else
+            {
+                return API.idle();
+            }
 
         }
 
