@@ -306,30 +306,32 @@
             $( container ).hide();
 
             // refresh navigation elements
+            var $elem;
             $( navigation ).each( function( i, elem )
             {
-                $( elem ).removeClass( 'disabled active' );
+                $elem = $( elem );
+                $elem.removeClass( 'disabled active' );
 
-                $( elem ).find( '[role="tab"]' ).attr( 'aria-selected', 'false' );
+                $elem.find( '[role="tab"]' ).attr( 'aria-selected', 'false' );
 
                 if ( i < current )
                 {
                     // set current element as active
-                    $( elem ).addClass( 'visited' );
+                    $elem.addClass( 'visited' );
                 }
                 else
                 {
                     if ( i == current )
                     {
-                        $( elem ).addClass( 'active visited' );
-                        $( elem ).find( '[role="tab"]' ).attr( 'aria-selected', 'true' );
+                        $elem.addClass( 'active visited' );
+                        $elem.find( '[role="tab"]' ).attr( 'aria-selected', 'true' );
                     }
                     else
                     {
-                        if ( i > current && !$( elem ).is( '.visited' ) )
+                        if ( i > current && !$elem.is( '.visited' ) )
                         {
                             // disable elements behind active
-                            $( elem ).addClass( 'disabled' );
+                            $elem.addClass( 'disabled' );
                         }
                     }
                 }
@@ -339,21 +341,21 @@
             // hide "previous"-button if first content container is shown
             if ( current <= 0 )
             {
-                $( buttonPrev ).attr( "disabled", "disabled" );
+                buttonPrev.attr( "disabled", "disabled" );
             }
             else
             {
-                $( buttonPrev ).removeAttr( "disabled" );
+                buttonPrev.removeAttr( "disabled" );
             }
 
             // hide "next"-button if last content container is shown
             if ( current + 1 == navigation.length )
             {
-                $( buttonNext ).attr( "disabled", "disabled" );
+                buttonNext.attr( "disabled", "disabled" );
             }
             else
             {
-                $( buttonNext ).removeAttr( "disabled" );
+                buttonNext.removeAttr( "disabled" );
             }
 
             // show current content container

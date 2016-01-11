@@ -98,7 +98,6 @@
          */
         function getCategoryContent( categoryID )
         {
-
             return API.get( '/rest/categoryview/categorycontentbody/?categoryID=' + categoryID );
         }
 
