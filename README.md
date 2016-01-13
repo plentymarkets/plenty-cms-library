@@ -56,90 +56,51 @@ This library is used by the plentymarkets [**Callisto Light**](http://standardte
 
 #### Binding directives
 
-Just add the *data*-attribute used for the directive you want to bind to any HTML element:
+Directives can be used to add several functions to your markup. The library provides a simple syntax to access directives from a single *data*-attribute:
+
+`EVENT:DIRECIVE.METHOD( PARAMS* )`
+
+- EVENT: any event to trigger the method on, e.g. 'click', 'focus', 'change'. To trigger a directive when document is ready, use 'ready' or leave empty.
+- DIRECTIVE: The name of the directive, e.g. 'UI', 'Basket', 'Tab'
+- METHOD: A public method of the referenced directive.
+- PARAMS: You can pass several parameters to a directive. It is possible to pass Strings, numbers, boolean values or this-reference containing the bound HTML-element.
+
+It is also possible to chain multiple bindings separated by `;`
+
 ```html
-<!-- Clicking this element will make the page scroll to top -->
-<span data-plenty="toTop">Go to top</span>
-```
-
-
-#### Calling service functions
-
-You can call public methods of any service (e.g. *BasketService*) by calling `plenty.SERVICE_NAME.SERVICE_FUNCTION()`:
-```js
-plenty.BasketService.addItem( BasketItem );
-// 'plenty' is shorthand for PlentyFramework.getInstance();
+<span data-plenty="click:UI.toggleClass('newClass', this)">Toggle class</span>
+<span data-plenty="UI.initToTop(this)">To top</span>
+<input data-plenty="change:Basket.setItemQuantity( 123, this ); focus:UI.removeClass( 'has-error', this )" type="text" />
 ```
 
 ### Using the JavaScript API
 
-#### Creating a custom directive
+#### Components hierarchy and dependency injection
 
-Create your own directive using `PlentyFramework.directive( selector, callbackFn );`:
+The library is composed of several layers to separate logical methods from UI-dependent functions:
+
+`HTML / Markup` &lt;---&gt; `directives` &lt;---&gt; `services` &lt;---&gt; `factories`
+
+Every component can inject other components at the same or higher levels inside this hierarchy. On the other hand it is not possible
+to inject lower-level componets. According to this, a directive can inject other directives, services and factories but a factory can only inject other factories but no services or directives.
+
+#### Creating custom components
+All components are built the same way using `PlentyFramework.directive()`, `PlentyFramework.service()` or `PlentyFramework.factory()`.
+Each of these methods expects the following parameters:
+- a component name: This name can be used to inject this components into other.
+- the components definition: a function wrapping all methods of this component.
+- a list of dependencies: An array containing names of other components to inject. Injected components will be passed as parameters to the components wrapper function.
+
 ```js
-PlentyFramework.directive('.myClass', function(i, element) {
-	element.click(function() {
-		console.log('.myClass no ' + i + ' was clicked.');
-	});
-});
+PlentyFramework.directive( 'MyDirective', function( aService, aFactory ) {
+    return {
+        doAnything: function() {
+            console.log('Hello!)';
+        }
+    }
+}, ['SomeServiceName', 'FactoryToInject'] );
 ```
 
-Inject services in your directive:
-```js
-PlentyFramework.directive('.myClass', function(i, element, ServiceA, ServiceB) {
-
-	ServiceA.doSomethingWithElement( element );
-
-	element.click(function() {
-		ServiceB.doAnything();
-	});
-
-}, ['ServiceA', 'ServiceB']);
-```
-#### Creating a custom services
-
-You can create a custom service to provide global functions by using `PlentyFramework.service( serviceName, callbackFn );`:
-```js
-PlentyFramework.service('MyService', function() {
-	return {
-		publicFn: publicFn
-	}
-
-	function publicFn() {
-		var message = privateFn();
-	}
-
-	function privateFn() {
-		return "I have been created inside a private function of 'MyService'";
-	}
-});
-```
-
-You can inject factories in your service:
-```js
-PlentyFramework.service('MyService', function(FactoryA, FactoryB) {
-
-	return {
-		callFactory: FactoryA.doSomething
-	}
-
-}, ['FactoryA', 'FactoryB']);
-```
-#### Creating a custom factory
-
-Create a factory to provide functions for services. Factories cannot be accessed from instances of PlentyFramework.
-Factories can inject other factories.
-```js
-PlentyFramework.factory('MyFactory', function( AnotherFactory ) {
-	return {
-		prepareInformation: publicFactoryFunction
-	}
-
-	function publicFactoryFunction() {
-		return AnotherFactory.getInformation();
-	}
-}, ['AnotherFactory']);
-```
 #### Registering global variables
 
 Global variables can be used to pass server-side variables to the client-side framework:
