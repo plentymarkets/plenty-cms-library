@@ -140,17 +140,27 @@
                 }
             }
 
+            function positionSuggestionList( $parent, suggestionKey) {
+                $suggestionContainer[suggestionKey].css( {
+                    'width': $parent.outerWidth( true ),
+                    'left' : $parent.position().left,
+                    'top'  : $parent.position().top + $parent.outerHeight( true )
+                } );
+            }
+
             function buildSuggestionList( $parent, values )
             {
                 var suggestionKey = $parent.attr( 'name' );
 
                 // render html content
                 $suggestionContainer[suggestionKey] = $( pm.compileTemplate( 'addressSuggestions/addressDoctor.html', {values: values} ) );
-                $suggestionContainer[suggestionKey].css( {
-                    'width': $parent.outerWidth( true ),
-                    'left' : $parent.position().left,
-                    'top'  : $parent.position().top + $parent.outerHeight( true )
-                } );
+
+                positionSuggestionList( $parent, suggestionKey );
+
+                $(window).on('sizeChange', function() {
+                    positionSuggestionList( $parent, suggestionKey );
+                });
+
 
                 // bind click event to list elements
                 $suggestionContainer[suggestionKey].find( '[data-address-value]' ).each( function( i, elem )
