@@ -99,7 +99,7 @@
                     size = 'xs';
                 }
             }
-            if ( size != bsInterval )
+            if ( size != bsInterval || size === 'xs' )
             {
                 var oldValue = bsInterval;
                 bsInterval   = size;
