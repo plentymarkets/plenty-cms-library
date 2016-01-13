@@ -58,7 +58,7 @@ This library is used by the plentymarkets [**Callisto Light**](http://standardte
 
 Directives can be used to add several functions to your markup. The library provides a simple syntax to access directives from a single *data*-attribute:
 
-`EVENT:DIRECIVE.METHOD( PARAMS* )`
+`EVENT:DIRECTIVE.METHOD( PARAMS* )`
 
 - EVENT: any event to trigger the method on, e.g. 'click', 'focus', 'change'. To trigger a directive when document is ready, use 'ready' or leave empty.
 - DIRECTIVE: The name of the directive, e.g. 'UI', 'Basket', 'Tab'
