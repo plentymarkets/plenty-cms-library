@@ -270,7 +270,7 @@
 
         function editItemAttributes( BasketItemID )
         {
-            var modal = $( '[data-plenty-basket-item="' + BasketItemID + '"' );
+            var modal = $( '[data-plenty-basket-item="' + BasketItemID + '"]' );
             modal.modal( 'show' );
             modal.find( '[data-plenty-modal="confirm"]' ).on( 'click', function()
             {
