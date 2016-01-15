@@ -27,9 +27,10 @@
     {
 
         var sessionExpirationTimeout = null;
-        $( document ).ready(function() {
+        $( document ).ready( function()
+        {
             renewLoginSession();
-        });
+        } );
 
         return {
             get   : _get,
@@ -41,15 +42,16 @@
 
         function renewLoginSession()
         {
-            if( !!sessionExpirationTimeout )
+            if ( !!sessionExpirationTimeout )
             {
                 clearTimeout( sessionExpirationTimeout );
             }
 
-            sessionExpirationTimeout = setTimeout(function() {
+            sessionExpirationTimeout = setTimeout( function()
+            {
                 $( window ).trigger( 'login-expired' );
 
-                if( pm.getGlobal('PageDesign') === "Checkout" )
+                if ( pm.getGlobal( 'PageDesign' ) === "Checkout" )
                 {
                     Modal.prepare()
                         .setTitle( pm.translate( 'Your session has expired.' ) )
@@ -67,7 +69,7 @@
                         .show();
                 }
 
-            }, pm.getGlobal('LoginSessionExpiration') );
+            }, pm.getGlobal( 'LoginSessionExpiration' ) );
         }
 
         /**
@@ -118,7 +120,7 @@
                 url,
                 {
                     type    : 'GET',
-                    data: params,
+                    data    : params,
                     dataType: 'json',
                     async   : !sync,
                     error   : function( jqXHR )
@@ -223,8 +225,8 @@
                 url,
                 {
                     type       : 'PUT',
-                    data: JSON.stringify( data ),
-                    dataType: 'json',
+                    data       : JSON.stringify( data ),
+                    dataType   : 'json',
                     contentType: 'application/json',
                     error      : function( jqXHR )
                     {
@@ -270,8 +272,8 @@
                 url,
                 {
                     type       : 'DELETE',
-                    data: JSON.stringify( data ),
-                    dataType: 'json',
+                    data       : JSON.stringify( data ),
+                    dataType   : 'json',
                     contentType: 'application/json',
                     error      : function( jqXHR )
                     {

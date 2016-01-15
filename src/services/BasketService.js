@@ -70,7 +70,7 @@
                             .onConfirm( function()
                             {
                                 // validate form
-                                if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+                                if ( $( '[data-plenty-checkout-form="OrderParamsForm"]' ).validateForm() )
                                 {
                                     // save order params
                                     addArticle( saveOrderParams( article ) );
@@ -126,20 +126,20 @@
                     (attrType != 'radio' && attrType != 'checkbox')) && attrType != 'file' && attrType != 'hidden' )
                 {
 
-                    var match = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
+                    var match         = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
                     articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], $self.val() );
 
                 }
                 else if ( attrType == 'file' )
                 {
-                    if( $self[0].files && $self[0].files.length > 0 )
+                    if ( $self[0].files && $self[0].files.length > 0 )
                     {
                         articleWithParams = orderParamFileUpload( $self, articleWithParams );
                     }
                     else
                     {
-                        var match = $self[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
-                        var paramValue = $( 'input[type="hidden"][name="ParamValue[' + match[1] + '][' + match[2] + ']"]' ).val();
+                        var match         = $self[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
+                        var paramValue    = $( 'input[type="hidden"][name="ParamValue[' + match[1] + '][' + match[2] + ']"]' ).val();
                         articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], paramValue );
                     }
                 }
@@ -323,7 +323,7 @@
                     .onConfirm( function()
                     {
                         // validate form
-                        if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+                        if ( $( '[data-plenty-checkout-form="OrderParamsForm"]' ).validateForm() )
                         {
                             // save order params
                             updateArticle( saveOrderParams( [basketItem] ) );
