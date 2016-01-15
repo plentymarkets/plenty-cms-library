@@ -306,7 +306,7 @@
                 {
                     var close = modal.onConfirm();
 
-                    if( typeof close == "undefined" )
+                    if ( typeof close == "undefined" )
                     {
                         close = true;
                     }

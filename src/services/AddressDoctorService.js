@@ -18,8 +18,8 @@
         function validateAddress( addressForms )
         {
             var addressIsValid = true;
-            addressForms = addressForms || '[data-plenty-address-doctor]';
-            $( addressForms ).filter('[data-plenty-address-doctor]:visible').each( function( i, form )
+            addressForms       = addressForms || '[data-plenty-address-doctor]';
+            $( addressForms ).filter( '[data-plenty-address-doctor]:visible' ).each( function( i, form )
             {
                 var addressDoctor  = new AddressDoctor( form );
                 var requiredFields = $( form ).attr( 'data-plenty-address-doctor' ).replace( /\s/g, '' ).split( ',' );
@@ -132,7 +132,10 @@
                     $inputs[key].addClass( 'has-error' );
                     $form.find( 'label[for="' + $inputs[key].attr( 'id' ) + '"]' ).addClass( 'has-error' );
 
-                    if( !suggestionListVisible ) buildSuggestionList( $inputs[key], valueList );
+                    if ( !suggestionListVisible )
+                    {
+                        buildSuggestionList( $inputs[key], valueList );
+                    }
                     $inputs[key].off( 'focus' );
                     $inputs[key].focus();
                     return false;
@@ -140,7 +143,8 @@
                 }
             }
 
-            function positionSuggestionList( $parent, suggestionKey) {
+            function positionSuggestionList( $parent, suggestionKey )
+            {
                 $suggestionContainer[suggestionKey].css( {
                     'width': $parent.outerWidth( true ),
                     'left' : $parent.position().left,
@@ -157,10 +161,10 @@
 
                 positionSuggestionList( $parent, suggestionKey );
 
-                $(window).on('sizeChange', function() {
+                $( window ).on( 'sizeChange', function()
+                {
                     positionSuggestionList( $parent, suggestionKey );
-                });
-
+                } );
 
                 // bind click event to list elements
                 $suggestionContainer[suggestionKey].find( '[data-address-value]' ).each( function( i, elem )

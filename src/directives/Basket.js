@@ -50,10 +50,10 @@
 
         function changeItemQuantity( elem, increment )
         {
-            var $elem         = $( elem );
+            var $elem          = $( elem );
             var $quantityInput = $elem.parent().find( 'input' );
-            var maxLength     = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
-            var value         = parseInt( $quantityInput.val() ) + increment;
+            var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
+            var value          = parseInt( $quantityInput.val() ) + increment;
 
             var isBasketView = $elem.parents( '[data-basket-item-id]' ).length > 0;
 
@@ -78,7 +78,8 @@
 
                 $elem.data( 'timeout', timeout );
             }
-            else {
+            else
+            {
                 if ( (value + '').length <= maxLength && value >= 1 )
                 {
                     $quantityInput.val( value );
