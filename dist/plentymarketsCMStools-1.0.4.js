@@ -989,8 +989,13 @@ PlentyFramework.cssClasses = {
      * @class APIFactory
      * @static
      */
-    pm.factory( 'APIFactory', function( UI )
+    pm.factory( 'APIFactory', function( UI, Modal )
     {
+
+        var sessionExpirationTimeout = null;
+        $( document ).ready(function() {
+            renewLoginSession();
+        });
 
         return {
             get   : _get,
@@ -999,6 +1004,37 @@ PlentyFramework.cssClasses = {
             delete: _delete,
             idle  : _idle
         };
+
+        function renewLoginSession()
+        {
+            if( !!sessionExpirationTimeout )
+            {
+                clearTimeout( sessionExpirationTimeout );
+            }
+
+            sessionExpirationTimeout = setTimeout(function() {
+                $( window ).trigger( 'login-expired' );
+
+                if( pm.getGlobal('PageDesign') === "Checkout" )
+                {
+                    Modal.prepare()
+                        .setTitle( pm.translate( 'Your session has expired.' ) )
+                        .setContent( pm.translate( 'Please log in again to continue shopping.' ) )
+                        .setLabelDismiss( null )
+                        .setLabelConfirm( pm.translate( 'OK' ) )
+                        .onConfirm( function()
+                        {
+                            window.location.assign( '/' );
+                        } )
+                        .onDismiss( function()
+                        {
+                            window.location.assign( '/' );
+                        } )
+                        .show();
+                }
+
+            }, pm.getGlobal('LoginSessionExpiration') );
+        }
 
         /**
          * Is called by default if a request failed.<br>
@@ -1065,6 +1101,7 @@ PlentyFramework.cssClasses = {
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -1123,6 +1160,7 @@ PlentyFramework.cssClasses = {
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
         }
 
@@ -1168,6 +1206,7 @@ PlentyFramework.cssClasses = {
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -1214,6 +1253,7 @@ PlentyFramework.cssClasses = {
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -1228,7 +1268,7 @@ PlentyFramework.cssClasses = {
             return $.Deferred().resolve();
         }
 
-    }, ['UIFactory'] );
+    }, ['UIFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));
 /**
  * Licensed under AGPL v3
@@ -2225,17 +2265,27 @@ PlentyFramework.cssClasses = {
                 }
             }
 
+            function positionSuggestionList( $parent, suggestionKey) {
+                $suggestionContainer[suggestionKey].css( {
+                    'width': $parent.outerWidth( true ),
+                    'left' : $parent.position().left,
+                    'top'  : $parent.position().top + $parent.outerHeight( true )
+                } );
+            }
+
             function buildSuggestionList( $parent, values )
             {
                 var suggestionKey = $parent.attr( 'name' );
 
                 // render html content
                 $suggestionContainer[suggestionKey] = $( pm.compileTemplate( 'addressSuggestions/addressDoctor.html', {values: values} ) );
-                $suggestionContainer[suggestionKey].css( {
-                    'width': $parent.outerWidth( true ),
-                    'left' : $parent.position().left,
-                    'top'  : $parent.position().top + $parent.outerHeight( true )
-                } );
+
+                positionSuggestionList( $parent, suggestionKey );
+
+                $(window).on('sizeChange', function() {
+                    positionSuggestionList( $parent, suggestionKey );
+                });
+
 
                 // bind click event to list elements
                 $suggestionContainer[suggestionKey].find( '[data-address-value]' ).each( function( i, elem )
@@ -2841,7 +2891,7 @@ PlentyFramework.cssClasses = {
 
         function editItemAttributes( BasketItemID )
         {
-            var modal = $( '[data-plenty-basket-item="' + BasketItemID + '"' );
+            var modal = $( '[data-plenty-basket-item="' + BasketItemID + '"]' );
             modal.modal( 'show' );
             modal.find( '[data-plenty-modal="confirm"]' ).on( 'click', function()
             {
@@ -3957,7 +4007,7 @@ PlentyFramework.cssClasses = {
                     size = 'xs';
                 }
             }
-            if ( size != bsInterval )
+            if ( size != bsInterval || size === 'xs' )
             {
                 var oldValue = bsInterval;
                 bsInterval   = size;
