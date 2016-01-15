@@ -81,7 +81,7 @@
                     }
                 }
 
-                if ( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) )
+                if ( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) || suggestions.getAddresses().length == 1 )
                 {
                     $inputs.HouseNo.removeClass( 'has-error' );
                     $form.find( 'label[for="' + $inputs.HouseNo.attr( 'id' ) + '"]' ).removeClass( 'has-error' );
