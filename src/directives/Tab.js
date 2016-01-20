@@ -49,7 +49,7 @@
 
         function showRemoteTab( tabID, groupID, interval )
         {
-            if( MediaSize.isInterval( interval ) )
+            if ( MediaSize.isInterval( interval ) )
             {
                 pm.getRecentEvent().preventDefault();
 
@@ -67,9 +67,9 @@
             var activeTab;
 
             return {
-                addTab : addTab,
-                showTab: showTab,
-                getTab : getTab,
+                addTab   : addTab,
+                showTab  : showTab,
+                getTab   : getTab,
                 resetTabs: resetTabs
             };
 
@@ -94,7 +94,7 @@
                     // activeTab not set before
                     for ( var tab in tabs )
                     {
-                        if( !!tabs[tab].getContent() )
+                        if ( !!tabs[tab].getContent() )
                         {
                             var currentZ = parseInt( tabs[tab].getContent().parent().css( 'zIndex' ) );
                             if ( zIndex == 0 || currentZ < zIndex )
@@ -107,13 +107,13 @@
 
                     for ( var tab in tabs )
                     {
-                        if( !!tabs[tab].getContent() )
+                        if ( !!tabs[tab].getContent() )
                         {
                             tabs[tab].getContent().parent().css( 'zIndex', zIndex - 1 );
                         }
                     }
 
-                    $(window ).on('sizeChange', resetTabs);
+                    $( window ).on( 'sizeChange', resetTabs );
                 }
 
                 activeTab = tabs[tabID];
@@ -130,7 +130,7 @@
             {
                 for ( var tab in tabs )
                 {
-                    if( !!tabs[tab].getContent() )
+                    if ( !!tabs[tab].getContent() )
                     {
                         tabs[tab].show();
                     }
@@ -142,9 +142,9 @@
 
         function Tab( id )
         {
-            var $labels = [];
             var $content;
-            var tabID = id;
+            var $labels = [];
+            var tabID   = id;
 
             return {
                 addLabel  : addLabel,

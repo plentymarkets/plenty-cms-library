@@ -268,31 +268,28 @@
 
         function slideDown( target, duration )
         {
-            duration = duration || 400;
-            $(target).parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
-            $(target).slideDown( duration, function() {
-                fireEqualHeight();
-            });
+            slideAction( $( target ), duration, 'slideDown' );
         }
 
         function slideUp( target, duration )
         {
-            duration = duration || 400;
-            $(target).parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
-            $(target).slideUp( duration, function() {
-                fireEqualHeight();
-            });
+            slideAction( $( target ), duration, 'slideUp' );
         }
 
         function slideToggle( target, duration )
         {
-            duration = duration || 400;
-            $(target).parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
-            $(target).slideToggle( duration, function() {
-                fireEqualHeight();
-            });
+            slideAction( $( target ), duration, 'slideToggle' );
         }
 
+        function slideAction( $target, duration, callbackString )
+        {
+            duration = duration || 400;
+            $target.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+            $target[callbackString]( duration, function()
+            {
+                fireEqualHeight();
+            } );
+        }
 
         /**
          * TODO check comment
@@ -374,13 +371,39 @@
          */
         function toggleClass( cssClass, target, interval )
         {
+            var $target = $( target );
+            /* FIXME
+             * Callisto 3.1 Design adaption:
+             * NavigationCategoriesList
+             * Line 8
+             * BEFORE:
+             * <li class="cat-$CategoryId{% if $CategoryLevel == 1 && $SubCategoryExists %} dropdown{% endif %}{% if $SubCategoryExists %} hasSublevel{% endif %}{% if $CategoryLevel == 1 && in_array($CategoryId, $_useBigMenu) %} bigmenu{% endif %}{% if $CategoryIsOpen || $CategoryIsCurrent %} active{% endif %}"{% if $CategoryIsOpen || $CategoryIsCurrent %} data-plenty="UI.toggleClass('open', this, 'xs, sm')"{% endif %}>
+             * AFTER:
+             * <li class="cat-$CategoryId{% if $CategoryLevel == 1 && $SubCategoryExists %} dropdown{% endif %}{% if $SubCategoryExists %} hasSublevel{% endif %}{% if $CategoryLevel == 1 && in_array($CategoryId, $_useBigMenu) %} bigmenu{% endif %}{% if $CategoryIsOpen || $CategoryIsCurrent %} active{% endif %}">
+             *
+             * Line 10
+             * BEFORE:
+             * <span class="openCloseToggle" data-plenty="click:MobileDropdown.slideDropdown(this)"></span>
+             * AFTER:
+             * <span class="openCloseToggle" data-plenty="{% if $CategoryIsOpen || $CategoryIsCurrent %}MobileDropdown.slideDropdown(this); {% endif %}click:MobileDropdown.slideDropdown(this)"></span>
+             *
+             * */
+            if ( $target.parents( ".navbar-main" ).length > 0 )
+            {
+                var $elem = $target.children( "span" );
+                pm.directives["MobileDropdown"].slideDropdown( $elem );
+                return true;
+            }
 
             if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
             {
                 var e = pm.getRecentEvent();
-                if( !!e ) e.preventDefault();
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
 
-                $( target ).toggleClass( cssClass );
+                $target.toggleClass( cssClass );
                 return false;
             }
         }
@@ -390,7 +413,10 @@
             if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
             {
                 var e = pm.getRecentEvent();
-                if( !!e ) e.preventDefault();
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
 
                 $( target ).addClass( cssClass );
                 return false;
@@ -402,7 +428,10 @@
             if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
             {
                 var e = pm.getRecentEvent();
-                if( !!e ) e.preventDefault();
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
 
                 $( target ).removeClass( cssClass );
                 return false;

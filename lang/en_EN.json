@@ -1,4 +1,5 @@
 {
+  "OK": "OK",
   "Close": "Close",
   "Cancel": "Cancel",
   "Confirm": "Confirm",
@@ -10,5 +11,7 @@
   "Edit order parameters": "Edit order parameters",
   "Packstations and post offices in your area": "Packstations and post offices in your area",
   "Please enter a ZIP code and/or a city.": "Please enter a ZIP code and/or a city.",
-  "more information": "more information"
+  "more information": "more information",
+  "Your session has expired.": "Your session has expired.",
+  "Please log in again to continue shopping.": "Please log in again to continue shopping."
 }

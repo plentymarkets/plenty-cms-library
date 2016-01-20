@@ -23,101 +23,154 @@
 
         return {
             initDropdowns: initDropdowns,
-            openDropdown: openDropdown,
+            openDropdown : openDropdown,
             slideDropdown: slideDropdown
         };
 
         function initDropdowns()
         {
-            $(window).on('orientationchange sizeChange', function() {
+            $( window ).on( 'orientationchange sizeChange', function()
+            {
                 resetDropdowns( dropdownElements );
-            });
-
-            $( 'html' ).click( function( e ) {
                 resetDropdowns( closableDropdownElements );
-            });
+            } );
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", function( event )
+            {
+                resetDropdowns( closableDropdownElements, event );
+            } );
         }
 
-        function resetDropdowns( dropdownList )
+        function resetDropdowns( dropdownList, event )
         {
-
-            for( var i = 0; i < dropdownList.length; i++ )
+            var $current;
+            for ( var i = 0; i < dropdownList.length; i++ )
             {
-                $( dropdownList[i] ).removeClass('open');
+                $current = $( dropdownList[i] );
+                if ( !!event )
+                {
+                    if ( $current.find( $( event.target ) ).length === 0 )
+                    {
+                        $current.removeClass( 'open' );
+                    }
+                }
+                else
+                {
+                    $current.removeClass( 'open' );
+                }
             }
 
         }
 
-        function openDropdown( elem, closable )
+        function openDropdown( elem, alwaysClickable )
         {
-
-            var $elem = $( elem );
+            var $elem   = $( elem );
             var $parent = $elem.parent();
 
-            if( Modernizr.touch )
+            // case 1: xs || sm || ( touch && ( md || lg ) ) -> open/close via click on small devices, open/close via
+            // css-hover on desktop, open/close via click on touch-desktop (e.g. top navigation)
+
+            if ( !!alwaysClickable && ( MediaSize.isInterval( 'xs, sm' ) || ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) ) )
             {
-                if ( MediaSize.isInterval('md, lg') && !$parent.is( '.open' ) )
+                if ( !$parent.is( '.open' ) )
                 {
+                    showDropdownHideOthers( $elem, $parent );
 
-                    // avoid redirecting
-                    pm.getRecentEvent().preventDefault();
-
-                    // hide other dropdowns
-                    resetDropdowns( dropdownElements );
-
-                    // show dropdown
-                    $parent.addClass( 'open' );
-
-                    if ( $.inArray( $parent[0], dropdownElements ) < 0 )
+                    // if href
+                    if ( !$elem.attr( 'href' ) )
                     {
-                        dropdownElements.push( $parent[0] );
+                        avoidRedirectinStopPropagation( $parent.not( $elem ) );
                     }
-
-                    if ( !!closable && $.inArray( $parent[0], closableDropdownElements ) < 0 )
-                    {
-                        closableDropdownElements.push( $parent[0] );
-                    }
-
-                    // avoid closing popup by clicking itself
-                    $parent.off( 'click' );
-                    $parent.on( 'click', function( e )
-                    {
-                        e.stopPropagation();
-                    } );
                 }
-
+                else
+                {
+                    if ( !$elem.attr( 'href' ) )
+                    {
+                        // hide dropdown
+                        $parent.removeClass( 'open' );
+                    }
+                }
             }
-            else
+
+            // case 2: touch && ( md || lg ) -> open via 1st click on touch-desktop, return false (e.g. main navigation)
+
+            if ( !alwaysClickable && ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) )
             {
-                // redirect to href
-                // do nothing
+                if ( !$parent.is( '.open' ) )
+                {
+                    showDropdownHideOthers( $elem, $parent );
+
+                    avoidRedirectinStopPropagation( $parent );
+                }
+                else
+                {
+                    // redirect to href if dropdown is already open
+                    // do nothing
+                }
+            }
+        }
+
+        function showDropdownHideOthers( elem, parent )
+        {
+            var $parent = $( parent );
+
+            // hide other dropdowns
+            resetDropdowns( closableDropdownElements );
+
+            // remember opened dropdown
+            if ( $.inArray( $parent[0], closableDropdownElements ) < 0 )
+            {
+                closableDropdownElements.push( $parent[0] );
             }
 
+            // show dropdown
+            $parent.addClass( 'open' );
+        }
+
+        function avoidRedirectinStopPropagation( elem )
+        {
+            var $elem = $( elem );
+
+            // avoid redirecting
+            pm.getRecentEvent().preventDefault();
+
+            // avoid closing popup by clicking itself
+            $elem.off( 'click' );
+            $elem.on( 'click', function( e )
+            {
+                e.stopPropagation();
+            } );
         }
 
         function slideDropdown( elem )
         {
-            var $elem = $( elem );
+            var $elem       = $( elem );
             var $elemParent = $elem.parent();
 
-            $elemParent.addClass( 'animating' );
-            $elem.siblings( 'ul' ).slideToggle( 200, function()
+            // size interval query is required since function is used on document ready to initial open active
+            // navigation (on small devices)
+            if ( MediaSize.isInterval( 'xs, sm' ) )
             {
-                if ( $elemParent.is( '.open' ) )
+                $elemParent.addClass( 'animating' );
+                $elem.siblings( 'ul' ).slideToggle( 400, function()
                 {
-                    $elemParent.removeClass( 'open' );
-                }
-                else
-                {
-                    $elemParent.addClass( 'open' );
-                    if( $.inArray( $elemParent[0], dropdownElements) < 0 )
+                    if ( $elemParent.is( '.open' ) )
                     {
-                        dropdownElements.push( $elemParent[0] );
+                        $elemParent.removeClass( 'open' );
                     }
-                }
-                $elem.siblings( 'ul' ).removeAttr( 'style' );
-                $elemParent.removeClass( 'animating' );
-            } );
+                    else
+                    {
+                        $elemParent.addClass( 'open' );
+                        if ( $.inArray( $elemParent[0], dropdownElements ) < 0 )
+                        {
+                            dropdownElements.push( $elemParent[0] );
+                        }
+                    }
+                    $elem.siblings( 'ul' ).removeAttr( 'style' );
+                    $elemParent.removeClass( 'animating' );
+                } );
+            }
         }
 
     }, ['MediaSizeService'] );

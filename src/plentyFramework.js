@@ -205,18 +205,18 @@
     PlentyFramework.getRecentEvent = function( eventType )
     {
         var lastEventIdx = eventStack.length - 1;
-        if( !eventType )
+        if ( !eventType )
         {
-            return eventStack[ lastEventIdx ];
+            return eventStack[lastEventIdx];
         }
         else
         {
-            for( var i = lastEventIdx; i >= 0; i-- )
+            for ( var i = lastEventIdx; i >= 0; i-- )
             {
-               if( eventType == eventStack[i].type )
-               {
-                   return eventStack[i];
-               }
+                if ( eventType == eventStack[i].type )
+                {
+                    return eventStack[i];
+                }
             }
         }
 
@@ -228,7 +228,6 @@
     {
         eventStack.push( event );
     };
-
 
     /**
      * Bind event to element by eventType.
@@ -253,41 +252,44 @@
 
         var $elem = $( element );
 
-        if( $elem.is('input[type="checkbox"]') )
+        if ( $elem.is( 'input[type="checkbox"]' ) )
         {
-            $elem.on('change', function() {
+            $elem.on( 'change', function()
+            {
 
-                if( $elem.is(':checked') )
+                if ( $elem.is( ':checked' ) )
                 {
-                    $elem.trigger('check');
+                    $elem.trigger( 'check' );
                 }
                 else
                 {
-                    $elem.trigger('uncheck');
+                    $elem.trigger( 'uncheck' );
                 }
-            });
+            } );
         }
 
-        if( $elem.is('input[type="radio"]') )
+        if ( $elem.is( 'input[type="radio"]' ) )
         {
-            $elem.on('change', function() {
+            $elem.on( 'change', function()
+            {
 
-                var radioGroup = $elem.attr('name');
+                var radioGroup = $elem.attr( 'name' );
 
-                $( 'input[type="radio"][name="' + radioGroup + '"]' ).each(function( i, radio ) {
+                $( 'input[type="radio"][name="' + radioGroup + '"]' ).each( function( i, radio )
+                {
                     var $radio = $( radio );
-                    if( $radio.is(':checked') )
+                    if ( $radio.is( ':checked' ) )
                     {
-                        $radio.trigger('check');
+                        $radio.trigger( 'check' );
                     }
                     else
                     {
-                        $radio.trigger('uncheck');
+                        $radio.trigger( 'uncheck' );
                     }
 
-                });
+                } );
 
-            });
+            } );
         }
     }
 
@@ -581,7 +583,7 @@
 
         // resolve dependencies
         var compiledDependencies = [];
-        for( var i = 0; i < component.dependencies.length; i++ )
+        for ( var i = 0; i < component.dependencies.length; i++ )
         {
             var dependency = component.dependencies[i];
             if ( $.inArray( dependency, dependencyStack ) < 0 )
@@ -634,15 +636,15 @@
         }
 
         // compile component
-        if( componentLevel == 3 )
+        if ( componentLevel == 3 )
         {
             PlentyFramework.factories[component.name] = component.setup.apply( null, compiledDependencies );
         }
-        else if( componentLevel == 2 )
+        else if ( componentLevel == 2 )
         {
             PlentyFramework.prototype[component.name] = component.setup.apply( null, compiledDependencies );
         }
-        else if( componentLevel == 1 )
+        else if ( componentLevel == 1 )
         {
             PlentyFramework.directives[component.name] = component.setup.apply( null, compiledDependencies );
         }

@@ -360,7 +360,7 @@
                     formControl = $( getFormControl( elem ) );
                     formControl.on( 'focus click', function()
                     {
-                        var $errorElement = $(elem);
+                        var $errorElement = $( elem );
                         $errorElement.removeClass( errorClass );
                         $form.find( 'label[for="' + $( this ).attr( 'id' ) + '"]' ).removeClass( errorClass );
                     } );
