@@ -42,6 +42,11 @@
 
         function renewLoginSession()
         {
+            if ( !pm.getGlobal( 'LoginSession' ) )
+            {
+                return;
+            }
+
             if ( !!sessionExpirationTimeout )
             {
                 clearTimeout( sessionExpirationTimeout );
