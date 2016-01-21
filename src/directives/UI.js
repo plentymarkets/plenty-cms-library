@@ -268,20 +268,21 @@
 
         function slideDown( target, duration )
         {
-            slideAction($( target ), duration, 'slideDown');
+            slideAction( $( target ), duration, 'slideDown' );
         }
 
         function slideUp( target, duration )
         {
-            slideAction($( target ), duration, 'slideUp');
+            slideAction( $( target ), duration, 'slideUp' );
         }
 
         function slideToggle( target, duration )
         {
-            slideAction($( target ), duration, 'slideToggle');
+            slideAction( $( target ), duration, 'slideToggle' );
         }
 
-        function slideAction ($target, duration, callbackString) {
+        function slideAction( $target, duration, callbackString )
+        {
             duration = duration || 400;
             $target.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
             $target[callbackString]( duration, function()

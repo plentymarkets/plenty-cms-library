@@ -12,7 +12,7 @@
         {
             if ( MediaSizeService.interval() != 'xs' )
             {
-                if ( $( href ).length > 0 )
+                if ( typeof href === 'string' && href.indexOf('/') == -1 && $( href ).length > 0 )
                 {
                     window.location.assign( $( href ).attr( 'href' ) );
                 }

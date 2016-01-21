@@ -346,18 +346,18 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
     PlentyFramework.getRecentEvent = function( eventType )
     {
         var lastEventIdx = eventStack.length - 1;
-        if( !eventType )
+        if ( !eventType )
         {
-            return eventStack[ lastEventIdx ];
+            return eventStack[lastEventIdx];
         }
         else
         {
-            for( var i = lastEventIdx; i >= 0; i-- )
+            for ( var i = lastEventIdx; i >= 0; i-- )
             {
-               if( eventType == eventStack[i].type )
-               {
-                   return eventStack[i];
-               }
+                if ( eventType == eventStack[i].type )
+                {
+                    return eventStack[i];
+                }
             }
         }
 
@@ -369,7 +369,6 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
     {
         eventStack.push( event );
     };
-
 
     /**
      * Bind event to element by eventType.
@@ -394,41 +393,44 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
         var $elem = $( element );
 
-        if( $elem.is('input[type="checkbox"]') )
+        if ( $elem.is( 'input[type="checkbox"]' ) )
         {
-            $elem.on('change', function() {
+            $elem.on( 'change', function()
+            {
 
-                if( $elem.is(':checked') )
+                if ( $elem.is( ':checked' ) )
                 {
-                    $elem.trigger('check');
+                    $elem.trigger( 'check' );
                 }
                 else
                 {
-                    $elem.trigger('uncheck');
+                    $elem.trigger( 'uncheck' );
                 }
-            });
+            } );
         }
 
-        if( $elem.is('input[type="radio"]') )
+        if ( $elem.is( 'input[type="radio"]' ) )
         {
-            $elem.on('change', function() {
+            $elem.on( 'change', function()
+            {
 
-                var radioGroup = $elem.attr('name');
+                var radioGroup = $elem.attr( 'name' );
 
-                $( 'input[type="radio"][name="' + radioGroup + '"]' ).each(function( i, radio ) {
+                $( 'input[type="radio"][name="' + radioGroup + '"]' ).each( function( i, radio )
+                {
                     var $radio = $( radio );
-                    if( $radio.is(':checked') )
+                    if ( $radio.is( ':checked' ) )
                     {
-                        $radio.trigger('check');
+                        $radio.trigger( 'check' );
                     }
                     else
                     {
-                        $radio.trigger('uncheck');
+                        $radio.trigger( 'uncheck' );
                     }
 
-                });
+                } );
 
-            });
+            } );
         }
     }
 
@@ -722,7 +724,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
         // resolve dependencies
         var compiledDependencies = [];
-        for( var i = 0; i < component.dependencies.length; i++ )
+        for ( var i = 0; i < component.dependencies.length; i++ )
         {
             var dependency = component.dependencies[i];
             if ( $.inArray( dependency, dependencyStack ) < 0 )
@@ -775,15 +777,15 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         }
 
         // compile component
-        if( componentLevel == 3 )
+        if ( componentLevel == 3 )
         {
             PlentyFramework.factories[component.name] = component.setup.apply( null, compiledDependencies );
         }
-        else if( componentLevel == 2 )
+        else if ( componentLevel == 2 )
         {
             PlentyFramework.prototype[component.name] = component.setup.apply( null, compiledDependencies );
         }
-        else if( componentLevel == 1 )
+        else if ( componentLevel == 1 )
         {
             PlentyFramework.directives[component.name] = component.setup.apply( null, compiledDependencies );
         }
@@ -989,8 +991,14 @@ PlentyFramework.cssClasses = {
      * @class APIFactory
      * @static
      */
-    pm.factory( 'APIFactory', function( UI )
+    pm.factory( 'APIFactory', function( UI, Modal )
     {
+
+        var sessionExpirationTimeout = null;
+        $( document ).ready( function()
+        {
+            renewLoginSession();
+        } );
 
         return {
             get   : _get,
@@ -999,6 +1007,43 @@ PlentyFramework.cssClasses = {
             delete: _delete,
             idle  : _idle
         };
+
+        function renewLoginSession()
+        {
+            if ( !pm.getGlobal( 'LoginSession' ) )
+            {
+                return;
+            }
+
+            if ( !!sessionExpirationTimeout )
+            {
+                clearTimeout( sessionExpirationTimeout );
+            }
+
+            sessionExpirationTimeout = setTimeout( function()
+            {
+                $( window ).trigger( 'login-expired' );
+
+                if ( pm.getGlobal( 'PageDesign' ) === "Checkout" )
+                {
+                    Modal.prepare()
+                        .setTitle( pm.translate( 'Your session has expired.' ) )
+                        .setContent( pm.translate( 'Please log in again to continue shopping.' ) )
+                        .setLabelDismiss( null )
+                        .setLabelConfirm( pm.translate( 'OK' ) )
+                        .onConfirm( function()
+                        {
+                            window.location.assign( '/' );
+                        } )
+                        .onDismiss( function()
+                        {
+                            window.location.assign( '/' );
+                        } )
+                        .show();
+                }
+
+            }, pm.getGlobal( 'LoginSessionExpiration' ) );
+        }
 
         /**
          * Is called by default if a request failed.<br>
@@ -1048,7 +1093,7 @@ PlentyFramework.cssClasses = {
                 url,
                 {
                     type    : 'GET',
-                    data: params,
+                    data    : params,
                     dataType: 'json',
                     async   : !sync,
                     error   : function( jqXHR )
@@ -1065,6 +1110,7 @@ PlentyFramework.cssClasses = {
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -1123,6 +1169,7 @@ PlentyFramework.cssClasses = {
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
         }
 
@@ -1151,8 +1198,8 @@ PlentyFramework.cssClasses = {
                 url,
                 {
                     type       : 'PUT',
-                    data: JSON.stringify( data ),
-                    dataType: 'json',
+                    data       : JSON.stringify( data ),
+                    dataType   : 'json',
                     contentType: 'application/json',
                     error      : function( jqXHR )
                     {
@@ -1168,6 +1215,7 @@ PlentyFramework.cssClasses = {
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -1197,8 +1245,8 @@ PlentyFramework.cssClasses = {
                 url,
                 {
                     type       : 'DELETE',
-                    data: JSON.stringify( data ),
-                    dataType: 'json',
+                    data       : JSON.stringify( data ),
+                    dataType   : 'json',
                     contentType: 'application/json',
                     error      : function( jqXHR )
                     {
@@ -1214,6 +1262,7 @@ PlentyFramework.cssClasses = {
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -1228,7 +1277,7 @@ PlentyFramework.cssClasses = {
             return $.Deferred().resolve();
         }
 
-    }, ['UIFactory'] );
+    }, ['UIFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));
 /**
  * Licensed under AGPL v3
@@ -1330,7 +1379,6 @@ PlentyFramework.cssClasses = {
          */
         function getCategoryContent( categoryID )
         {
-
             return API.get( '/rest/categoryview/categorycontentbody/?categoryID=' + categoryID );
         }
 
@@ -1841,7 +1889,7 @@ PlentyFramework.cssClasses = {
                 {
                     var close = modal.onConfirm();
 
-                    if( typeof close == "undefined" )
+                    if ( typeof close == "undefined" )
                     {
                         close = true;
                     }
@@ -2104,8 +2152,8 @@ PlentyFramework.cssClasses = {
         function validateAddress( addressForms )
         {
             var addressIsValid = true;
-            addressForms = addressForms || '[data-plenty-address-doctor]';
-            $( addressForms ).filter('[data-plenty-address-doctor]:visible').each( function( i, form )
+            addressForms       = addressForms || '[data-plenty-address-doctor]';
+            $( addressForms ).filter( '[data-plenty-address-doctor]:visible' ).each( function( i, form )
             {
                 var addressDoctor  = new AddressDoctor( form );
                 var requiredFields = $( form ).attr( 'data-plenty-address-doctor' ).replace( /\s/g, '' ).split( ',' );
@@ -2167,7 +2215,7 @@ PlentyFramework.cssClasses = {
                     }
                 }
 
-                if ( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) )
+                if ( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) || suggestions.getAddresses().length == 1 )
                 {
                     $inputs.HouseNo.removeClass( 'has-error' );
                     $form.find( 'label[for="' + $inputs.HouseNo.attr( 'id' ) + '"]' ).removeClass( 'has-error' );
@@ -2218,12 +2266,24 @@ PlentyFramework.cssClasses = {
                     $inputs[key].addClass( 'has-error' );
                     $form.find( 'label[for="' + $inputs[key].attr( 'id' ) + '"]' ).addClass( 'has-error' );
 
-                    if( !suggestionListVisible ) buildSuggestionList( $inputs[key], valueList );
+                    if ( !suggestionListVisible )
+                    {
+                        buildSuggestionList( $inputs[key], valueList );
+                    }
                     $inputs[key].off( 'focus' );
                     $inputs[key].focus();
                     return false;
 
                 }
+            }
+
+            function positionSuggestionList( $parent, suggestionKey )
+            {
+                $suggestionContainer[suggestionKey].css( {
+                    'width': $parent.outerWidth( true ),
+                    'left' : $parent.position().left,
+                    'top'  : $parent.position().top + $parent.outerHeight( true )
+                } );
             }
 
             function buildSuggestionList( $parent, values )
@@ -2232,10 +2292,12 @@ PlentyFramework.cssClasses = {
 
                 // render html content
                 $suggestionContainer[suggestionKey] = $( pm.compileTemplate( 'addressSuggestions/addressDoctor.html', {values: values} ) );
-                $suggestionContainer[suggestionKey].css( {
-                    'width': $parent.outerWidth( true ),
-                    'left' : $parent.position().left,
-                    'top'  : $parent.position().top + $parent.outerHeight( true )
+
+                positionSuggestionList( $parent, suggestionKey );
+
+                $( window ).on( 'sizeChange', function()
+                {
+                    positionSuggestionList( $parent, suggestionKey );
                 } );
 
                 // bind click event to list elements
@@ -2494,7 +2556,6 @@ PlentyFramework.cssClasses = {
                     Password: values.loginPassword
                 };
 
-
                 UI.showWaitScreen();
                 return API.post( "/rest/checkout/login/", params )
                     .done( function()
@@ -2539,47 +2600,29 @@ PlentyFramework.cssClasses = {
 
             if ( form.validateForm() && pm.getInstance().AddressDoctorService.validateAddress() )
             {
-                var values = form.getFormValues();
+                var values       = form.getFormValues();
+                values.LoginType = 2;
 
-                // create new invoice address
-                var invoiceAddress = {
-                    LoginType        : 2,
-                    FormOfAddressID  : values.FormOfAddressID,
-                    Company          : values.Company,
-                    FirstName        : values.FirstName,
-                    LastName         : values.LastName,
-                    Street           : values.Street,
-                    HouseNo          : values.HouseNo,
-                    AddressAdditional: values.AddressAdditional,
-                    ZIP              : values.ZIP,
-                    City             : values.City,
-                    CountryID        : values.CountryID,
-                    VATNumber        : values.VATNumber,
-                    Email            : values.Email,
-                    EmailRepeat      : values.EmailRepeat,
-                    BirthDay         : values.BirthDay,
-                    BirthMonth       : values.BirthMonth,
-                    BirthYear        : values.BirthYear,
-                    Password         : values.Password,
-                    PasswordRepeat   : values.PasswordRepeat,
-                    PhoneNumber      : values.PhoneNumber,
-                    MobileNumber     : values.MobileNumber,
-                    FaxNumber        : values.FaxNumber,
-                    Postnummer       : values.Postnummer
-                };
-
-                invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
-
-                form.find( "[data-plenty-property-id]" ).each( function( i, propertyInput )
+                if ( values.checkout
+                    && values.checkout.customerInvoiceAddress
+                    && values.checkout.customerInvoiceAddress.CustomerProperty )
                 {
+                    var tmpProperties             = values.checkout.customerInvoiceAddress.CustomerProperty;
+                    values.CustomerPropertiesList = values.CustomerPropertiesList || [];
 
-                    invoiceAddress.CustomerPropertiesList.push( {
-                        PropertyID   : $( propertyInput ).attr( 'data-plenty-property-id' ),
-                        PropertyValue: $( propertyInput ).val()
-                    } );
-                } );
+                    for ( var property in tmpProperties )
+                    {
+                        if ( tmpProperties[property] )
+                        {
+                            values.CustomerPropertiesList.push( {
+                                PropertyID   : property,
+                                PropertyValue: tmpProperties[property]
+                            } );
+                        }
+                    }
+                }
 
-                return setInvoiceAddress( invoiceAddress )
+                return setInvoiceAddress( values )
                     .done( function()
                     {
                         window.location.assign( form.attr( 'action' ) );
@@ -2661,7 +2704,7 @@ PlentyFramework.cssClasses = {
                             .onConfirm( function()
                             {
                                 // validate form
-                                if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+                                if ( $( '[data-plenty-checkout-form="OrderParamsForm"]' ).validateForm() )
                                 {
                                     // save order params
                                     addArticle( saveOrderParams( article ) );
@@ -2717,20 +2760,20 @@ PlentyFramework.cssClasses = {
                     (attrType != 'radio' && attrType != 'checkbox')) && attrType != 'file' && attrType != 'hidden' )
                 {
 
-                    var match = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
+                    var match         = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
                     articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], $self.val() );
 
                 }
                 else if ( attrType == 'file' )
                 {
-                    if( $self[0].files && $self[0].files.length > 0 )
+                    if ( $self[0].files && $self[0].files.length > 0 )
                     {
                         articleWithParams = orderParamFileUpload( $self, articleWithParams );
                     }
                     else
                     {
-                        var match = $self[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
-                        var paramValue = $( 'input[type="hidden"][name="ParamValue[' + match[1] + '][' + match[2] + ']"]' ).val();
+                        var match         = $self[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
+                        var paramValue    = $( 'input[type="hidden"][name="ParamValue[' + match[1] + '][' + match[2] + ']"]' ).val();
                         articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], paramValue );
                     }
                 }
@@ -2861,7 +2904,7 @@ PlentyFramework.cssClasses = {
 
         function editItemAttributes( BasketItemID )
         {
-            var modal = $( '[data-plenty-basket-item="' + BasketItemID + '"' );
+            var modal = $( '[data-plenty-basket-item="' + BasketItemID + '"]' );
             modal.modal( 'show' );
             modal.find( '[data-plenty-modal="confirm"]' ).on( 'click', function()
             {
@@ -2914,7 +2957,7 @@ PlentyFramework.cssClasses = {
                     .onConfirm( function()
                     {
                         // validate form
-                        if ( $('[data-plenty-checkout-form="OrderParamsForm"]').validateForm() )
+                        if ( $( '[data-plenty-checkout-form="OrderParamsForm"]' ).validateForm() )
                         {
                             // save order params
                             updateArticle( saveOrderParams( [basketItem] ) );
@@ -3314,8 +3357,8 @@ PlentyFramework.cssClasses = {
 
                             Checkout.setCheckout().done( function()
                             {
-                                Checkout.reloadContainer("MethodsOfPaymentList");
-                                Checkout.reloadContainer("ShippingProfilesList");
+                                Checkout.reloadContainer( "MethodsOfPaymentList" );
+                                Checkout.reloadContainer( "ShippingProfilesList" );
                                 if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
                                 {
                                     Checkout.reloadContainer( 'CustomerShippingAddress' );
@@ -3341,8 +3384,8 @@ PlentyFramework.cssClasses = {
 
                     return Checkout.setCheckout().done( function()
                     {
-                        Checkout.reloadContainer("MethodsOfPaymentList");
-                        Checkout.reloadContainer("ShippingProfilesList");
+                        Checkout.reloadContainer( "MethodsOfPaymentList" );
+                        Checkout.reloadContainer( "ShippingProfilesList" );
                         if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
                         {
                             Checkout.reloadContainer( 'CustomerShippingAddress' );
@@ -3761,14 +3804,16 @@ PlentyFramework.cssClasses = {
 /**
  * @module Services
  */
-(function($, pm) {
+(function( $, pm )
+{
 
-    pm.service('FeedbackService', function( API ) {
+    pm.service( 'FeedbackService', function( API )
+    {
 
         return {
-            getFeedbacks: getFeedbacks,
-            addFeedback: addFeedback,
-            ArticleTypes: articleTypes(),
+            getFeedbacks : getFeedbacks,
+            addFeedback  : addFeedback,
+            ArticleTypes : articleTypes(),
             FeedbackTypes: feedbackTypes()
         };
 
@@ -3777,32 +3822,35 @@ PlentyFramework.cssClasses = {
          .getFeedbacks().between('2014-12-03', '2015-07-01')
          .for( FeedbackService.ArticleTypes.ITEM, 2732, FeedbackService.FeedbackTypes.COMMENTS_ONLY );
          */
-        function getFeedbacks() {
+        function getFeedbacks()
+        {
             var feedbackInterval = {
                 dateStart: null,
-                dateEnd: null
+                dateEnd  : null
             };
 
             return {
                 between: setFeedbackInterval,
-                for: listFeedbacks
+                for    : listFeedbacks
             };
 
-            function setFeedbackInterval( start, end ) {
+            function setFeedbackInterval( start, end )
+            {
                 feedbackInterval.dateStart = start;
-                feedbackInterval.dateEnd = end;
+                feedbackInterval.dateEnd   = end;
                 return this;
             }
 
-            function listFeedbacks( articleType, referenceId, feedbackType ) {
+            function listFeedbacks( articleType, referenceId, feedbackType )
+            {
 
                 var params = {
-                    ReferenceId: referenceId,
-                    FromDate: feedbackInterval.dateStart,
-                    ToDate: feedbackInterval.dateEnd,
+                    ReferenceId : referenceId,
+                    FromDate    : feedbackInterval.dateStart,
+                    ToDate      : feedbackInterval.dateEnd,
                     FeedbackType: feedbackType || feedbackTypes().COMMENTS_AND_RATINGS
                 };
-                return API.get( '/rest/feedback/'+articleType+'/', params );
+                return API.get( '/rest/feedback/' + articleType + '/', params );
 
             }
         }
@@ -3815,67 +3863,78 @@ PlentyFramework.cssClasses = {
          .withAuthor( 'Felix', 'felix.dausch@plentymarkets.com', 123456 )
          .to( FeedbackService.ArticleTypes.ITEM, 2732 );
          */
-        function addFeedback() {
+        function addFeedback()
+        {
 
             var params = {
-                Rating: 1.0,
-                Text: '',
-                Author: '',
-                Email: '',
+                Rating    : 1.0,
+                Text      : '',
+                Author    : '',
+                Email     : '',
                 CustomerId: 0
             };
 
             return {
-                withRating: withRating,
+                withRating : withRating,
                 withComment: withComment,
-                withAuthor: withAuthor,
-                to: sendFeedback
+                withAuthor : withAuthor,
+                to         : sendFeedback
             };
 
-            function withRating( rating ) {
+            function withRating( rating )
+            {
                 params.Rating = rating;
                 return this;
             }
 
-            function withComment( comment ) {
+            function withComment( comment )
+            {
                 params.Text = comment;
                 return this;
             }
 
-            function withAuthor( author, mail, customerID ) {
+            function withAuthor( author, mail, customerID )
+            {
                 params.Author = author;
-                if( !!mail ) params.Email = mail;
-                if( !!customerID ) params.CustomerId = customerID;
+                if ( !!mail )
+                {
+                    params.Email = mail;
+                }
+                if ( !!customerID )
+                {
+                    params.CustomerId = customerID;
+                }
                 return this;
             }
 
-            function sendFeedback( articleType, referenceId ) {
-                return API.post( '/rest/feedback/'+articleType+'/', params );
+            function sendFeedback( articleType, referenceId )
+            {
+                return API.post( '/rest/feedback/' + articleType + '/', params );
 
             }
 
         }
 
-        function feedbackTypes() {
+        function feedbackTypes()
+        {
             return {
-                COMMENTS_ONLY:          'comments_only',
-                RATINGS_ONLY:           'ratings_only',
-                COMMENTS_AND_RATINGS:   'comments_with_ratings'
+                COMMENTS_ONLY       : 'comments_only',
+                RATINGS_ONLY        : 'ratings_only',
+                COMMENTS_AND_RATINGS: 'comments_with_ratings'
             }
         }
 
-        function articleTypes() {
+        function articleTypes()
+        {
             return {
-                ITEM:       'item',
-                CATEGORY:   'category',
-                BLOG:       'blog'
+                ITEM    : 'item',
+                CATEGORY: 'category',
+                BLOG    : 'blog'
             }
         }
 
-
-
-    }, ['APIFactory']);
-}(jQuery, PlentyFramework));
+    }, ['APIFactory'] );
+}( jQuery, PlentyFramework ));
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
@@ -3977,7 +4036,7 @@ PlentyFramework.cssClasses = {
                     size = 'xs';
                 }
             }
-            if ( size != bsInterval )
+            if ( size != bsInterval || size === 'xs' )
             {
                 var oldValue = bsInterval;
                 bsInterval   = size;
@@ -4309,30 +4368,32 @@ PlentyFramework.cssClasses = {
             $( container ).hide();
 
             // refresh navigation elements
+            var $elem;
             $( navigation ).each( function( i, elem )
             {
-                $( elem ).removeClass( 'disabled active' );
+                $elem = $( elem );
+                $elem.removeClass( 'disabled active' );
 
-                $( elem ).find( '[role="tab"]' ).attr( 'aria-selected', 'false' );
+                $elem.find( '[role="tab"]' ).attr( 'aria-selected', 'false' );
 
                 if ( i < current )
                 {
                     // set current element as active
-                    $( elem ).addClass( 'visited' );
+                    $elem.addClass( 'visited' );
                 }
                 else
                 {
                     if ( i == current )
                     {
-                        $( elem ).addClass( 'active visited' );
-                        $( elem ).find( '[role="tab"]' ).attr( 'aria-selected', 'true' );
+                        $elem.addClass( 'active visited' );
+                        $elem.find( '[role="tab"]' ).attr( 'aria-selected', 'true' );
                     }
                     else
                     {
-                        if ( i > current && !$( elem ).is( '.visited' ) )
+                        if ( i > current && !$elem.is( '.visited' ) )
                         {
                             // disable elements behind active
-                            $( elem ).addClass( 'disabled' );
+                            $elem.addClass( 'disabled' );
                         }
                     }
                 }
@@ -4342,21 +4403,21 @@ PlentyFramework.cssClasses = {
             // hide "previous"-button if first content container is shown
             if ( current <= 0 )
             {
-                $( buttonPrev ).attr( "disabled", "disabled" );
+                buttonPrev.attr( "disabled", "disabled" );
             }
             else
             {
-                $( buttonPrev ).removeAttr( "disabled" );
+                buttonPrev.removeAttr( "disabled" );
             }
 
             // hide "next"-button if last content container is shown
             if ( current + 1 == navigation.length )
             {
-                $( buttonNext ).attr( "disabled", "disabled" );
+                buttonNext.attr( "disabled", "disabled" );
             }
             else
             {
-                $( buttonNext ).removeAttr( "disabled" );
+                buttonNext.removeAttr( "disabled" );
             }
 
             // show current content container
@@ -4695,17 +4756,19 @@ PlentyFramework.cssClasses = {
             shippingFields.PostfinderItemZIP.removeClass( 'has-success' ).addClass( 'has-error' );
             $( 'label[for="' + shippingFields.PostfinderItemZIP.attr( 'id' ) + '"]' ).removeClass( 'has-success' ).addClass( 'has-error' );
 
-            shippingFields.PostfinderItemCity.focus(function() {
-                $(this).removeClass('has-error');
-                var inputId = $(this).attr('id');
-                $(this).closest('.form-group').find('[for="' + inputId + '"]').removeClass('has-error');
-            });
+            shippingFields.PostfinderItemCity.focus( function()
+            {
+                $( this ).removeClass( 'has-error' );
+                var inputId = $( this ).attr( 'id' );
+                $( this ).closest( '.form-group' ).find( '[for="' + inputId + '"]' ).removeClass( 'has-error' );
+            } );
 
-            shippingFields.PostfinderItemZIP.focus(function() {
-                $(this).removeClass('has-error');
-                var inputId = $(this).attr('id');
-                $(this).closest('.form-group').find('[for="' + inputId + '"]').removeClass('has-error');
-            });
+            shippingFields.PostfinderItemZIP.focus( function()
+            {
+                $( this ).removeClass( 'has-error' );
+                var inputId = $( this ).attr( 'id' );
+                $( this ).closest( '.form-group' ).find( '[for="' + inputId + '"]' ).removeClass( 'has-error' );
+            } );
         }
     }, ['APIFactory', 'ModalFactory', 'UIFactory'] );
 
@@ -5217,7 +5280,7 @@ PlentyFramework.cssClasses = {
                     formControl = $( getFormControl( elem ) );
                     formControl.on( 'focus click', function()
                     {
-                        var $errorElement = $(elem);
+                        var $errorElement = $( elem );
                         $errorElement.removeClass( errorClass );
                         $form.find( 'label[for="' + $( this ).attr( 'id' ) + '"]' ).removeClass( errorClass );
                     } );
@@ -5426,10 +5489,10 @@ PlentyFramework.cssClasses = {
 
         function changeItemQuantity( elem, increment )
         {
-            var $elem         = $( elem );
+            var $elem          = $( elem );
             var $quantityInput = $elem.parent().find( 'input' );
-            var maxLength     = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
-            var value         = parseInt( $quantityInput.val() ) + increment;
+            var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
+            var value          = parseInt( $quantityInput.val() ) + increment;
 
             var isBasketView = $elem.parents( '[data-basket-item-id]' ).length > 0;
 
@@ -5454,7 +5517,8 @@ PlentyFramework.cssClasses = {
 
                 $elem.data( 'timeout', timeout );
             }
-            else {
+            else
+            {
                 if ( (value + '').length <= maxLength && value >= 1 )
                 {
                     $quantityInput.val( value );
@@ -5668,7 +5732,7 @@ PlentyFramework.cssClasses = {
         {
             if ( MediaSizeService.interval() != 'xs' )
             {
-                if ( $( href ).length > 0 )
+                if ( typeof href === 'string' && href.indexOf('/') == -1 && $( href ).length > 0 )
                 {
                     window.location.assign( $( href ).attr( 'href' ) );
                 }
@@ -5737,7 +5801,7 @@ PlentyFramework.cssClasses = {
 
         function showRemoteTab( tabID, groupID, interval )
         {
-            if( MediaSize.isInterval( interval ) )
+            if ( MediaSize.isInterval( interval ) )
             {
                 pm.getRecentEvent().preventDefault();
 
@@ -5755,9 +5819,9 @@ PlentyFramework.cssClasses = {
             var activeTab;
 
             return {
-                addTab : addTab,
-                showTab: showTab,
-                getTab : getTab,
+                addTab   : addTab,
+                showTab  : showTab,
+                getTab   : getTab,
                 resetTabs: resetTabs
             };
 
@@ -5782,7 +5846,7 @@ PlentyFramework.cssClasses = {
                     // activeTab not set before
                     for ( var tab in tabs )
                     {
-                        if( !!tabs[tab].getContent() )
+                        if ( !!tabs[tab].getContent() )
                         {
                             var currentZ = parseInt( tabs[tab].getContent().parent().css( 'zIndex' ) );
                             if ( zIndex == 0 || currentZ < zIndex )
@@ -5795,13 +5859,13 @@ PlentyFramework.cssClasses = {
 
                     for ( var tab in tabs )
                     {
-                        if( !!tabs[tab].getContent() )
+                        if ( !!tabs[tab].getContent() )
                         {
                             tabs[tab].getContent().parent().css( 'zIndex', zIndex - 1 );
                         }
                     }
 
-                    $(window ).on('sizeChange', resetTabs);
+                    $( window ).on( 'sizeChange', resetTabs );
                 }
 
                 activeTab = tabs[tabID];
@@ -5818,7 +5882,7 @@ PlentyFramework.cssClasses = {
             {
                 for ( var tab in tabs )
                 {
-                    if( !!tabs[tab].getContent() )
+                    if ( !!tabs[tab].getContent() )
                     {
                         tabs[tab].show();
                     }
@@ -5830,9 +5894,9 @@ PlentyFramework.cssClasses = {
 
         function Tab( id )
         {
-            var $labels = [];
             var $content;
-            var tabID = id;
+            var $labels = [];
+            var tabID   = id;
 
             return {
                 addLabel  : addLabel,
@@ -6165,20 +6229,21 @@ PlentyFramework.cssClasses = {
 
         function slideDown( target, duration )
         {
-            slideAction($( target ), duration, 'slideDown');
+            slideAction( $( target ), duration, 'slideDown' );
         }
 
         function slideUp( target, duration )
         {
-            slideAction($( target ), duration, 'slideUp');
+            slideAction( $( target ), duration, 'slideUp' );
         }
 
         function slideToggle( target, duration )
         {
-            slideAction($( target ), duration, 'slideToggle');
+            slideAction( $( target ), duration, 'slideToggle' );
         }
 
-        function slideAction ($target, duration, callbackString) {
+        function slideAction( $target, duration, callbackString )
+        {
             duration = duration || 400;
             $target.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
             $target[callbackString]( duration, function()

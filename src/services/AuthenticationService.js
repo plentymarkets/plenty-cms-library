@@ -88,7 +88,6 @@
                     Password: values.loginPassword
                 };
 
-
                 UI.showWaitScreen();
                 return API.post( "/rest/checkout/login/", params )
                     .done( function()
@@ -133,47 +132,29 @@
 
             if ( form.validateForm() && pm.getInstance().AddressDoctorService.validateAddress() )
             {
-                var values = form.getFormValues();
+                var values       = form.getFormValues();
+                values.LoginType = 2;
 
-                // create new invoice address
-                var invoiceAddress = {
-                    LoginType        : 2,
-                    FormOfAddressID  : values.FormOfAddressID,
-                    Company          : values.Company,
-                    FirstName        : values.FirstName,
-                    LastName         : values.LastName,
-                    Street           : values.Street,
-                    HouseNo          : values.HouseNo,
-                    AddressAdditional: values.AddressAdditional,
-                    ZIP              : values.ZIP,
-                    City             : values.City,
-                    CountryID        : values.CountryID,
-                    VATNumber        : values.VATNumber,
-                    Email            : values.Email,
-                    EmailRepeat      : values.EmailRepeat,
-                    BirthDay         : values.BirthDay,
-                    BirthMonth       : values.BirthMonth,
-                    BirthYear        : values.BirthYear,
-                    Password         : values.Password,
-                    PasswordRepeat   : values.PasswordRepeat,
-                    PhoneNumber      : values.PhoneNumber,
-                    MobileNumber     : values.MobileNumber,
-                    FaxNumber        : values.FaxNumber,
-                    Postnummer       : values.Postnummer
-                };
-
-                invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
-
-                form.find( "[data-plenty-property-id]" ).each( function( i, propertyInput )
+                if ( values.checkout
+                    && values.checkout.customerInvoiceAddress
+                    && values.checkout.customerInvoiceAddress.CustomerProperty )
                 {
+                    var tmpProperties             = values.checkout.customerInvoiceAddress.CustomerProperty;
+                    values.CustomerPropertiesList = values.CustomerPropertiesList || [];
 
-                    invoiceAddress.CustomerPropertiesList.push( {
-                        PropertyID   : $( propertyInput ).attr( 'data-plenty-property-id' ),
-                        PropertyValue: $( propertyInput ).val()
-                    } );
-                } );
+                    for ( var property in tmpProperties )
+                    {
+                        if ( tmpProperties[property] )
+                        {
+                            values.CustomerPropertiesList.push( {
+                                PropertyID   : property,
+                                PropertyValue: tmpProperties[property]
+                            } );
+                        }
+                    }
+                }
 
-                return setInvoiceAddress( invoiceAddress )
+                return setInvoiceAddress( values )
                     .done( function()
                     {
                         window.location.assign( form.attr( 'action' ) );

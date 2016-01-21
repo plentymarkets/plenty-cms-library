@@ -18,8 +18,8 @@
         function validateAddress( addressForms )
         {
             var addressIsValid = true;
-            addressForms = addressForms || '[data-plenty-address-doctor]';
-            $( addressForms ).filter('[data-plenty-address-doctor]:visible').each( function( i, form )
+            addressForms       = addressForms || '[data-plenty-address-doctor]';
+            $( addressForms ).filter( '[data-plenty-address-doctor]:visible' ).each( function( i, form )
             {
                 var addressDoctor  = new AddressDoctor( form );
                 var requiredFields = $( form ).attr( 'data-plenty-address-doctor' ).replace( /\s/g, '' ).split( ',' );
@@ -81,7 +81,7 @@
                     }
                 }
 
-                if ( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) )
+                if ( suggestions.houseNoAllowed( $inputs.HouseNo.val() ) || suggestions.getAddresses().length == 1 )
                 {
                     $inputs.HouseNo.removeClass( 'has-error' );
                     $form.find( 'label[for="' + $inputs.HouseNo.attr( 'id' ) + '"]' ).removeClass( 'has-error' );
@@ -132,12 +132,24 @@
                     $inputs[key].addClass( 'has-error' );
                     $form.find( 'label[for="' + $inputs[key].attr( 'id' ) + '"]' ).addClass( 'has-error' );
 
-                    if( !suggestionListVisible ) buildSuggestionList( $inputs[key], valueList );
+                    if ( !suggestionListVisible )
+                    {
+                        buildSuggestionList( $inputs[key], valueList );
+                    }
                     $inputs[key].off( 'focus' );
                     $inputs[key].focus();
                     return false;
 
                 }
+            }
+
+            function positionSuggestionList( $parent, suggestionKey )
+            {
+                $suggestionContainer[suggestionKey].css( {
+                    'width': $parent.outerWidth( true ),
+                    'left' : $parent.position().left,
+                    'top'  : $parent.position().top + $parent.outerHeight( true )
+                } );
             }
 
             function buildSuggestionList( $parent, values )
@@ -146,10 +158,12 @@
 
                 // render html content
                 $suggestionContainer[suggestionKey] = $( pm.compileTemplate( 'addressSuggestions/addressDoctor.html', {values: values} ) );
-                $suggestionContainer[suggestionKey].css( {
-                    'width': $parent.outerWidth( true ),
-                    'left' : $parent.position().left,
-                    'top'  : $parent.position().top + $parent.outerHeight( true )
+
+                positionSuggestionList( $parent, suggestionKey );
+
+                $( window ).on( 'sizeChange', function()
+                {
+                    positionSuggestionList( $parent, suggestionKey );
                 } );
 
                 // bind click event to list elements

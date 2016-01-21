@@ -23,8 +23,14 @@
      * @class APIFactory
      * @static
      */
-    pm.factory( 'APIFactory', function( UI )
+    pm.factory( 'APIFactory', function( UI, Modal )
     {
+
+        var sessionExpirationTimeout = null;
+        $( document ).ready( function()
+        {
+            renewLoginSession();
+        } );
 
         return {
             get   : _get,
@@ -33,6 +39,43 @@
             delete: _delete,
             idle  : _idle
         };
+
+        function renewLoginSession()
+        {
+            if ( !pm.getGlobal( 'LoginSession' ) )
+            {
+                return;
+            }
+
+            if ( !!sessionExpirationTimeout )
+            {
+                clearTimeout( sessionExpirationTimeout );
+            }
+
+            sessionExpirationTimeout = setTimeout( function()
+            {
+                $( window ).trigger( 'login-expired' );
+
+                if ( pm.getGlobal( 'PageDesign' ) === "Checkout" )
+                {
+                    Modal.prepare()
+                        .setTitle( pm.translate( 'Your session has expired.' ) )
+                        .setContent( pm.translate( 'Please log in again to continue shopping.' ) )
+                        .setLabelDismiss( null )
+                        .setLabelConfirm( pm.translate( 'OK' ) )
+                        .onConfirm( function()
+                        {
+                            window.location.assign( '/' );
+                        } )
+                        .onDismiss( function()
+                        {
+                            window.location.assign( '/' );
+                        } )
+                        .show();
+                }
+
+            }, pm.getGlobal( 'LoginSessionExpiration' ) );
+        }
 
         /**
          * Is called by default if a request failed.<br>
@@ -82,7 +125,7 @@
                 url,
                 {
                     type    : 'GET',
-                    data: params,
+                    data    : params,
                     dataType: 'json',
                     async   : !sync,
                     error   : function( jqXHR )
@@ -99,6 +142,7 @@
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -157,6 +201,7 @@
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
         }
 
@@ -185,8 +230,8 @@
                 url,
                 {
                     type       : 'PUT',
-                    data: JSON.stringify( data ),
-                    dataType: 'json',
+                    data       : JSON.stringify( data ),
+                    dataType   : 'json',
                     contentType: 'application/json',
                     error      : function( jqXHR )
                     {
@@ -202,6 +247,7 @@
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -231,8 +277,8 @@
                 url,
                 {
                     type       : 'DELETE',
-                    data: JSON.stringify( data ),
-                    dataType: 'json',
+                    data       : JSON.stringify( data ),
+                    dataType   : 'json',
                     contentType: 'application/json',
                     error      : function( jqXHR )
                     {
@@ -248,6 +294,7 @@
                 {
                     UI.hideWaitScreen();
                 }
+                renewLoginSession();
             } );
 
         }
@@ -262,5 +309,5 @@
             return $.Deferred().resolve();
         }
 
-    }, ['UIFactory'] );
+    }, ['UIFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));
