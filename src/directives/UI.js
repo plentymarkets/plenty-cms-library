@@ -85,7 +85,7 @@
                 stopOnHover    : true,
                 afterMove      : function( current )
                 {
-                    $( current ).find( 'img[data-plenty-rel="lazyload"]' ).trigger( 'appear' );
+                    $( current ).find( '[data-plenty-rel="lazyload"]' ).trigger( 'appear' );
                 }
             } );
         }
@@ -169,10 +169,13 @@
             $elem.lazyload( {
                 effect: effect
             } );
-            $elem.on( "loaded", function()
+            if( $elem.is('img') )
             {
-                $elem.css( 'display', 'inline-block' );
-            } );
+                $elem.on( 'loaded', function()
+                {
+                    $elem.css( 'display', 'inline-block' );
+                } );
+            }
         }
 
         /**
