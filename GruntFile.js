@@ -40,7 +40,10 @@ module.exports = function( grunt )
         },
 
         concat: {
-            debug: {
+            options: {
+                sourceMap: true
+            },
+            debug  : {
                 src : ['libs/mustache.min.js', 'src/helpers/*.js', 'tmp/templates.js', 'src/plentyFramework.js', 'src/partials/**/*.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
                 dest: 'debug/<%= pkg.name %>-<%= pkg.version %>.js'
             }
@@ -53,11 +56,13 @@ module.exports = function( grunt )
                 "join_vars" : true
             },
             options : {
-                sourceMap: true,
-                banner   : '/**\n * Licensed under AGPL v3\n * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)\n * =====================================================================================\n * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)\n * @author      Felix Dausch <felix.dausch@plentymarkets.com>\n * =====================================================================================\n*/'
+                sourceMap              : true,
+                sourceMapIncludeSources: true,
+                sourceMapIn            : 'debug/<%= pkg.name %>-<%= pkg.version %>.js.map',
+                banner                 : '/**\n * Licensed under AGPL v3\n * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)\n * =====================================================================================\n * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)\n * @author      Felix Dausch <felix.dausch@plentymarkets.com>\n * =====================================================================================\n*/'
             },
             build   : {
-                src : 'debug/<%= pkg.name %>-<%= pkg.version %>.js',
+                src : 'dist/<%= pkg.name %>-<%= pkg.version %>.js',
                 dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.min.js'
             }
         },
@@ -96,8 +101,8 @@ module.exports = function( grunt )
 
     grunt.registerTask( 'debug', ['clean:debug', 'copy:debug', 'htmlConvert', 'concat:debug'] );
     grunt.registerTask( 'doc', ['clean:doc', 'yuidoc:doc'] );
-    grunt.registerTask( 'build', ['debug', 'doc', 'karma', 'clean:build', 'uglify:build', 'copy:build'] );
-    grunt.registerTask( 'build-skip-tests', ['debug', 'doc', 'clean:build', 'uglify:build', 'copy:build'] );
+    grunt.registerTask( 'build', ['debug', 'doc', 'karma', 'clean:build', 'copy:build', 'uglify:build'] );
+    grunt.registerTask( 'build-skip-tests', ['debug', 'doc', 'clean:build', 'copy:build', 'uglify:build'] );
     grunt.registerTask( 'default', ['debug'] );
 
 };

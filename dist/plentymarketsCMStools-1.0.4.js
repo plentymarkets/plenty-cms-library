@@ -6461,3 +6461,4 @@ jQuery( document ).ready( function()
 {
     plenty.bindDirectives();
 } );
+//# sourceMappingURL=plentymarketsCMStools-1.0.4.js.map
