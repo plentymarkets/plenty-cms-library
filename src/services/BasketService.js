@@ -228,7 +228,7 @@
 
             var match = $input[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
 
-            return addOrderParamValue( articleWithParams, match[1], match[2], $input.val() );
+            return addOrderParamValue( articleWithParams, match[1], match[2], orderParamUploadFiles[key][0]['name'] );
         }
 
         /**
