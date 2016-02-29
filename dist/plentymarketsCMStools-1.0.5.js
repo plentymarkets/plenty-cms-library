@@ -6047,7 +6047,7 @@ PlentyFramework.cssClasses = {
                 stopOnHover    : true,
                 afterMove      : function( current )
                 {
-                    $( current ).find( 'img[data-plenty-rel="lazyload"]' ).trigger( 'appear' );
+                    $( current ).find( '[data-plenty-rel="lazyload"]' ).trigger( 'appear' );
                 }
             } );
         }
@@ -6131,10 +6131,13 @@ PlentyFramework.cssClasses = {
             $elem.lazyload( {
                 effect: effect
             } );
-            $elem.on( "loaded", function()
+            if( $elem.is('img') )
             {
-                $elem.css( 'display', 'inline-block' );
-            } );
+                $elem.on( 'loaded', function()
+                {
+                    $elem.css( 'display', 'inline-block' );
+                } );
+            }
         }
 
         /**
@@ -6462,3 +6465,4 @@ jQuery( document ).ready( function()
 {
     plenty.bindDirectives();
 } );
+//# sourceMappingURL=plentymarketsCMStools-1.0.5.js.map
