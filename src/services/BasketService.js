@@ -162,10 +162,14 @@
                             CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', {ArticleID: article[0].BasketItemItemID} ).from( 'ItemView' )
                                 .done( function( response )
                                 {
-                                    Modal.prepare()
-                                        .setContent( response.data[0] )
-                                        .setTimeout( 5000 )
-                                        .show();
+                                    var timeout = pm.getGlobal( 'TimeoutItemToBasketOverlay' );
+                                    var modal = Modal.prepare().setContent( response.data[0] );
+
+                                    if( timeout > 0 ) {
+                                        modal.setTimeout( timeout );
+                                    }
+
+                                    modal.show();
                                 } );
                         } );
                 } ).fail( function( jqXHR )
