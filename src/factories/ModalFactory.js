@@ -42,9 +42,9 @@
          * @function prepare
          * @returns {Modal}
          */
-        function prepare()
+        function prepare( selector )
         {
-            return new Modal();
+            return new Modal( selector );
         }
 
         /**
@@ -54,10 +54,12 @@
          * @returns {Modal}
          * @constructor
          */
-        function Modal()
+        function Modal( selector )
         {
 
             var modal = this;
+            modal.selector = selector;
+
             /**
              * The title of the modal
              * @attribute title
@@ -275,29 +277,35 @@
              */
             function show()
             {
-                var entryNumber = 0;
-                if ( isModal( modal.content ) )
+                if( !!modal.selector )
                 {
-                    bsModal = PlentyFramework.partials.Modal.getModal( modal.content );
+                    bsModal = $( modal.selector );
                 }
                 else
                 {
-                    bsModal = $( PlentyFramework.compileTemplate( 'modal/modal.html', modal ) );
-                }
-
-                $( modal.container ).append( bsModal );
-
-                // append additional scripts executable
-                var scripts = $( modal.content ).filter( 'script' );
-                if ( scripts.length > 0 )
-                {
-                    scripts.each( function( i, script )
+                    if ( isModal( modal.content ) )
                     {
-                        var element       = document.createElement( 'script' );
-                        element.type      = 'text/javascript';
-                        element.innerHTML = $( script ).text();
-                        $( modal.container ).append( element );
-                    } );
+                        bsModal = PlentyFramework.partials.Modal.getModal( modal.content );
+                    }
+                    else
+                    {
+                        bsModal = $( PlentyFramework.compileTemplate( 'modal/modal.html', modal ) );
+                    }
+
+                    $( modal.container ).append( bsModal );
+
+                    // append additional scripts executable
+                    var scripts = $( modal.content ).filter( 'script' );
+                    if ( scripts.length > 0 )
+                    {
+                        scripts.each( function( i, script )
+                        {
+                            var element       = document.createElement( 'script' );
+                            element.type      = 'text/javascript';
+                            element.innerHTML = $( script ).text();
+                            $( modal.container ).append( element );
+                        } );
+                    }
                 }
 
                 // bind callback functions

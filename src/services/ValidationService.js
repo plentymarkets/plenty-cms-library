@@ -284,9 +284,9 @@
                         }
                         else
                         {
-                            eval( "var minMax = " + attrValidate );
-                            checkedMin = !!minMax ? minMax.min : 1;
-                            checkedMax = !!minMax ? minMax.max : 1;
+                            var minMax = (new Function("return " + attrValidate))() || {min: 1, max: 1};
+                            checkedMin = minMax.min;
+                            checkedMax = minMax.max;
                         }
 
                         currentHasError = ( checked < checkedMin || checked > checkedMax );

@@ -25,7 +25,7 @@
      * @class CheckoutService
      * @static
      */
-    pm.service( 'CheckoutService', function( API, CMS, Checkout, Modal )
+    pm.service( 'CheckoutService', function( API, UI, CMS, Checkout, Modal )
     {
 
         return {
@@ -37,6 +37,7 @@
             loadAddressSuggestion : loadAddressSuggestion,
             preparePayment        : preparePayment,
             setMethodOfPayment    : setMethodOfPayment,
+            confirmAtrigaPaymax   : confirmAtrigaPaymax,
             editBankDetails       : editBankDetails,
             editCreditCard        : editCreditCard,
             placeOrder            : placeOrder
@@ -117,6 +118,7 @@
 
             // TODO: move bootstrap specific function
             $( '#shippingAdressSelect' ).modal( 'hide' );
+            //Modal.prepare( '#shippingAdressSelect' ).hide();
 
             if ( shippingAddressID < 0 )
             {
@@ -285,7 +287,7 @@
          */
         function preparePayment()
         {
-            return API.post( "/rest/checkout/preparepayment/", null )
+            return API.post( "/rest/checkout/preparepayment/", null, true )
                 .done( function( response )
                 {
                     if ( response.data.CheckoutMethodOfPaymentRedirectURL != '' )
@@ -313,7 +315,49 @@
                             } )
                             .show();
                     }
-                } );
+                } )
+                .fail( function( jqXHR ) {
+                    try
+                    {
+                        var response = $.parseJSON( jqXHR.responseText );
+
+                        var atrigaValidationFailed = false;
+                        // append info link to atriga validation error (code 651)
+                        for( var i = 0; i < response.error.error_stack.length; i++ )
+                        {
+                            var currentError = response.error.error_stack[i];
+                            if( currentError.code == 651 )
+                            {
+                                atrigaValidationFailed = true;
+                                currentError.message += '<br><a href="#">' + pm.translate( 'more information' ) + '</a>';
+                                response.error.error_stack[i] = currentError;
+                                break;
+                            }
+                        }
+
+                        UI.printErrors( response.error.error_stack );
+                        if( atrigaValidationFailed && pm.getGlobal('Checkout.AtrigaShowValidationError') )
+                        {
+                            // show error and bind modal on additional error link
+                            $( '[data-plenty-error-code="651"] a' ).click( function( e )
+                            {
+                                e.preventDefault();
+                                pm.partials.Error.hideAll();
+                                Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
+                            } );
+                        }
+                        else if( atrigaValidationFailed && !pm.getGlobal('Checkout.AtrigaShowValidationError') )
+                        {
+                            // show atriga information modal instead of error
+                            pm.partials.Error.hideAll();
+                            Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
+                        }
+                    }
+                    catch ( e )
+                    {
+                        UI.throwError( jqXHR.status, jqXHR.statusText );
+                    }
+                });
 
         }
 
@@ -327,9 +371,18 @@
          */
         function setMethodOfPayment( paymentID )
         {
-
-            paymentID = paymentID || $( '[data-plenty-checkout-form="methodOfPayment"]' ).getFormValues().MethodOfPaymentID;
-
+            /*
+            var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
+            var methodOfPayment;
+            for( var i = 0; i < methodsOfPaymentList.length; i++ )
+            {
+                if( methodsOfPaymentList[i].MethodOfPaymentID == paymentID )
+                {
+                    methodOfPayment = methodsOfPaymentList[i];
+                    break;
+                }
+            }
+            */
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutShippingProfileID;
@@ -339,6 +392,15 @@
                 {
                     Checkout.reloadContainer( 'ShippingProfilesList' );
                 } );
+        }
+
+        function confirmAtrigaPaymax( atrigaPaymaxChecked )
+        {
+            Checkout.getCheckout().CheckoutAtrigapaymaxChecked = !!atrigaPaymaxChecked;
+            return API.put('/rest/checkout', {
+                CheckoutAtrigapaymaxChecked: !!atrigaPaymaxChecked
+            });
+            //return Checkout.setCheckout();
         }
 
         /**
@@ -581,5 +643,5 @@
             }
         }
 
-    }, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
+    }, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));

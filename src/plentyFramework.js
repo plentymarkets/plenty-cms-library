@@ -12,6 +12,8 @@
  */
 (function( $ )
 {
+    // will be overridden by grunt
+    var version = "0.0.0";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -41,6 +43,45 @@
         instance = instance || new PlentyFramework();
         return instance;
     };
+
+    PlentyFramework.version = (function() {
+
+        return {
+            get: function() {
+                return version;
+            },
+            equals: function( v ) {
+                return compare(v) == 0;
+            },
+            compare: compare
+        };
+
+        function compare( compare )
+        {
+            var localVersion = version.split(".");
+            var compareVersion = compare.split(".");
+
+            for( var i = 0; i < compareVersion.length; i++ )
+            {
+                if( localVersion[i] === compareVersion[i] || compareVersion[i] === "*" )
+                {
+                    continue;
+                }
+
+                if( parseInt(localVersion[i]) < parseInt(compareVersion[i]) )
+                {
+                    return -1;
+                }
+
+                if( parseInt(localVersion[i]) > parseInt(compareVersion[i]) )
+                {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
+    })();
 
     /**
      * Customizable controls for partials will be injected here.
@@ -87,8 +128,12 @@
      * @param  identifier  The identifier of the requested variable
      * @return {*}         The value of the variable
      */
-    PlentyFramework.getGlobal = function( identifier )
+    PlentyFramework.getGlobal = function( identifier, fallbackValue )
     {
+        if( !PlentyFramework.globals.hasOwnProperty( identifier ) )
+        {
+            return fallbackValue;
+        }
         return PlentyFramework.globals[identifier];
     };
 

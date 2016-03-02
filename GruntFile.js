@@ -44,7 +44,7 @@ module.exports = function( grunt )
                 sourceMap: true
             },
             debug  : {
-                src : ['libs/mustache.min.js', 'src/helpers/*.js', 'tmp/templates.js', 'src/plentyFramework.js', 'src/partials/**/*.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
+                src : ['libs/mustache.min.js', 'src/helpers/*.js', 'tmp/templates.js', 'tmp/plentyFramework.js', 'src/partials/**/*.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
                 dest: 'debug/<%= pkg.name %>-<%= pkg.version %>.js'
             }
         },
@@ -88,6 +88,20 @@ module.exports = function( grunt )
                 src   : '**',
                 dest  : 'dist/'
             }
+        },
+
+        'string-replace': {
+            debug: {
+                files: {
+                    'tmp/plentyFramework.js' : 'src/plentyFramework.js'
+                },
+                options: {
+                    replacements: [{
+                        pattern: /var version = "([\d]+\.[\d]+\.[\d])";/g,
+                        replacement: 'var version = "<%= pkg.version %>";'
+                    }]
+                }
+            }
         }
     } );
 
@@ -96,10 +110,11 @@ module.exports = function( grunt )
     grunt.loadNpmTasks( 'grunt-contrib-uglify' );
     grunt.loadNpmTasks( 'grunt-contrib-yuidoc' );
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
+    grunt.loadNpmTasks( 'grunt-string-replace' );
     grunt.loadNpmTasks( 'grunt-karma' );
     grunt.loadNpmTasks( 'grunt-html-convert' );
 
-    grunt.registerTask( 'debug', ['clean:debug', 'copy:debug', 'htmlConvert', 'concat:debug'] );
+    grunt.registerTask( 'debug', ['clean:debug', 'copy:debug', 'htmlConvert', 'string-replace', 'concat:debug'] );
     grunt.registerTask( 'doc', ['clean:doc', 'yuidoc:doc'] );
     grunt.registerTask( 'build', ['debug', 'doc', 'karma', 'clean:build', 'copy:build', 'uglify:build'] );
     grunt.registerTask( 'build-skip-tests', ['debug', 'doc', 'clean:build', 'copy:build', 'uglify:build'] );
