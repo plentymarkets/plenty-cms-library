@@ -6131,7 +6131,7 @@ PlentyFramework.cssClasses = {
             $elem.lazyload( {
                 effect: effect
             } );
-            if( $elem.is('img') )
+            if ( $elem.is( 'img' ) )
             {
                 $elem.on( 'loaded', function()
                 {
