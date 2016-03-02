@@ -1,11 +1,12 @@
-module.exports = function(grunt) {
+module.exports = function( grunt )
+{
 
-    grunt.initConfig({
-        pkg: grunt.file.readJSON('package.json'),
+    grunt.initConfig( {
+        pkg: grunt.file.readJSON( 'package.json' ),
 
         clean: {
             debug: ['debug'],
-            doc: ['doc'],
+            doc  : ['doc'],
             build: ['dist']
         },
 
@@ -21,41 +22,47 @@ module.exports = function(grunt) {
                 // - PhantomJS
                 // - IE (only Windows)
                 // CLI --browsers Chrome,Firefox,Safari
-                browsers: ['PhantomJS'],
-                verbose: true,
-                logLevel: 'WARN'
+                browsers  : ['PhantomJS'],
+                verbose   : true,
+                logLevel  : 'WARN'
             }
         },
 
         htmlConvert: {
-            options: {
-                base: 'src/partials/',
+            options  : {
+                base  : 'src/partials/',
                 module: 'TemplateCache'
             },
             templates: {
-                src: ['src/partials/**/*.html'],
+                src : ['src/partials/**/*.html'],
                 dest: 'tmp/templates.js'
             }
         },
 
         concat: {
-            debug: {
-                src: [ 'libs/mustache.min.js', 'src/helpers/*.js', 'tmp/templates.js', 'src/plentyFramework.js', 'src/partials/**/*.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
+            options: {
+                sourceMap: true
+            },
+            debug  : {
+                src : ['libs/mustache.min.js', 'src/helpers/*.js', 'tmp/templates.js', 'src/plentyFramework.js', 'src/partials/**/*.js', 'src/factories/*.js', 'src/services/*.js', 'src/directives/*.js', 'src/plentyFrameworkCompiler.js'],
                 dest: 'debug/<%= pkg.name %>-<%= pkg.version %>.js'
             }
         },
 
         uglify: {
-            compress:{
-                "pure_funcs": [ 'console.log' ],
-                unused: true,
-                "join_vars": true
+            compress: {
+                "pure_funcs": ['console.log'],
+                unused      : true,
+                "join_vars" : true
             },
-            options: {
-                banner:  '/**\n * Licensed under AGPL v3\n * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)\n * =====================================================================================\n * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)\n * @author      Felix Dausch <felix.dausch@plentymarkets.com>\n * =====================================================================================\n*/'
+            options : {
+                sourceMap              : true,
+                sourceMapIncludeSources: true,
+                sourceMapIn            : 'debug/<%= pkg.name %>-<%= pkg.version %>.js.map',
+                banner                 : '/**\n * Licensed under AGPL v3\n * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)\n * =====================================================================================\n * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)\n * @author      Felix Dausch <felix.dausch@plentymarkets.com>\n * =====================================================================================\n*/'
             },
-            build: {
-                src: 'debug/<%= pkg.name %>-<%= pkg.version %>.js',
+            build   : {
+                src : 'dist/<%= pkg.name %>-<%= pkg.version %>.js',
                 dest: 'dist/<%= pkg.name %>-<%= pkg.version %>.min.js'
             }
         },
@@ -63,7 +70,7 @@ module.exports = function(grunt) {
         yuidoc: {
             doc: {
                 options: {
-                    paths: 'src/',
+                    paths : 'src/',
                     outdir: 'doc/'
                 }
             }
@@ -72,30 +79,30 @@ module.exports = function(grunt) {
         copy: {
             debug: {
                 expand: true,
-                src: 'lang/*',
-                dest: 'debug/'
+                src   : 'lang/*',
+                dest  : 'debug/'
             },
             build: {
                 expand: true,
-                cwd: 'debug/',
-                src: '**',
-                dest: 'dist/'
+                cwd   : 'debug/',
+                src   : '**',
+                dest  : 'dist/'
             }
         }
-    });
+    } );
 
-    grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-yuidoc');
-    grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-karma');
-    grunt.loadNpmTasks('grunt-html-convert');
+    grunt.loadNpmTasks( 'grunt-contrib-clean' );
+    grunt.loadNpmTasks( 'grunt-contrib-concat' );
+    grunt.loadNpmTasks( 'grunt-contrib-uglify' );
+    grunt.loadNpmTasks( 'grunt-contrib-yuidoc' );
+    grunt.loadNpmTasks( 'grunt-contrib-copy' );
+    grunt.loadNpmTasks( 'grunt-karma' );
+    grunt.loadNpmTasks( 'grunt-html-convert' );
 
-    grunt.registerTask('debug', ['clean:debug', 'copy:debug', 'htmlConvert', 'concat:debug']);
-    grunt.registerTask('doc', ['clean:doc', 'yuidoc:doc']);
-    grunt.registerTask('build', ['debug', 'doc', 'karma', 'clean:build', 'uglify:build', 'copy:build']);
-    grunt.registerTask('build-skip-tests', ['debug', 'doc', 'clean:build', 'uglify:build', 'copy:build']);
-    grunt.registerTask('default', ['debug']);
+    grunt.registerTask( 'debug', ['clean:debug', 'copy:debug', 'htmlConvert', 'concat:debug'] );
+    grunt.registerTask( 'doc', ['clean:doc', 'yuidoc:doc'] );
+    grunt.registerTask( 'build', ['debug', 'doc', 'karma', 'clean:build', 'copy:build', 'uglify:build'] );
+    grunt.registerTask( 'build-skip-tests', ['debug', 'doc', 'clean:build', 'copy:build', 'uglify:build'] );
+    grunt.registerTask( 'default', ['debug'] );
 
 };

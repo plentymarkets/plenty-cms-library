@@ -2862,7 +2862,7 @@ PlentyFramework.cssClasses = {
 
             var match = $input[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
 
-            return addOrderParamValue( articleWithParams, match[1], match[2], $input.val() );
+            return addOrderParamValue( articleWithParams, match[1], match[2], orderParamUploadFiles[key][0]['name'] );
         }
 
         /**
@@ -3207,6 +3207,7 @@ PlentyFramework.cssClasses = {
 
     }, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));
+
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
@@ -5732,7 +5733,7 @@ PlentyFramework.cssClasses = {
         {
             if ( MediaSizeService.interval() != 'xs' )
             {
-                if ( $( href ).length > 0 )
+                if ( typeof href === 'string' && href.indexOf('/') == -1 && $( href ).length > 0 )
                 {
                     window.location.assign( $( href ).attr( 'href' ) );
                 }
