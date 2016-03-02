@@ -82,7 +82,7 @@ var ScriptLoader = {
                 var millis = new Date().getTime();
 
                 // looking for existing prefixes.
-                if ( filename.indexOf( "?" ) === -1 )
+                if ( !filename || filename.indexOf( "?" ) === -1 )
                 {
                     return "?" + millis;
                 }
