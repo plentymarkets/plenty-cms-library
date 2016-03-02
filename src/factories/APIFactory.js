@@ -42,7 +42,7 @@
 
         function renewLoginSession()
         {
-            if ( !pm.getGlobal( 'LoginSessionExpiration' ) )
+            if ( !pm.getGlobal( 'LoginSession' ) )
             {
                 return;
             }
