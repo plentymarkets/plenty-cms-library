@@ -162,7 +162,7 @@
                             CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', {ArticleID: article[0].BasketItemItemID} ).from( 'ItemView' )
                                 .done( function( response )
                                 {
-                                    var timeout = pm.getGlobal( 'TimeoutItemToBasketOverlay' );
+                                    var timeout = pm.getGlobal( 'TimeoutItemToBasketOverlay', 5000 );
                                     var modal = Modal.prepare().setContent( response.data[0] );
 
                                     if( timeout > 0 ) {

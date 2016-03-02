@@ -128,8 +128,12 @@
      * @param  identifier  The identifier of the requested variable
      * @return {*}         The value of the variable
      */
-    PlentyFramework.getGlobal = function( identifier )
+    PlentyFramework.getGlobal = function( identifier, fallbackValue )
     {
+        if( !PlentyFramework.globals.hasOwnProperty( identifier ) )
+        {
+            return fallbackValue;
+        }
         return PlentyFramework.globals[identifier];
     };
 
