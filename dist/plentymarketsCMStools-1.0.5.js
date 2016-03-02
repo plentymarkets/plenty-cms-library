@@ -153,6 +153,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
  */
 (function( $ )
 {
+    // will be overridden by grunt
+    var version = "1.0.5";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -182,6 +184,45 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         instance = instance || new PlentyFramework();
         return instance;
     };
+
+    PlentyFramework.version = (function() {
+
+        return {
+            get: function() {
+                return version;
+            },
+            equals: function( v ) {
+                return compare(v) == 0;
+            },
+            compare: compare
+        };
+
+        function compare( compare )
+        {
+            var localVersion = version.split(".");
+            var compareVersion = compare.split(".");
+
+            for( var i = 0; i < compareVersion.length; i++ )
+            {
+                if( localVersion[i] === compareVersion[i] || compareVersion[i] === "*" )
+                {
+                    continue;
+                }
+
+                if( parseInt(localVersion[i]) < parseInt(compareVersion[i]) )
+                {
+                    return -1;
+                }
+
+                if( parseInt(localVersion[i]) > parseInt(compareVersion[i]) )
+                {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
+    })();
 
     /**
      * Customizable controls for partials will be injected here.
@@ -228,8 +269,12 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
      * @param  identifier  The identifier of the requested variable
      * @return {*}         The value of the variable
      */
-    PlentyFramework.getGlobal = function( identifier )
+    PlentyFramework.getGlobal = function( identifier, fallbackValue )
     {
+        if( !PlentyFramework.globals.hasOwnProperty( identifier ) )
+        {
+            return fallbackValue;
+        }
         return PlentyFramework.globals[identifier];
     };
 
@@ -814,8 +859,7 @@ PlentyFramework.cssClasses = {
         {
             $( popup ).find( '.close' ).click( function()
             {
-                popup.hide();
-                popup.find( '.plentyErrorBoxInner' ).html( '' );
+                pm.partials.Error.hideAll();
             } );
         },
 
@@ -841,6 +885,11 @@ PlentyFramework.cssClasses = {
         show: function( popup )
         {
             $( popup ).show();
+        },
+
+        hideAll: function() {
+            $( '#CheckoutErrorPane' ).hide();
+            $( '#CheckoutErrorPane' ).find( '.plentyErrorBoxInner' ).html( '' );
         }
 
     }
@@ -861,7 +910,11 @@ PlentyFramework.cssClasses = {
             element.on( 'hidden.bs.modal', function()
             {
                 modal.hide();
-                element.remove();
+                if( !modal.selector )
+                {
+                    //Do not remove static modals
+                    element.remove();
+                }
             } );
 
             if ( modal.timeout > 0 )
@@ -1625,9 +1678,9 @@ PlentyFramework.cssClasses = {
          * @function prepare
          * @returns {Modal}
          */
-        function prepare()
+        function prepare( selector )
         {
-            return new Modal();
+            return new Modal( selector );
         }
 
         /**
@@ -1637,10 +1690,12 @@ PlentyFramework.cssClasses = {
          * @returns {Modal}
          * @constructor
          */
-        function Modal()
+        function Modal( selector )
         {
 
             var modal = this;
+            modal.selector = selector;
+
             /**
              * The title of the modal
              * @attribute title
@@ -1858,29 +1913,35 @@ PlentyFramework.cssClasses = {
              */
             function show()
             {
-                var entryNumber = 0;
-                if ( isModal( modal.content ) )
+                if( !!modal.selector )
                 {
-                    bsModal = PlentyFramework.partials.Modal.getModal( modal.content );
+                    bsModal = $( modal.selector );
                 }
                 else
                 {
-                    bsModal = $( PlentyFramework.compileTemplate( 'modal/modal.html', modal ) );
-                }
-
-                $( modal.container ).append( bsModal );
-
-                // append additional scripts executable
-                var scripts = $( modal.content ).filter( 'script' );
-                if ( scripts.length > 0 )
-                {
-                    scripts.each( function( i, script )
+                    if ( isModal( modal.content ) )
                     {
-                        var element       = document.createElement( 'script' );
-                        element.type      = 'text/javascript';
-                        element.innerHTML = $( script ).text();
-                        $( modal.container ).append( element );
-                    } );
+                        bsModal = PlentyFramework.partials.Modal.getModal( modal.content );
+                    }
+                    else
+                    {
+                        bsModal = $( PlentyFramework.compileTemplate( 'modal/modal.html', modal ) );
+                    }
+
+                    $( modal.container ).append( bsModal );
+
+                    // append additional scripts executable
+                    var scripts = $( modal.content ).filter( 'script' );
+                    if ( scripts.length > 0 )
+                    {
+                        scripts.each( function( i, script )
+                        {
+                            var element       = document.createElement( 'script' );
+                            element.type      = 'text/javascript';
+                            element.innerHTML = $( script ).text();
+                            $( modal.container ).append( element );
+                        } );
+                    }
                 }
 
                 // bind callback functions
@@ -2796,10 +2857,14 @@ PlentyFramework.cssClasses = {
                             CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', {ArticleID: article[0].BasketItemItemID} ).from( 'ItemView' )
                                 .done( function( response )
                                 {
-                                    Modal.prepare()
-                                        .setContent( response.data[0] )
-                                        .setTimeout( 5000 )
-                                        .show();
+                                    var timeout = pm.getGlobal( 'TimeoutItemToBasketOverlay', 5000 );
+                                    var modal = Modal.prepare().setContent( response.data[0] );
+
+                                    if( timeout > 0 ) {
+                                        modal.setTimeout( timeout );
+                                    }
+
+                                    modal.show();
                                 } );
                         } );
                 } ).fail( function( jqXHR )
@@ -3235,7 +3300,7 @@ PlentyFramework.cssClasses = {
      * @class CheckoutService
      * @static
      */
-    pm.service( 'CheckoutService', function( API, CMS, Checkout, Modal )
+    pm.service( 'CheckoutService', function( API, UI, CMS, Checkout, Modal )
     {
 
         return {
@@ -3247,6 +3312,7 @@ PlentyFramework.cssClasses = {
             loadAddressSuggestion : loadAddressSuggestion,
             preparePayment        : preparePayment,
             setMethodOfPayment    : setMethodOfPayment,
+            confirmAtrigaPaymax   : confirmAtrigaPaymax,
             editBankDetails       : editBankDetails,
             editCreditCard        : editCreditCard,
             placeOrder            : placeOrder
@@ -3327,6 +3393,7 @@ PlentyFramework.cssClasses = {
 
             // TODO: move bootstrap specific function
             $( '#shippingAdressSelect' ).modal( 'hide' );
+            //Modal.prepare( '#shippingAdressSelect' ).hide();
 
             if ( shippingAddressID < 0 )
             {
@@ -3495,7 +3562,7 @@ PlentyFramework.cssClasses = {
          */
         function preparePayment()
         {
-            return API.post( "/rest/checkout/preparepayment/", null )
+            return API.post( "/rest/checkout/preparepayment/", null, true )
                 .done( function( response )
                 {
                     if ( response.data.CheckoutMethodOfPaymentRedirectURL != '' )
@@ -3523,7 +3590,49 @@ PlentyFramework.cssClasses = {
                             } )
                             .show();
                     }
-                } );
+                } )
+                .fail( function( jqXHR ) {
+                    try
+                    {
+                        var response = $.parseJSON( jqXHR.responseText );
+
+                        var atrigaValidationFailed = false;
+                        // append info link to atriga validation error (code 651)
+                        for( var i = 0; i < response.error.error_stack.length; i++ )
+                        {
+                            var currentError = response.error.error_stack[i];
+                            if( currentError.code == 651 )
+                            {
+                                atrigaValidationFailed = true;
+                                currentError.message += '<br><a href="#">' + pm.translate( 'more information' ) + '</a>';
+                                response.error.error_stack[i] = currentError;
+                                break;
+                            }
+                        }
+
+                        UI.printErrors( response.error.error_stack );
+                        if( atrigaValidationFailed && pm.getGlobal('Checkout.AtrigaShowValidationError') )
+                        {
+                            // show error and bind modal on additional error link
+                            $( '[data-plenty-error-code="651"] a' ).click( function( e )
+                            {
+                                e.preventDefault();
+                                pm.partials.Error.hideAll();
+                                Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
+                            } );
+                        }
+                        else if( atrigaValidationFailed && !pm.getGlobal('Checkout.AtrigaShowValidationError') )
+                        {
+                            // show atriga information modal instead of error
+                            pm.partials.Error.hideAll();
+                            Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
+                        }
+                    }
+                    catch ( e )
+                    {
+                        UI.throwError( jqXHR.status, jqXHR.statusText );
+                    }
+                });
 
         }
 
@@ -3537,9 +3646,18 @@ PlentyFramework.cssClasses = {
          */
         function setMethodOfPayment( paymentID )
         {
-
-            paymentID = paymentID || $( '[data-plenty-checkout-form="methodOfPayment"]' ).getFormValues().MethodOfPaymentID;
-
+            /*
+            var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
+            var methodOfPayment;
+            for( var i = 0; i < methodsOfPaymentList.length; i++ )
+            {
+                if( methodsOfPaymentList[i].MethodOfPaymentID == paymentID )
+                {
+                    methodOfPayment = methodsOfPaymentList[i];
+                    break;
+                }
+            }
+            */
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutShippingProfileID;
@@ -3549,6 +3667,15 @@ PlentyFramework.cssClasses = {
                 {
                     Checkout.reloadContainer( 'ShippingProfilesList' );
                 } );
+        }
+
+        function confirmAtrigaPaymax( atrigaPaymaxChecked )
+        {
+            Checkout.getCheckout().CheckoutAtrigapaymaxChecked = !!atrigaPaymaxChecked;
+            return API.put('/rest/checkout', {
+                CheckoutAtrigapaymaxChecked: !!atrigaPaymaxChecked
+            });
+            //return Checkout.setCheckout();
         }
 
         /**
@@ -3791,7 +3918,7 @@ PlentyFramework.cssClasses = {
             }
         }
 
-    }, ['APIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
+    }, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));
 /**
  * Licensed under AGPL v3
@@ -5205,9 +5332,9 @@ PlentyFramework.cssClasses = {
                         }
                         else
                         {
-                            eval( "var minMax = " + attrValidate );
-                            checkedMin = !!minMax ? minMax.min : 1;
-                            checkedMax = !!minMax ? minMax.max : 1;
+                            var minMax = (new Function("return " + attrValidate))() || {min: 1, max: 1};
+                            checkedMin = minMax.min;
+                            checkedMax = minMax.max;
                         }
 
                         currentHasError = ( checked < checkedMin || checked > checkedMax );
@@ -5542,6 +5669,27 @@ PlentyFramework.cssClasses = {
 
     }, ['BasketService'] );
 }( jQuery, PlentyFramework ));
+(function( $, pm )
+{
+    pm.directive( 'Checkout', function( CheckoutService )
+    {
+
+        return {
+            setMethodOfPayment: setMethodOfPayment,
+            confirmAtrigaPaymax: confirmAtrigaPaymax
+        };
+
+        function setMethodOfPayment( paymentID )
+        {
+            CheckoutService.setMethodOfPayment( paymentID );
+        }
+
+        function confirmAtrigaPaymax( atrigaPaymaxConfirmed )
+        {
+            CheckoutService.confirmAtrigaPaymax( atrigaPaymaxConfirmed );
+        }
+    }, ['CheckoutService'] );
+})( jQuery, PlentyFramework );
 /**
  * Mobile dropdowns
  * Toggles dropdowns using css class 'open' instead of pseudo class :hover
