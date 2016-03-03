@@ -154,7 +154,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
+<<<<<<< HEAD:dist/plentymarketsCMStools-1.0.5.js
     var version = "1.0.5";
+=======
+    var version = "1.0.6";
+>>>>>>> plenty_dev:dist/plentymarketsCMStools-1.0.6.js
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -2858,9 +2862,16 @@ PlentyFramework.cssClasses = {
                                 .done( function( response )
                                 {
                                     var timeout = pm.getGlobal( 'TimeoutItemToBasketOverlay', 5000 );
+<<<<<<< HEAD:dist/plentymarketsCMStools-1.0.5.js
                                     var modal = Modal.prepare().setContent( response.data[0] );
 
                                     if( timeout > 0 ) {
+=======
+                                    var modal   = Modal.prepare().setContent( response.data[0] );
+
+                                    if ( timeout > 0 )
+                                    {
+>>>>>>> plenty_dev:dist/plentymarketsCMStools-1.0.6.js
                                         modal.setTimeout( timeout );
                                     }
 
@@ -2927,7 +2938,7 @@ PlentyFramework.cssClasses = {
 
             var match = $input[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
 
-            return addOrderParamValue( articleWithParams, match[1], match[2], orderParamUploadFiles[key][0]['name'] );
+            return addOrderParamValue( articleWithParams, match[1], match[2], $input.val() );
         }
 
         /**
@@ -3076,7 +3087,7 @@ PlentyFramework.cssClasses = {
                     {
                         Checkout.loadCheckout().done( function()
                         {
-                            $( '[data-basket-item-id="' + BasketItemID + '"]' ).remove();
+                            //$( '[data-basket-item-id="' + BasketItemID + '"]' ).remove();
 
                             if ( !Checkout.getCheckout().BasketItemsList || Checkout.getCheckout().BasketItemsList.length <= 0 )
                             {
@@ -3084,6 +3095,26 @@ PlentyFramework.cssClasses = {
                             }
                             else
                             {
+                                // FALLBACK if design not support selector
+                                // [data-plenty-checkout-template="BasketItemsList"]
+                                if ( $( '[data-plenty-checkout-template="BasketItemsList"]' ).length >= 0 )
+                                {
+                                    API.get( "/rest/checkout/container_checkoutbasketitemslist/" ).done( function( response )
+                                    {
+                                        var $oldBasketList       = $( '[data-basket-item-id]' ).parents( "ul" );
+                                        var $basketListContainer = $oldBasketList.parents( ".panel-body" );
+                                        $oldBasketList.fadeOut( function()
+                                        {
+                                            $( this ).siblings( ":not('[data-plenty-checkout-template]')" ).remove();
+                                            $( this ).remove();
+                                            $basketListContainer.prepend( $( response.data[0] ) ).hide().fadeIn();
+                                        } );
+                                    } );
+                                }
+                                else
+                                {
+                                    Checkout.reloadContainer( 'BasketItemsList' );
+                                }
                                 Checkout.reloadContainer( 'Totals' );
                             }
 
@@ -3272,7 +3303,6 @@ PlentyFramework.cssClasses = {
 
     }, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
 }( jQuery, PlentyFramework ));
-
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
@@ -6279,7 +6309,11 @@ PlentyFramework.cssClasses = {
             $elem.lazyload( {
                 effect: effect
             } );
+<<<<<<< HEAD:dist/plentymarketsCMStools-1.0.5.js
             if ( $elem.is( 'img' ) )
+=======
+            if( $elem.is('img') )
+>>>>>>> plenty_dev:dist/plentymarketsCMStools-1.0.6.js
             {
                 $elem.on( 'loaded', function()
                 {
@@ -6613,4 +6647,8 @@ jQuery( document ).ready( function()
 {
     plenty.bindDirectives();
 } );
+<<<<<<< HEAD:dist/plentymarketsCMStools-1.0.5.js
 //# sourceMappingURL=plentymarketsCMStools-1.0.5.js.map
+=======
+//# sourceMappingURL=plentymarketsCMStools-1.0.6.js.map
+>>>>>>> plenty_dev:dist/plentymarketsCMStools-1.0.6.js
