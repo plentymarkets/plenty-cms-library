@@ -287,7 +287,9 @@
          */
         function preparePayment()
         {
-            return API.post( "/rest/checkout/preparepayment/", null, true )
+            var paymentID = Checkout.getCheckout().CheckoutMethodOfPaymentID;
+            var paymentData = $('input[type="radio"][name="MethodOfPaymentID"][value="' + paymentID + '"]').parent().getFormValues();
+            return API.post( "/rest/checkout/preparepayment/", paymentData, true )
                 .done( function( response )
                 {
                     if ( response.data.CheckoutMethodOfPaymentRedirectURL != '' )
@@ -384,6 +386,12 @@
             }
             */
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
+
+            if( !pm.getGlobal('Checkout.AtrigaRequireUserConfirmation') )
+            {
+                Checkout.getCheckout().CheckoutAtrigapaymaxChecked = true;
+            }
+
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
