@@ -384,6 +384,12 @@
             }
             */
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
+
+            if( !pm.getGlobal('Checkout.AtrigaRequireUserConfirmation') )
+            {
+                Checkout.getCheckout().CheckoutAtrigapaymaxChecked = true;
+            }
+
             delete Checkout.getCheckout().CheckoutCustomerShippingAddressID;
             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
