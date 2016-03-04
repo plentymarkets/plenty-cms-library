@@ -52,3 +52,5 @@ ScriptLoader.load({
 	sourceMap:'{% GetGlobal('LayoutFolder'); %}/js/plenty/scripts.json'
 });
 ```
+### Browser cache debug switch
+If you want to avoid caching scripts by browser, set the boolean property "debug" to "true".
