@@ -65,7 +65,7 @@
                     {
                         Modal.prepare()
                             .setContent( resp.data[0] )
-                            .setTitle( pm.translate( "Select order parameters" ) )
+                            .setTitle( pm.translate( "Order.select.parameters" ) )
                             .setLabelConfirm( pm.translate( "Save" ) )
                             .onConfirm( function()
                             {
@@ -323,7 +323,7 @@
                 // checking for order params!
                 Modal.prepare()
                     .setContent( resp.data[0] )
-                    .setTitle( pm.translate( "Edit order parameters" ) )
+                    .setTitle( pm.translate( "Order.edit.parameters" ) )
                     .setLabelConfirm( pm.translate( "Save" ) )
                     .onConfirm( function()
                     {
@@ -424,8 +424,8 @@
             {
                 // show confirmation popup
                 Modal.prepare()
-                    .setTitle( pm.translate( 'Please confirm' ) )
-                    .setContent( '<p>' + pm.translate( "Do you really want to remove \"{{item}}\" from your basket?", {item: itemName} ) + '</p>' )
+                    .setTitle( pm.translate( 'Confirm.please' ) )
+                    .setContent( '<p>' + pm.translate( "Confirm.delete.item", {item: itemName} ) + '</p>' )
                     .onDismiss( function()
                     {
                         //$('[data-basket-item-id="' + BasketItemID +

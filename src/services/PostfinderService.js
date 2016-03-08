@@ -95,7 +95,7 @@
                         var html = pm.compileTemplate( 'addressSuggestions/postFinder.html', params );
 
                         Modal.prepare()
-                            .setTitle( pm.translate( 'Packstations and post offices in your area' ) )
+                            .setTitle( pm.translate( 'Packstation.yourArea' ) )
                             .setContent( html )
                             .setClass( 'checkout' )
                             .onConfirm( function()
@@ -142,7 +142,7 @@
 
         function showErrorMessage()
         {
-            UIFactory.throwError( 0, pm.translate( 'Please enter a ZIP code and/or a city.' ) );
+            UIFactory.throwError( 0, pm.translate( 'Enter.ZipOrCity' ) );
 
             shippingFields.PostfinderItemCity.removeClass( 'has-success' ).addClass( 'has-error' );
             $( 'label[for="' + shippingFields.PostfinderItemCity.attr( 'id' ) + '"]' ).removeClass( 'has-success' ).addClass( 'has-error' );

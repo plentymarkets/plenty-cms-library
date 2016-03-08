@@ -331,7 +331,7 @@
                             if( currentError.code == 651 )
                             {
                                 atrigaValidationFailed = true;
-                                currentError.message += '<br><a href="#">' + pm.translate( 'more information' ) + '</a>';
+                                currentError.message += '<br><a href="#">' + pm.translate( 'More.information' ) + '</a>';
                                 response.error.error_stack[i] = currentError;
                                 break;
                             }

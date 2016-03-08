@@ -59,8 +59,8 @@
                 if ( pm.getGlobal( 'PageDesign' ) === "Checkout" )
                 {
                     Modal.prepare()
-                        .setTitle( pm.translate( 'Your session has expired.' ) )
-                        .setContent( pm.translate( 'Please log in again to continue shopping.' ) )
+                        .setTitle( pm.translate( 'Session.expired' ) )
+                        .setContent( pm.translate( 'LogIn.again' ) )
                         .setLabelDismiss( null )
                         .setLabelConfirm( pm.translate( 'OK' ) )
                         .onConfirm( function()

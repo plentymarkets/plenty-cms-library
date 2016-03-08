@@ -1080,8 +1080,8 @@ PlentyFramework.cssClasses = {
                 if ( pm.getGlobal( 'PageDesign' ) === "Checkout" )
                 {
                     Modal.prepare()
-                        .setTitle( pm.translate( 'Your session has expired.' ) )
-                        .setContent( pm.translate( 'Please log in again to continue shopping.' ) )
+                        .setTitle( pm.translate( 'Session.expired' ) )
+                        .setContent( pm.translate( 'LogIn.again' ) )
                         .setLabelDismiss( null )
                         .setLabelConfirm( pm.translate( 'OK' ) )
                         .onConfirm( function()
@@ -2760,7 +2760,7 @@ PlentyFramework.cssClasses = {
                     {
                         Modal.prepare()
                             .setContent( resp.data[0] )
-                            .setTitle( pm.translate( "Select order parameters" ) )
+                            .setTitle( pm.translate( "Order.select.parameters" ) )
                             .setLabelConfirm( pm.translate( "Save" ) )
                             .onConfirm( function()
                             {
@@ -3018,7 +3018,7 @@ PlentyFramework.cssClasses = {
                 // checking for order params!
                 Modal.prepare()
                     .setContent( resp.data[0] )
-                    .setTitle( pm.translate( "Edit order parameters" ) )
+                    .setTitle( pm.translate( "Order.edit.parameters" ) )
                     .setLabelConfirm( pm.translate( "Save" ) )
                     .onConfirm( function()
                     {
@@ -3119,8 +3119,8 @@ PlentyFramework.cssClasses = {
             {
                 // show confirmation popup
                 Modal.prepare()
-                    .setTitle( pm.translate( 'Please confirm' ) )
-                    .setContent( '<p>' + pm.translate( "Do you really want to remove \"{{item}}\" from your basket?", {item: itemName} ) + '</p>' )
+                    .setTitle( pm.translate( 'Confirm.please' ) )
+                    .setContent( '<p>' + pm.translate( "Confirm.delete.item", {item: itemName} ) + '</p>' )
                     .onDismiss( function()
                     {
                         //$('[data-basket-item-id="' + BasketItemID +
@@ -3626,7 +3626,7 @@ PlentyFramework.cssClasses = {
                             if( currentError.code == 651 )
                             {
                                 atrigaValidationFailed = true;
-                                currentError.message += '<br><a href="#">' + pm.translate( 'more information' ) + '</a>';
+                                currentError.message += '<br><a href="#">' + pm.translate( 'More.information' ) + '</a>';
                                 response.error.error_stack[i] = currentError;
                                 break;
                             }
@@ -4857,7 +4857,7 @@ PlentyFramework.cssClasses = {
                         var html = pm.compileTemplate( 'addressSuggestions/postFinder.html', params );
 
                         Modal.prepare()
-                            .setTitle( pm.translate( 'Packstations and post offices in your area' ) )
+                            .setTitle( pm.translate( 'Packstation.yourArea' ) )
                             .setContent( html )
                             .setClass( 'checkout' )
                             .onConfirm( function()
@@ -4904,7 +4904,7 @@ PlentyFramework.cssClasses = {
 
         function showErrorMessage()
         {
-            UIFactory.throwError( 0, pm.translate( 'Please enter a ZIP code and/or a city.' ) );
+            UIFactory.throwError( 0, pm.translate( 'Enter.ZipOrCity' ) );
 
             shippingFields.PostfinderItemCity.removeClass( 'has-success' ).addClass( 'has-error' );
             $( 'label[for="' + shippingFields.PostfinderItemCity.attr( 'id' ) + '"]' ).removeClass( 'has-success' ).addClass( 'has-error' );

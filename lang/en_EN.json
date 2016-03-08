@@ -4,14 +4,14 @@
   "Cancel": "Cancel",
   "Confirm": "Confirm",
   "Delete": "Delete",
-  "Please confirm": "Please confirm",
   "Save": "Save",
-  "Do you really want to remove \"{{item}}\" from your basket?": "Do you really want to remove \"{{item}}\" from your basket?",
-  "Select order parameters": "Select order parameters",
-  "Edit order parameters": "Edit order parameters",
-  "Packstations and post offices in your area": "Packstations and post offices in your area",
-  "Please enter a ZIP code and/or a city.": "Please enter a ZIP code and/or a city.",
-  "more information": "more information",
-  "Your session has expired.": "Your session has expired.",
-  "Please log in again to continue shopping.": "Please log in again to continue shopping."
+  "Confirm.please": "Please confirm",
+  "Confirm.delete.item": "Do you really want to remove \"{{item}}\" from your basket?",
+  "Order.select.parameters": "Select order parameters",
+  "Order.edit.parameters": "Edit order parameters",
+  "Packstation.yourArea": "Packstations and post offices in your area",
+  "Enter.ZipOrCity": "Please enter a ZIP code and/or a city.",
+  "More.information": "more information",
+  "Session.expired": "Your session has expired.",
+  "LogIn.again": "Please log in again to continue shopping."
 }

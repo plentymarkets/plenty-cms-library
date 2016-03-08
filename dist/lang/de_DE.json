@@ -4,14 +4,14 @@
   "Cancel": "Abbrechen",
   "Confirm": "Bestätigen",
   "Delete": "Löschen",
-  "Please confirm": "Bitte bestätigen",
   "Save": "Speichern",
-  "Do you really want to remove \"{{item}}\" from your basket?": "Möchten Sie den Artikel \"{{item}}\" wirklich aus dem Warenkorb entfernen?",
-  "Select order parameters": "Bestellmerkmale wählen",
-  "Edit order parameters": "Bestellmerkmale ändern",
-  "Packstations and post offices in your area": "Packstationen und Postfilialen in der Nähe",
-  "Please enter a ZIP code and/or a city.": "Bitte geben Sie eine Postleitzahl und/oder einen Ort an.",
-  "more information": "Mehr Informationen",
-  "Your session has expired.": "Sie sind nicht mehr angemeldet.",
-  "Please log in again to continue shopping.": "Bitte melden Sie sich erneut an, um weiter einzukaufen."
+  "Confirm.please": "Bitte bestätigen",
+  "Confirm.delete.item": "Möchten Sie den Artikel \"{{item}}\" wirklich aus dem Warenkorb entfernen?",
+  "Order.select.parameters": "Bestellmerkmale wählen",
+  "Order.edit.parameters": "Bestellmerkmale ändern",
+  "Packstation.yourArea": "Packstationen und Postfilialen in der Nähe",
+  "Enter.ZipOrCity": "Bitte geben Sie eine Postleitzahl und/oder einen Ort an.",
+  "More.information": "Mehr Informationen",
+  "Session.expired": "Sie sind nicht mehr angemeldet.",
+  "LogIn.again": "Bitte melden Sie sich erneut an, um weiter einzukaufen."
 }
