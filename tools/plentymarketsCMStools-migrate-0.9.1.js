@@ -18,7 +18,7 @@
         // #### COMMON ACTIONS
         if ( $rootElement.find( 'body' ).length > 0 )
         {
-            pm.directives['MobileDropdown'].initMobileDropdown();
+            pm.directives['MobileDropdown'].initDropdowns();
             pm.directives['UI'].initUIWindowEvents();
         }
 
