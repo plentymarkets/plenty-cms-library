@@ -379,7 +379,6 @@
         function setMethodOfPayment( paymentID )
         {
             /*
-<<<<<<< HEAD
             var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
             var methodOfPayment;
             for( var i = 0; i < methodsOfPaymentList.length; i++ )
@@ -397,19 +396,6 @@
                 paymentID = $('input[name="MethodOfPaymentID"]:checked').val();
             }
 
-=======
-             var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
-             var methodOfPayment;
-             for( var i = 0; i < methodsOfPaymentList.length; i++ )
-             {
-             if( methodsOfPaymentList[i].MethodOfPaymentID == paymentID )
-             {
-             methodOfPayment = methodsOfPaymentList[i];
-             break;
-             }
-             }
-             */
->>>>>>> 17bf306057598efb89064efd0a38c655158593d4
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
 
             if ( !pm.getGlobal( 'Checkout.AtrigaRequireUserConfirmation' ) )
