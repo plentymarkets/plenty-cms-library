@@ -3681,6 +3681,12 @@ PlentyFramework.cssClasses = {
                 }
             }
             */
+            if( !paymentID )
+            {
+                // FIX for older callisto layouts (< 3.3): get payment id from input field
+                paymentID = $('input[name="MethodOfPaymentID"]:checked').val();
+            }
+
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
 
             if( !pm.getGlobal('Checkout.AtrigaRequireUserConfirmation') )
