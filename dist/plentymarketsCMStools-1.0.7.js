@@ -4223,25 +4223,6 @@ PlentyFramework.cssClasses = {
         function setMethodOfPayment( paymentID )
         {
             /*
-<<<<<<< HEAD:dist/plentymarketsCMStools-1.0.6.js
-            var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
-            var methodOfPayment;
-            for( var i = 0; i < methodsOfPaymentList.length; i++ )
-            {
-                if( methodsOfPaymentList[i].MethodOfPaymentID == paymentID )
-                {
-                    methodOfPayment = methodsOfPaymentList[i];
-                    break;
-                }
-            }
-            */
-            if( !paymentID )
-            {
-                // FIX for older callisto layouts (< 3.3): get payment id from input field
-                paymentID = $('input[name="MethodOfPaymentID"]:checked').val();
-            }
-
-=======
              var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
              var methodOfPayment;
              for( var i = 0; i < methodsOfPaymentList.length; i++ )
@@ -4253,7 +4234,12 @@ PlentyFramework.cssClasses = {
              }
              }
              */
->>>>>>> 17bf306057598efb89064efd0a38c655158593d4:dist/plentymarketsCMStools-1.0.7.js
+            if ( !paymentID )
+            {
+                // FIX for older callisto layouts (< 3.3): get payment id from input field
+                paymentID = $( 'input[name="MethodOfPaymentID"]:checked' ).val();
+            }
+
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
 
             if ( !pm.getGlobal( 'Checkout.AtrigaRequireUserConfirmation' ) )
