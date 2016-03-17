@@ -290,6 +290,12 @@
             eventStack.push( event );
             return callback.apply( null, params );
         } );
+
+        if( document.readyState === "complete" && eventType === "ready" )
+        {
+            // execute 'ready' directives directly if document is already loaded
+            callback.apply( null, params );
+        }
     }
 
     function addCustomEvents( element )

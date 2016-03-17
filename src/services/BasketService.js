@@ -402,7 +402,9 @@
                                         {
                                             $( this ).siblings( ":not('[data-plenty-checkout-template]')" ).remove();
                                             $( this ).remove();
-                                            $basketListContainer.prepend( $( response.data[0] ) ).hide().fadeIn();
+                                            $basketListContainer.prepend( $( response.data[0] ) ).hide().fadeIn(function() {
+                                                pm.getInstance().bindDirectives( $basketListContainer );
+                                            });
                                         } );
                                     } );
                                 }
