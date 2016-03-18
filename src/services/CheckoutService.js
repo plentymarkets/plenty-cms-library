@@ -324,40 +324,26 @@
                     {
                         var response = $.parseJSON( jqXHR.responseText );
 
-                        var atrigaValidationFailed = false;
-                        // append info link to atriga validation error (code 651)
+                        var errorStack = [];
                         for ( var i = 0; i < response.error.error_stack.length; i++ )
                         {
-                            var currentError = response.error.error_stack[i];
-                            if ( currentError.code == 651 )
+                            if ( response.error.error_stack[i].code == 651 )
                             {
-                                atrigaValidationFailed        = true;
-                                currentError.message += '<br><a href="#">' + pm.translate( 'more information' ) + '</a>';
-                                response.error.error_stack[i] = currentError;
-                                Checkout.reloadContainer( 'MethodsOfPaymentList' ).done( showAtrigaInformationDialog );
-                                break;
+                                // notify atriga validation errors
+                                Checkout.reloadContainer( 'MethodsOfPaymentList' ).done(function() {
+                                    $(document).trigger('plenty.AtrigaValidationFailed');
+                                });
+                            }
+                            else
+                            {
+                                errorStack.push( response.error.error_stack[i] );
                             }
                         }
 
-                        function showAtrigaInformationDialog()
+                        // display remaining errors
+                        if( errorStack.length > 0 )
                         {
-                            UI.printErrors( response.error.error_stack );
-                            if ( atrigaValidationFailed && pm.getGlobal( 'Checkout.AtrigaShowValidationError' ) )
-                            {
-                                // show error and bind modal on additional error link
-                                $( '[data-plenty-error-code="651"] a' ).click( function( e )
-                                {
-                                    e.preventDefault();
-                                    pm.partials.Error.hideAll();
-                                    Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
-                                } );
-                            }
-                            else if ( atrigaValidationFailed && !pm.getGlobal( 'Checkout.AtrigaShowValidationError' ) )
-                            {
-                                // show atriga information modal instead of error
-                                pm.partials.Error.hideAll();
-                                Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
-                            }
+                            UI.printErrors(errorStack);
                         }
                     }
                     catch ( e )
