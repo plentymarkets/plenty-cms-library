@@ -10,7 +10,8 @@
 /**
  * @module Services
  */
-(function ($, pm) {
+(function( $, pm )
+{
 
     /**
      * Providing methods for logging in and out and registering new customers.<br>
@@ -22,13 +23,14 @@
      * @class AuthenticationService
      * @static
      */
-    pm.service('AuthenticationService', function (API, Checkout) {
+    pm.service( 'AuthenticationService', function( API, Checkout )
+    {
 
         return {
-            resetPassword: resetPassword,
-            customerLogin: customerLogin,
+            resetPassword    : resetPassword,
+            customerLogin    : customerLogin,
             setInvoiceAddress: setInvoiceAddress,
-            registerCustomer: registerCustomer
+            registerCustomer : registerCustomer
         };
 
         /**
@@ -36,13 +38,16 @@
          * and sends request to provide a new password to the entered E-Mail-Address.
          *
          * @function resetPasswort
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
-        function resetPassword() {
+        function resetPassword()
+        {
 
-            var form = $('[data-plenty-checkout="lostPasswordForm"]');
+            var form = $( '[data-plenty-checkout="lostPasswordForm"]' );
 
-            if( form.validateForm() ) {
+            if ( form.validateForm() )
+            {
 
                 var values = form.getFormValues();
 
@@ -50,13 +55,15 @@
                     Email: values.Email
                 };
 
-                return API.post("/rest/checkout/lostpassword/", params)
-                    .done(function( response ) {
-                        if ( response.data.IsMailSend == true ) {
-                            $('[data-plenty-checkout="lostPasswordTextContainer"]').hide();
-                            $('[data-plenty-checkout="lostPasswordSuccessMessage"]').show();
+                return API.post( "/rest/checkout/lostpassword/", params )
+                    .done( function( response )
+                    {
+                        if ( response.data.IsMailSend == true )
+                        {
+                            $( '[data-plenty-checkout="lostPasswordTextContainer"]' ).hide();
+                            $( '[data-plenty-checkout="lostPasswordSuccessMessage"]' ).show();
                         }
-                    });
+                    } );
 
             }
         }
@@ -67,23 +74,27 @@
          *
          * @function customerLogin
          * @param {object} form The jQuery-wrapped form-element to read the credentials from
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
-        function customerLogin( form ) {
-            if( form.validateForm() ) {
+        function customerLogin( form )
+        {
+            if ( form.validateForm() )
+            {
                 var values = form.getFormValues();
 
                 var params = {
-                    Email: values.loginMail,
+                    Email   : values.loginMail,
                     Password: values.loginPassword
                 };
 
-                return API.post("/rest/checkout/login/", params)
-                    .done(function () {
+                return API.post( "/rest/checkout/login/", params )
+                    .done( function()
+                    {
                         // successful login -> go to form's target referenced by action-attribute
-                        window.location.assign( form.attr('action') );
+                        window.location.assign( form.attr( 'action' ) );
 
-                    });
+                    } );
             }
         }
 
@@ -92,14 +103,17 @@
          *
          * @function setInvoiceAddress
          * @param {object} invoiceAddress containing address-data sent to server
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
-        function setInvoiceAddress( invoiceAddress ) {
+        function setInvoiceAddress( invoiceAddress )
+        {
 
-            return API.post("/rest/checkout/customerinvoiceaddress/", invoiceAddress)
-                .done(function (response) {
+            return API.post( "/rest/checkout/customerinvoiceaddress/", invoiceAddress )
+                .done( function( response )
+                {
                     Checkout.getCheckout().CustomerInvoiceAddress = response.data;
-                });
+                } );
         }
 
         /**
@@ -108,47 +122,51 @@
          * On success, redirect to forms target referenced by action-attribute
          *
          * @function registerCustomer
-         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred Object</a>
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
          */
-        function registerCustomer() {
-            var form = $('[data-plenty-checkout-form="customerRegistration"]');
+        function registerCustomer()
+        {
+            var form = $( '[data-plenty-checkout-form="customerRegistration"]' );
 
-            if( form.validateForm() ) {
+            if ( form.validateForm() )
+            {
                 var values = form.getFormValues();
 
                 // create new invoice address
                 var invoiceAddress = {
-                    LoginType: 2,
-                    FormOfAddressID: values.FormOfAddressID,
-                    Company: values.Company,
-                    FirstName: values.FirstName,
-                    LastName: values.LastName,
-                    Street: values.Street,
-                    HouseNo: values.HouseNo,
+                    LoginType        : 2,
+                    FormOfAddressID  : values.FormOfAddressID,
+                    Company          : values.Company,
+                    FirstName        : values.FirstName,
+                    LastName         : values.LastName,
+                    Street           : values.Street,
+                    HouseNo          : values.HouseNo,
                     AddressAdditional: values.AddressAdditional,
-                    ZIP: values.ZIP,
-                    City: values.City,
-                    CountryID: values.CountryID,
-                    VATNumber: values.VATNumber,
-                    Email: values.Email,
-                    EmailRepeat: values.EmailRepeat,
-                    BirthDay: values.BirthDay,
-                    BirthMonth: values.BirthMonth,
-                    BirthYear: values.BirthYear,
-                    Password: values.Password,
-                    PasswordRepeat: values.PasswordRepeat,
-                    PhoneNumber: values.PhoneNumber,
-                    MobileNumber: values.MobileNumber,
-                    FaxNumber: values.FaxNumber,
-                    Postnummer: values.Postnummer
+                    ZIP              : values.ZIP,
+                    City             : values.City,
+                    CountryID        : values.CountryID,
+                    VATNumber        : values.VATNumber,
+                    Email            : values.Email,
+                    EmailRepeat      : values.EmailRepeat,
+                    BirthDay         : values.BirthDay,
+                    BirthMonth       : values.BirthMonth,
+                    BirthYear        : values.BirthYear,
+                    Password         : values.Password,
+                    PasswordRepeat   : values.PasswordRepeat,
+                    PhoneNumber      : values.PhoneNumber,
+                    MobileNumber     : values.MobileNumber,
+                    FaxNumber        : values.FaxNumber,
+                    Postnummer       : values.Postnummer
                 };
 
-                return setInvoiceAddress(invoiceAddress)
-                    .done(function () {
-                        window.location.assign( form.attr('action') );
-                    });
+                return setInvoiceAddress( invoiceAddress )
+                    .done( function()
+                    {
+                        window.location.assign( form.attr( 'action' ) );
+                    } );
             }
         }
-    }, ['APIFactory', 'CheckoutFactory']);
+    }, ['APIFactory', 'CheckoutFactory'] );
 
-}(jQuery, PlentyFramework));
+}( jQuery, PlentyFramework ));

@@ -7,7 +7,8 @@
  * =====================================================================================
  */
 
-(function($, pm) {
+(function( $, pm )
+{
 
 
     /*
@@ -24,17 +25,21 @@
      *     ...
      * </div>
      */
-    pm.directive('[data-plenty="contentpageSlider"]', function(i, elem) {
-        $(elem).owlCarousel({
-            navigation: true,
-            navigationText: false,
-            slideSpeed: 1000,
+    pm.directive( '[data-plenty="contentpageSlider"]', function( i, elem )
+    {
+        $( elem ).owlCarousel( {
+            navigation     : true,
+            navigationText : false,
+            slideSpeed     : 1000,
             paginationSpeed: 1000,
-            singleItem: true,
-            autoPlay: 6000,
-            stopOnHover: true,
-            afterMove: function(current) { $(current).find('img[data-plenty-lazyload]').trigger('appear'); }
-        });
-    });
+            singleItem     : true,
+            autoPlay       : 6000,
+            stopOnHover    : true,
+            afterMove      : function( current )
+            {
+                $( current ).find( 'img[data-plenty-lazyload]' ).trigger( 'appear' );
+            }
+        } );
+    } );
 
-}(jQuery, PlentyFramework));
+}( jQuery, PlentyFramework ));

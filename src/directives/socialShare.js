@@ -7,7 +7,8 @@
  * =====================================================================================
  */
 
-(function($, pm) {
+(function( $, pm )
+{
 
     /*
      * Social Share Activation
@@ -29,27 +30,35 @@
      * Tooltip will be destroyed after activating a social service
      * (!) Requires bootstrap.js
      */
-    pm.directive('[data-plenty-social]', function(i, elem, SocialShareService) {
+    pm.directive( '[data-plenty-social]', function( i, elem, SocialShareService )
+    {
 
-        var toggle = $(elem).find('[data-plenty="switch"]');
+        var toggle = $( elem ).find( '[data-plenty="switch"]' );
 
         // append container to put / delete service.html
-        $(elem).append('<div class="social-container"></div>');
+        $( elem ).append( '<div class="social-container"></div>' );
 
         // add "off" class to switch, if neither "off" or "on" is set
-        if ( !toggle.hasClass('off') && !toggle.hasClass('on') ) {
-            toggle.addClass('off');
+        if ( !toggle.hasClass( 'off' ) && !toggle.hasClass( 'on' ) )
+        {
+            toggle.addClass( 'off' );
         }
 
         // toggle switch
-        toggle.on('click', function() {
-            if ( toggle.hasClass('off') ) {
-                if ( $(elem).attr("data-toggle") == "tooltip" ) { $(elem).tooltip('destroy') };
-                toggle.removeClass('off').addClass('on');
+        toggle.on( 'click', function()
+        {
+            if ( toggle.hasClass( 'off' ) )
+            {
+                if ( $( elem ).attr( "data-toggle" ) == "tooltip" )
+                {
+                    $( elem ).tooltip( 'destroy' )
+                }
+                ;
+                toggle.removeClass( 'off' ).addClass( 'on' );
                 // hide dummy button
-                $(elem).find('[data-plenty="placeholder"]').hide();
+                $( elem ).find( '[data-plenty="placeholder"]' ).hide();
                 // load HTML defined in 'api'
-                $(elem).find('.social-container').append( SocialShareService.getSocialService( $(elem).attr('data-plenty-social') ) );
+                $( elem ).find( '.social-container' ).append( SocialShareService.getSocialService( $( elem ).attr( 'data-plenty-social' ) ) );
             }
             // do not disable social medias after activation
             /*
@@ -62,7 +71,7 @@
              $(elem).find('.social-container').html('');
              }
              */
-        });
-    }, ['SocialShareService']);
+        } );
+    }, ['SocialShareService'] );
 
-}(jQuery, PlentyFramework));
+}( jQuery, PlentyFramework ));

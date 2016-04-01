@@ -10,7 +10,8 @@
 /**
  * @module Services
  */
-(function($, pm){
+(function( $, pm )
+{
 
     /**
      * Listens to window's size and trigger 'sizeChange' event if the Bootstrap interval changes.
@@ -21,15 +22,16 @@
      *          console.log('The interval changed from ' + oldValue + ' to ' + newValue.');
      *      });
      */
-    pm.service('MediaSizeService', function() {
+    pm.service( 'MediaSizeService', function()
+    {
 
         var bsInterval;
 
         // recalculation of the current interval on window resize
-        $(window).resize( calculateMediaSize );
+        $( window ).resize( calculateMediaSize );
 
         // initially calculation of the interval
-        $(document).ready( calculateMediaSize );
+        $( document ).ready( calculateMediaSize );
 
         return {
             interval: getInterval
@@ -40,8 +42,12 @@
          * @function getInterval
          * @return {"xs"|"sm"|"md"|"lg"}
          */
-        function getInterval() {
-            if( !!bsInterval ) calculateMediaSize();
+        function getInterval()
+        {
+            if ( !!bsInterval )
+            {
+                calculateMediaSize();
+            }
 
             return bsInterval;
         }
@@ -51,27 +57,55 @@
          * @function calculateMediaSize
          * @private
          */
-        function calculateMediaSize() {
+        function calculateMediaSize()
+        {
             var size;
-            if( !!window.matchMedia ) { // FIX IE support
-                if( window.matchMedia('(min-width:1200px)').matches ) size = 'lg';
-                else if( window.matchMedia('(min-width:992px)').matches ) size = 'md';
-                else if( window.matchMedia('(min-width:768px)').matches ) size = 'sm';
-                else size = 'xs';
-            } else {
-                if( $(window).width() >= 1200 ) size = 'lg';
-                else if( $(window).width() >= 992 ) size = 'md';
-                else if( $(window).width() >= 768 ) size = 'sm';
-                else size = 'xs';
+            if ( !!window.matchMedia )
+            { // FIX IE support
+                if ( window.matchMedia( '(min-width:1200px)' ).matches )
+                {
+                    size = 'lg';
+                }
+                else if ( window.matchMedia( '(min-width:992px)' ).matches )
+                {
+                    size = 'md';
+                }
+                else if ( window.matchMedia( '(min-width:768px)' ).matches )
+                {
+                    size = 'sm';
+                }
+                else
+                {
+                    size = 'xs';
+                }
             }
-            if( size != bsInterval ) {
+            else
+            {
+                if ( $( window ).width() >= 1200 )
+                {
+                    size = 'lg';
+                }
+                else if ( $( window ).width() >= 992 )
+                {
+                    size = 'md';
+                }
+                else if ( $( window ).width() >= 768 )
+                {
+                    size = 'sm';
+                }
+                else
+                {
+                    size = 'xs';
+                }
+            }
+            if ( size != bsInterval )
+            {
                 var oldValue = bsInterval;
-                bsInterval = size;
-                $(window).trigger('sizeChange', [bsInterval, oldValue]);
+                bsInterval   = size;
+                $( window ).trigger( 'sizeChange', [bsInterval, oldValue] );
             }
         }
 
+    } );
 
-    });
-
-}(jQuery, PlentyFramework));
+}( jQuery, PlentyFramework ));

@@ -17,7 +17,8 @@ var plenty = PlentyFramework.getInstance();
  *
  * will not be tested. reasons:
  * http://stackoverflow.com/questions/29153733/how-to-unit-test-a-document-ready-function-using-jasmine
-  */
-jQuery(document).ready(function() {
+ */
+jQuery( document ).ready( function()
+{
     plenty.bindDirectives();
-});
+} );
