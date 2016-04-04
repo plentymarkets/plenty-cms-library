@@ -206,27 +206,31 @@
             var invoiceAddress       = form.getFormValues();
             invoiceAddress.LoginType = 1;
 
-            invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
-
-            form.find( "[data-plenty-property-id]" ).each( function( i, propertyInput )
+            if ( invoiceAddress.checkout
+                && invoiceAddress.checkout.customerInvoiceAddress
+                && invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty )
             {
-                invoiceAddress.CustomerPropertiesList.push( {
-                    PropertyID   : $( propertyInput ).attr( 'data-plenty-property-id' ),
-                    PropertyValue: $( propertyInput ).val()
-                } );
-            } );
+                var tmpProperties                     = invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty;
+                invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
+
+                for ( var property in tmpProperties )
+                {
+                    if ( tmpProperties[property] )
+                    {
+                        invoiceAddress.CustomerPropertiesList.push( {
+                            PropertyID   : property,
+                            PropertyValue: tmpProperties[property]
+                        } );
+                    }
+                }
+            }
 
             if ( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) )
             {
                 return API.post( "/rest/checkout/customerinvoiceaddress/", invoiceAddress )
                     .done( function( response )
                     {
-                        //Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
-                        saveShippingAddress().done( function()
-                        {
-                            Checkout.loadCheckout();
-                            //Checkout.getCheckout().CustomerInvoiceAddress = response.data;
-                        } );
+                        saveShippingAddress().done( Checkout.loadCheckout );
                     } );
             }
             else

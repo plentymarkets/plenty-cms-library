@@ -1,55 +1,3 @@
-(function defineMustache(global,factory){if(typeof exports==="object"&&exports&&typeof exports.nodeName!=="string"){factory(exports)}else if(typeof define==="function"&&define.amd){define(["exports"],factory)}else{global.Mustache={};factory(Mustache)}})(this,function mustacheFactory(mustache){var objectToString=Object.prototype.toString;var isArray=Array.isArray||function isArrayPolyfill(object){return objectToString.call(object)==="[object Array]"};function isFunction(object){return typeof object==="function"}function typeStr(obj){return isArray(obj)?"array":typeof obj}function escapeRegExp(string){return string.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g,"\\$&")}function hasProperty(obj,propName){return obj!=null&&typeof obj==="object"&&propName in obj}var regExpTest=RegExp.prototype.test;function testRegExp(re,string){return regExpTest.call(re,string)}var nonSpaceRe=/\S/;function isWhitespace(string){return!testRegExp(nonSpaceRe,string)}var entityMap={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#x2F;"};function escapeHtml(string){return String(string).replace(/[&<>"'\/]/g,function fromEntityMap(s){return entityMap[s]})}var whiteRe=/\s*/;var spaceRe=/\s+/;var equalsRe=/\s*=/;var curlyRe=/\s*\}/;var tagRe=/#|\^|\/|>|\{|&|=|!/;function parseTemplate(template,tags){if(!template)return[];var sections=[];var tokens=[];var spaces=[];var hasTag=false;var nonSpace=false;function stripSpace(){if(hasTag&&!nonSpace){while(spaces.length)delete tokens[spaces.pop()]}else{spaces=[]}hasTag=false;nonSpace=false}var openingTagRe,closingTagRe,closingCurlyRe;function compileTags(tagsToCompile){if(typeof tagsToCompile==="string")tagsToCompile=tagsToCompile.split(spaceRe,2);if(!isArray(tagsToCompile)||tagsToCompile.length!==2)throw new Error("Invalid tags: "+tagsToCompile);openingTagRe=new RegExp(escapeRegExp(tagsToCompile[0])+"\\s*");closingTagRe=new RegExp("\\s*"+escapeRegExp(tagsToCompile[1]));closingCurlyRe=new RegExp("\\s*"+escapeRegExp("}"+tagsToCompile[1]))}compileTags(tags||mustache.tags);var scanner=new Scanner(template);var start,type,value,chr,token,openSection;while(!scanner.eos()){start=scanner.pos;value=scanner.scanUntil(openingTagRe);if(value){for(var i=0,valueLength=value.length;i<valueLength;++i){chr=value.charAt(i);if(isWhitespace(chr)){spaces.push(tokens.length)}else{nonSpace=true}tokens.push(["text",chr,start,start+1]);start+=1;if(chr==="\n")stripSpace()}}if(!scanner.scan(openingTagRe))break;hasTag=true;type=scanner.scan(tagRe)||"name";scanner.scan(whiteRe);if(type==="="){value=scanner.scanUntil(equalsRe);scanner.scan(equalsRe);scanner.scanUntil(closingTagRe)}else if(type==="{"){value=scanner.scanUntil(closingCurlyRe);scanner.scan(curlyRe);scanner.scanUntil(closingTagRe);type="&"}else{value=scanner.scanUntil(closingTagRe)}if(!scanner.scan(closingTagRe))throw new Error("Unclosed tag at "+scanner.pos);token=[type,value,start,scanner.pos];tokens.push(token);if(type==="#"||type==="^"){sections.push(token)}else if(type==="/"){openSection=sections.pop();if(!openSection)throw new Error('Unopened section "'+value+'" at '+start);if(openSection[1]!==value)throw new Error('Unclosed section "'+openSection[1]+'" at '+start)}else if(type==="name"||type==="{"||type==="&"){nonSpace=true}else if(type==="="){compileTags(value)}}openSection=sections.pop();if(openSection)throw new Error('Unclosed section "'+openSection[1]+'" at '+scanner.pos);return nestTokens(squashTokens(tokens))}function squashTokens(tokens){var squashedTokens=[];var token,lastToken;for(var i=0,numTokens=tokens.length;i<numTokens;++i){token=tokens[i];if(token){if(token[0]==="text"&&lastToken&&lastToken[0]==="text"){lastToken[1]+=token[1];lastToken[3]=token[3]}else{squashedTokens.push(token);lastToken=token}}}return squashedTokens}function nestTokens(tokens){var nestedTokens=[];var collector=nestedTokens;var sections=[];var token,section;for(var i=0,numTokens=tokens.length;i<numTokens;++i){token=tokens[i];switch(token[0]){case"#":case"^":collector.push(token);sections.push(token);collector=token[4]=[];break;case"/":section=sections.pop();section[5]=token[2];collector=sections.length>0?sections[sections.length-1][4]:nestedTokens;break;default:collector.push(token)}}return nestedTokens}function Scanner(string){this.string=string;this.tail=string;this.pos=0}Scanner.prototype.eos=function eos(){return this.tail===""};Scanner.prototype.scan=function scan(re){var match=this.tail.match(re);if(!match||match.index!==0)return"";var string=match[0];this.tail=this.tail.substring(string.length);this.pos+=string.length;return string};Scanner.prototype.scanUntil=function scanUntil(re){var index=this.tail.search(re),match;switch(index){case-1:match=this.tail;this.tail="";break;case 0:match="";break;default:match=this.tail.substring(0,index);this.tail=this.tail.substring(index)}this.pos+=match.length;return match};function Context(view,parentContext){this.view=view;this.cache={".":this.view};this.parent=parentContext}Context.prototype.push=function push(view){return new Context(view,this)};Context.prototype.lookup=function lookup(name){var cache=this.cache;var value;if(cache.hasOwnProperty(name)){value=cache[name]}else{var context=this,names,index,lookupHit=false;while(context){if(name.indexOf(".")>0){value=context.view;names=name.split(".");index=0;while(value!=null&&index<names.length){if(index===names.length-1)lookupHit=hasProperty(value,names[index]);value=value[names[index++]]}}else{value=context.view[name];lookupHit=hasProperty(context.view,name)}if(lookupHit)break;context=context.parent}cache[name]=value}if(isFunction(value))value=value.call(this.view);return value};function Writer(){this.cache={}}Writer.prototype.clearCache=function clearCache(){this.cache={}};Writer.prototype.parse=function parse(template,tags){var cache=this.cache;var tokens=cache[template];if(tokens==null)tokens=cache[template]=parseTemplate(template,tags);return tokens};Writer.prototype.render=function render(template,view,partials){var tokens=this.parse(template);var context=view instanceof Context?view:new Context(view);return this.renderTokens(tokens,context,partials,template)};Writer.prototype.renderTokens=function renderTokens(tokens,context,partials,originalTemplate){var buffer="";var token,symbol,value;for(var i=0,numTokens=tokens.length;i<numTokens;++i){value=undefined;token=tokens[i];symbol=token[0];if(symbol==="#")value=this.renderSection(token,context,partials,originalTemplate);else if(symbol==="^")value=this.renderInverted(token,context,partials,originalTemplate);else if(symbol===">")value=this.renderPartial(token,context,partials,originalTemplate);else if(symbol==="&")value=this.unescapedValue(token,context);else if(symbol==="name")value=this.escapedValue(token,context);else if(symbol==="text")value=this.rawValue(token);if(value!==undefined)buffer+=value}return buffer};Writer.prototype.renderSection=function renderSection(token,context,partials,originalTemplate){var self=this;var buffer="";var value=context.lookup(token[1]);function subRender(template){return self.render(template,context,partials)}if(!value)return;if(isArray(value)){for(var j=0,valueLength=value.length;j<valueLength;++j){buffer+=this.renderTokens(token[4],context.push(value[j]),partials,originalTemplate)}}else if(typeof value==="object"||typeof value==="string"||typeof value==="number"){buffer+=this.renderTokens(token[4],context.push(value),partials,originalTemplate)}else if(isFunction(value)){if(typeof originalTemplate!=="string")throw new Error("Cannot use higher-order sections without the original template");value=value.call(context.view,originalTemplate.slice(token[3],token[5]),subRender);if(value!=null)buffer+=value}else{buffer+=this.renderTokens(token[4],context,partials,originalTemplate)}return buffer};Writer.prototype.renderInverted=function renderInverted(token,context,partials,originalTemplate){var value=context.lookup(token[1]);if(!value||isArray(value)&&value.length===0)return this.renderTokens(token[4],context,partials,originalTemplate)};Writer.prototype.renderPartial=function renderPartial(token,context,partials){if(!partials)return;var value=isFunction(partials)?partials(token[1]):partials[token[1]];if(value!=null)return this.renderTokens(this.parse(value),context,partials,value)};Writer.prototype.unescapedValue=function unescapedValue(token,context){var value=context.lookup(token[1]);if(value!=null)return value};Writer.prototype.escapedValue=function escapedValue(token,context){var value=context.lookup(token[1]);if(value!=null)return mustache.escape(value)};Writer.prototype.rawValue=function rawValue(token){return token[1]};mustache.name="mustache.js";mustache.version="2.1.3";mustache.tags=["{{","}}"];var defaultWriter=new Writer;mustache.clearCache=function clearCache(){return defaultWriter.clearCache()};mustache.parse=function parse(template,tags){return defaultWriter.parse(template,tags)};mustache.render=function render(template,view,partials){if(typeof template!=="string"){throw new TypeError('Invalid template! Template should be a "string" '+'but "'+typeStr(template)+'" was given as the first '+"argument for mustache#render(template, view, partials)")}return defaultWriter.render(template,view,partials)};mustache.to_html=function to_html(template,view,partials,send){var result=mustache.render(template,view,partials);if(isFunction(send)){send(result)}else{return result}};mustache.escape=escapeHtml;mustache.Scanner=Scanner;mustache.Context=Context;mustache.Writer=Writer});
-
-Object.equals = function( a, b )
-{
-    if ( a === b )
-    {
-        return true;
-    }
-    if ( !(a instanceof Object) || !(b instanceof Object) )
-    {
-        return false;
-    }
-    if ( a.constructor !== b.constructor )
-    {
-        return false;
-    }
-
-    for ( var key in a )
-    {
-        if ( !a.hasOwnProperty( key ) )
-        {
-            continue;
-        }
-        if ( !b.hasOwnProperty( key ) )
-        {
-            return false;
-        }
-        if ( a[key] === b[key] )
-        {
-            continue;
-        }
-        if ( typeof( a[key] ) !== "object" )
-        {
-            return false;
-        }
-        if ( !Object.equals( a[key], b[key] ) )
-        {
-            return false;
-        }
-    }
-
-    for ( var key in b )
-    {
-        if ( b.hasOwnProperty( key ) && !a.hasOwnProperty( key ) )
-        {
-            return false;
-        }
-    }
-
-    return true;
-
-};
 var TemplateCache = {};
 
 TemplateCache["addressSuggestions/addressDoctor.html"] = "<ul class=\"suggestion-list\">\n" +
@@ -852,184 +800,1055 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
 
 
-PlentyFramework.cssClasses = {
+/**
+ * Licensed under AGPL v3
+ * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
+ * =====================================================================================
+ * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
+ * @author      Felix Dausch <felix.dausch@plentymarkets.com>
+ * =====================================================================================
+ */
 
-    active: "active"
-
-};
 (function( $, pm )
 {
+    pm.directive( 'Authentication', function( AuthenticationService )
+    {
+        return {
+            login: login
+        };
 
-    pm.partials.Error = {
-
-        /**
-         * Will be called, after the error popup was created and injected in DOM.
-         * @param {HTMLElement} popup   The injected element of the popup
-         */
-        init: function( popup )
+        function login( elem )
         {
-            $( popup ).find( '.close' ).click( function()
-            {
-                pm.partials.Error.hideAll();
-            } );
-        },
-
-        /**
-         * Will be called for each thrown error. Has to be injected in DOM manually.
-         * @param {HTMLElement} popup   The error popup element
-         * @param {HTMLElement} error   The error message element
-         */
-        addError: function( popup, error )
-        {
-            var errorCode = $( error ).attr( 'data-plenty-error-code' );
-
-            if ( $( popup ).find( '[data-plenty-error-code="' + errorCode + '"]' ).length <= 0 )
-            {
-                $( popup ).find( '.plentyErrorBoxInner' ).append( error );
-            }
-        },
-
-        /**
-         * Will be called, after initialization and injection of all errors
-         * @param {HTMLElement} popup The error popup element
-         */
-        show: function( popup )
-        {
-            $( popup ).show();
-        },
-
-        hideAll: function() {
-            $( '#CheckoutErrorPane' ).hide();
-            $( '#CheckoutErrorPane' ).find( '.plentyErrorBoxInner' ).html( '' );
+            pm.getRecentEvent().preventDefault();
+            AuthenticationService.customerLogin( $( elem ) );
         }
+    }, ["AuthenticationService"] );
 
-    }
-
-})( jQuery, PlentyFramework );
+}( jQuery, PlentyFramework ));
 (function( $, pm )
 {
+    pm.directive( 'Basket', function( BasketService )
+    {
 
-    pm.partials.Modal = {
+        return {
+            addBasketItem     : addBasketItem,
+            changeItemQuantity: changeItemQuantity,
+            setItemQuantity   : setItemQuantity
+        };
 
-        /**
-         * Will be called after a new modal was created and injected into DOM
-         * @param {HTMLElement} element The injected modal element
-         * @param {Modal} modal         The instance of the current modal
-         */
-        init: function( element, modal )
+        function addBasketItem( elem )
         {
-            element.on( 'hidden.bs.modal', function()
+            pm.getRecentEvent().preventDefault();
+            //init
+            var basketItemsList = {};
+            var $elem           = $( elem );
+            var parentForm      = $elem.parents( 'form' );
+
+            basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
+            basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
+            basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
+            basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
+
+            //attributes
+            var attributeInputsList = parentForm.find( '[name^="ArticleAttribute"]' );
+            var attributesList      = [];
+
+            $.each( attributeInputsList, function( idx, elem )
             {
-                modal.hide();
-                if( !modal.selector )
+                var match = elem.name.match( /^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/ );
+                if ( match && match[1] )
                 {
-                    //Do not remove static modals
-                    element.remove();
+                    attributesList.push( {
+                        BasketItemAttributeID     : match[1],
+                        BasketItemAttributeValueID: $( elem ).val()
+                    } );
                 }
             } );
 
-            if ( modal.timeout > 0 )
+            if ( attributesList.length != 0 )
             {
-                element.on( 'hide.bs.modal', modal.stopTimeout );
-                element.find( '.modal-content' ).hover( function()
+                basketItemsList.BasketItemAttributesList = attributesList;
+            }
+
+            //add basketItem and refresh previewLists
+            BasketService.addItem( [basketItemsList] );
+
+        }
+
+        function changeItemQuantity( elem, increment )
+        {
+            var $elem          = $( elem );
+            var $quantityInput = $elem.parent().find( 'input' );
+            var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
+            var value          = parseInt( $quantityInput.val() ) + increment;
+
+            var isBasketView = $elem.parents( '[data-basket-item-id]' ).length > 0;
+
+            if ( isBasketView )
+            {
+                if ( (value + '').length <= maxLength && value >= 0 )
                 {
-                    modal.pauseTimeout();
-                }, function()
+                    $quantityInput.val( value );
+                }
+
+                var timeout = $elem.data( 'timeout' );
+
+                if ( !!timeout )
                 {
-                    if ( element.is( '.in' ) )
+                    window.clearTimeout( timeout );
+                }
+
+                timeout = window.setTimeout( function()
+                {
+                    $quantityInput.trigger( 'change' );
+                }, 1000 );
+
+                $elem.data( 'timeout', timeout );
+            }
+            else
+            {
+                if ( (value + '').length <= maxLength && value >= 1 )
+                {
+                    $quantityInput.val( value );
+                }
+            }
+        }
+
+        function setItemQuantity( basketItemID, input )
+        {
+            BasketService.setItemQuantity(
+                basketItemID,
+                parseInt( $( input ).val() )
+            ).fail( function()
+            {
+                // reset input's value on cancel
+                var basketItem = BasketService.getItem( basketItemID );
+                $( input ).val( basketItem.BasketItemQuantity );
+            } );
+        }
+
+    }, ['BasketService'] );
+}( jQuery, PlentyFramework ));
+(function( $, pm )
+{
+    pm.directive( 'Checkout', function( CheckoutService )
+    {
+
+        return {
+            setMethodOfPayment: setMethodOfPayment,
+            confirmAtrigaPaymax: confirmAtrigaPaymax
+        };
+
+        function setMethodOfPayment( paymentID )
+        {
+            CheckoutService.setMethodOfPayment( paymentID );
+        }
+
+        function confirmAtrigaPaymax( atrigaPaymaxConfirmed )
+        {
+            CheckoutService.confirmAtrigaPaymax( atrigaPaymaxConfirmed );
+        }
+    }, ['CheckoutService'] );
+})( jQuery, PlentyFramework );
+/**
+ * Mobile dropdowns
+ * Toggles dropdowns using css class 'open' instead of pseudo class :hover
+ * Usage:
+ * <li class="dropdown">
+ *     <a data-plenty-enable="CONDITION">...</a>
+ * </li>
+ *
+ * possible values for CONDITION
+ * "touch"                        : use 'open'-class if device is touch-device AND media size is 'md' or 'lg'
+ * "toggle-xs-sm-or-touch" : use 'open'-class if device is "touch" (as above) OR media size is 'xs' or 'sm'
+ *
+ */
+(function( $, pm )
+{
+    pm.directive( 'MobileDropdown', function( MediaSize )
+    {
+        // store all dropdown elements
+        var dropdownElements = [];
+
+        // store dropdown elements which should be closed by clicking outside the element itself
+        var closableDropdownElements = [];
+
+        return {
+            initDropdowns: initDropdowns,
+            openDropdown : openDropdown,
+            slideDropdown: slideDropdown
+        };
+
+        function initDropdowns()
+        {
+            $( window ).on( 'orientationchange sizeChange', function()
+            {
+                resetDropdowns( dropdownElements );
+                resetDropdowns( closableDropdownElements );
+            } );
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", function( event )
+            {
+                resetDropdowns( closableDropdownElements, event );
+            } );
+        }
+
+        function resetDropdowns( dropdownList, event )
+        {
+            var $current;
+            for ( var i = 0; i < dropdownList.length; i++ )
+            {
+                $current = $( dropdownList[i] );
+                if ( !!event )
+                {
+                    if ( $current.find( $( event.target ) ).length === 0 )
                     {
-                        modal.continueTimeout();
+                        $current.removeClass( 'open' );
+                    }
+                }
+                else
+                {
+                    $current.removeClass( 'open' );
+                }
+            }
+
+        }
+
+        function openDropdown( elem, alwaysClickable )
+        {
+            var $elem   = $( elem );
+            var $parent = $elem.parent();
+
+            // case 1: xs || sm || ( touch && ( md || lg ) ) -> open/close via click on small devices, open/close via
+            // css-hover on desktop, open/close via click on touch-desktop (e.g. top navigation)
+
+            if ( !!alwaysClickable && ( MediaSize.isInterval( 'xs, sm' ) || ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) ) )
+            {
+                if ( !$parent.is( '.open' ) )
+                {
+                    showDropdownHideOthers( $elem, $parent );
+
+                    // if href
+                    if ( !$elem.attr( 'href' ) )
+                    {
+                        avoidRedirectinStopPropagation( $parent.not( $elem ) );
+                    }
+                }
+                else
+                {
+                    if ( !$elem.attr( 'href' ) )
+                    {
+                        // hide dropdown
+                        $parent.removeClass( 'open' );
+                    }
+                }
+            }
+
+            // case 2: touch && ( md || lg ) -> open via 1st click on touch-desktop, return false (e.g. main navigation)
+
+            if ( !alwaysClickable && ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) )
+            {
+                if ( !$parent.is( '.open' ) )
+                {
+                    showDropdownHideOthers( $elem, $parent );
+
+                    avoidRedirectinStopPropagation( $parent );
+                }
+                else
+                {
+                    // redirect to href if dropdown is already open
+                    // do nothing
+                }
+            }
+        }
+
+        function showDropdownHideOthers( elem, parent )
+        {
+            var $parent = $( parent );
+
+            // hide other dropdowns
+            resetDropdowns( closableDropdownElements );
+
+            // remember opened dropdown
+            if ( $.inArray( $parent[0], closableDropdownElements ) < 0 )
+            {
+                closableDropdownElements.push( $parent[0] );
+            }
+
+            // show dropdown
+            $parent.addClass( 'open' );
+        }
+
+        function avoidRedirectinStopPropagation( elem )
+        {
+            var $elem = $( elem );
+
+            // avoid redirecting
+            pm.getRecentEvent().preventDefault();
+
+            // avoid closing popup by clicking itself
+            $elem.off( 'click' );
+            $elem.on( 'click', function( e )
+            {
+                e.stopPropagation();
+            } );
+        }
+
+        function slideDropdown( elem )
+        {
+            var $elem       = $( elem );
+            var $elemParent = $elem.parent();
+
+            // size interval query is required since function is used on document ready to initial open active
+            // navigation (on small devices)
+            if ( MediaSize.isInterval( 'xs, sm' ) )
+            {
+                $elemParent.addClass( 'animating' );
+                $elem.siblings( 'ul' ).slideToggle( 400, function()
+                {
+                    if ( $elemParent.is( '.open' ) )
+                    {
+                        $elemParent.removeClass( 'open' );
+                    }
+                    else
+                    {
+                        $elemParent.addClass( 'open' );
+                        if ( $.inArray( $elemParent[0], dropdownElements ) < 0 )
+                        {
+                            dropdownElements.push( $elemParent[0] );
+                        }
+                    }
+                    $elem.siblings( 'ul' ).removeAttr( 'style' );
+                    $elemParent.removeClass( 'animating' );
+                } );
+            }
+        }
+
+    }, ['MediaSizeService'] );
+}( jQuery, PlentyFramework ));
+(function( $, pm )
+{
+    pm.directive( 'Redirect', function( MediaSizeService, NavigatorService )
+    {
+
+        return {
+            to           : to,
+            toCheckoutTab: toCheckoutTab
+        };
+
+        function to( href )
+        {
+            if ( MediaSizeService.interval() != 'xs' )
+            {
+                if ( typeof href === 'string' && href.indexOf('/') == -1 && $( href ).length > 0 )
+                {
+                    window.location.assign( $( href ).attr( 'href' ) );
+                }
+                else
+                {
+                    window.location.assign( href );
+                }
+            }
+        }
+
+        function toCheckoutTab( tabID )
+        {
+            NavigatorService.goToID( tabID );
+        }
+
+    }, ['MediaSizeService', 'NavigatorService'] );
+}( jQuery, PlentyFramework ));
+(function( $, pm )
+{
+    pm.directive( 'Tab', function( MediaSize )
+    {
+
+        var tabGroups = {};
+
+        return {
+            showTab        : showTab,
+            initRemoteLabel: initRemoteLabel,
+            initRemoteTab  : initRemoteTab,
+            showRemoteTab  : showRemoteTab
+        };
+
+        function showTab( tabSelector )
+        {
+            $( tabSelector ).tab( 'show' );
+        }
+
+        function initRemoteLabel( $elem, tabID, groupID )
+        {
+            if ( !tabGroups[groupID] )
+            {
+                tabGroups[groupID] = new TabGroup();
+            }
+
+            if ( !tabGroups[groupID].getTab( tabID ) )
+            {
+                tabGroups[groupID].addTab( tabID );
+            }
+
+            tabGroups[groupID].getTab( tabID ).addLabel( $elem );
+        }
+
+        function initRemoteTab( $elem, tabID, groupID )
+        {
+            if ( !tabGroups[groupID] )
+            {
+                tabGroups[groupID] = new TabGroup();
+            }
+
+            if ( !tabGroups[groupID].getTab( tabID ) )
+            {
+                tabGroups[groupID].addTab( tabID );
+            }
+
+            tabGroups[groupID].getTab( tabID ).setContent( $elem );
+        }
+
+        function showRemoteTab( tabID, groupID, interval )
+        {
+            if ( MediaSize.isInterval( interval ) )
+            {
+                pm.getRecentEvent().preventDefault();
+
+                if ( !!tabGroups[groupID] && !!tabGroups[groupID].getTab( tabID ) )
+                {
+                    tabGroups[groupID].showTab( tabID );
+                }
+
+            }
+        }
+
+        function TabGroup()
+        {
+            var tabs = {};
+            var activeTab;
+
+            return {
+                addTab   : addTab,
+                showTab  : showTab,
+                getTab   : getTab,
+                resetTabs: resetTabs
+            };
+
+            function addTab( tabID )
+            {
+                tabs[tabID] = new Tab( tabID );
+                return tabs[tabID];
+            }
+
+            function showTab( tabID )
+            {
+                var zIndex = 0;
+                if ( !!activeTab )
+                {
+                    // activeTab is set
+                    zIndex = parseInt( activeTab.getContent().parent().css( 'zIndex' ) );
+                    activeTab.hide();
+                    activeTab.getContent().parent().css( 'zIndex', zIndex - 1 );
+                }
+                else
+                {
+                    // activeTab not set before
+                    for ( var tab in tabs )
+                    {
+                        if ( !!tabs[tab].getContent() )
+                        {
+                            var currentZ = parseInt( tabs[tab].getContent().parent().css( 'zIndex' ) );
+                            if ( zIndex == 0 || currentZ < zIndex )
+                            {
+                                zIndex = currentZ;
+                            }
+                            tabs[tab].hide();
+                        }
+                    }
+
+                    for ( var tab in tabs )
+                    {
+                        if ( !!tabs[tab].getContent() )
+                        {
+                            tabs[tab].getContent().parent().css( 'zIndex', zIndex - 1 );
+                        }
+                    }
+
+                    $( window ).on( 'sizeChange', resetTabs );
+                }
+
+                activeTab = tabs[tabID];
+                activeTab.getContent().parent().css( 'zIndex', zIndex );
+                activeTab.show();
+            }
+
+            function getTab( tabID )
+            {
+                return tabs[tabID];
+            }
+
+            function resetTabs()
+            {
+                for ( var tab in tabs )
+                {
+                    if ( !!tabs[tab].getContent() )
+                    {
+                        tabs[tab].show();
+                    }
+                }
+
+                activeTab = null;
+            }
+        }
+
+        function Tab( id )
+        {
+            var $content;
+            var $labels = [];
+            var tabID   = id;
+
+            return {
+                addLabel  : addLabel,
+                setContent: setContent,
+                getContent: getContent,
+                getID     : getID,
+                show      : show,
+                hide      : hide
+            };
+
+            function getID()
+            {
+                return tabID;
+            }
+
+            function addLabel( label )
+            {
+                $labels.push( label );
+                return this;
+            }
+
+            function setContent( content )
+            {
+                $content = content;
+                return this;
+            }
+
+            function getContent()
+            {
+                return $content;
+            }
+
+            function show()
+            {
+                for ( var i = 0; i < $labels.length; i++ )
+                {
+                    $labels[i].addClass( 'active' );
+                }
+
+                if ( !!$content )
+                {
+                    $content.show().addClass( 'in' );
+                }
+
+            }
+
+            function hide()
+            {
+                for ( var i = 0; i < $labels.length; i++ )
+                {
+                    $labels[i].removeClass( 'active' );
+                }
+
+                if ( !!$content )
+                {
+                    $content.hide().removeClass( 'in' );
+                }
+            }
+        }
+
+    }, ['MediaSizeService'] );
+})( jQuery, PlentyFramework );
+/**
+ * Add fancy ui modifications - the visual stuff - here.
+ * Respond functionality like 'event':UI.myFunctionality(currentElement)
+ *
+ * Example:
+ *      <button type="button" data-plenty="click:UI.addTooltip(this)">go to top</button>
+ *
+ */
+(function( $, pm )
+{
+    pm.directive( 'UI', function( MediaSizeService, SocialShareService )
+    {
+        // elements to calculate height.
+        var equalHeightElementList = [];
+        var toTopButtonList        = [];
+
+        return {
+            initUIWindowEvents  : initUIWindowEvents,
+            addContentPageSlider: addContentPageSlider,
+            equalHeight         : equalHeight,
+            initToTop           : initToTop,
+            initLazyload        : initLazyload,
+            initSlideToggle     : initSlideToggle,
+            slideDown           : slideDown,
+            slideUp             : slideUp,
+            slideToggle         : slideToggle,
+            toggleHideShow      : toggleHideShow,
+            toggleSocialShare   : toggleSocialShare,
+            toggleClass         : toggleClass,
+            addClass            : addClass,
+            removeClass         : removeClass
+        };
+
+        function initUIWindowEvents()
+        {
+            // resize elements on window size change.
+            $( window ).on( 'sizeChange contentChanged', function()
+            {
+                fireEqualHeight();
+            } );
+
+            $( window ).on( "scroll resize", function()
+            {
+                if ( toTopButtonList.length > 0 )
+                {
+                    if ( $( document ).scrollTop() > 100 )
+                    {
+                        doToArrayElements( toTopButtonList, "addClass", "visible" );
+                    }
+                    else
+                    {
+                        doToArrayElements( toTopButtonList, "removeClass", "visible" );
+                    }
+                }
+            } );
+        }
+
+        /**
+         * Adds content page slider (owlCarousel)
+         *
+         * usage:
+         * <div class="contentpageSlider" data-plenty="contentpageSlider">
+         *     <div class="slide">
+         *         ...
+         *     </div>
+         *     <div class="slide">
+         *         ...
+         *     </div>
+         *     ...
+         * </div>
+         *
+         * Legacy directive selector: data-plenty="contentpageSlider"
+         *
+         * @param elem
+         */
+        function addContentPageSlider( elem )
+        {
+            $( elem ).owlCarousel( {
+                navigation     : true,
+                navigationText : false,
+                slideSpeed     : 1000,
+                paginationSpeed: 1000,
+                singleItem     : true,
+                autoPlay       : 6000,
+                stopOnHover    : true,
+                afterMove      : function( current )
+                {
+                    $( current ).find( '[data-plenty-rel="lazyload"]' ).trigger( 'appear' );
+                }
+            } );
+        }
+
+        /**
+         * Equal Box height
+         * Calculates equal box height for chosen elements.
+         *
+         * Legacy directive selector: data-plenty-equal
+         *
+         * @param elem
+         * @param elementExists - default false
+         */
+        function equalHeight( elem, mediaSizes, elementExists )
+        {
+            var $elem            = $( elem );
+            var maxHeight        = 0;
+            var $equalTarget     = {};
+            var $equalTargetList = $elem.find( '[data-plenty-rel="equal-target"]' ).length > 0 ? $elem.find( '[data-plenty-rel="equal-target"]' ) : $elem.children();
+
+            // if element wasn't pushed before.
+            if ( elementExists !== true )
+            {
+                equalHeightElementList.push( elem );
+            }
+
+            for ( var i = $equalTargetList.length; i >= 0; i-- )
+            {
+                $equalTarget = $( $equalTargetList[i] );
+                $equalTarget.css( 'height', '' );
+
+                if ( $equalTarget.outerHeight( true ) > maxHeight )
+                {
+                    maxHeight = $equalTarget.outerHeight( true );
+                }
+            }
+
+            if ( !mediaSizes || MediaSizeService.isInterval( mediaSizes ) )
+            {
+                $equalTargetList.height( maxHeight );
+            }
+        }
+
+        /**
+         * Scroll page to top.
+         * Just add without events.
+         *
+         * Legacy directive selector: data-plenty="toTop"
+         *
+         * @param elem
+         */
+        function initToTop( elem )
+        {
+            var $elem = $( elem );
+
+            $elem.click( function()
+            {
+                $( 'html, body' ).animate( {
+                    scrollTop: 0
+                }, 400 );
+                return false;
+            } );
+
+            if ( !!$.inArray( $elem, toTopButtonList ) )
+            {
+                toTopButtonList.push( $elem );
+            }
+        }
+
+        /**
+         * lazy load on ready.
+         *
+         * Legacy directive selector: img[data-plenty-lazyload]
+         *
+         * @param elem
+         */
+        function initLazyload( elem, effect )
+        {
+            var $elem = $( elem );
+
+            $elem.lazyload( {
+                effect: effect
+            } );
+            if( $elem.is('img') )
+            {
+                $elem.on( 'loaded', function()
+                {
+                    $elem.css( 'display', 'inline-block' );
+                } );
+            }
+        }
+
+        /**
+         * Toggle show and hide animation.
+         *
+         * Legacy directive selector: data-plenty="openCloseToggle"
+         *
+         * @param elem
+         */
+        function toggleHideShow( elem )
+        {
+
+            console.log( elem );
+
+            var $elem       = $( elem );
+            var $elemParent = $elem.parent();
+
+            $elemParent.addClass( 'animating' );
+            $elem.siblings( 'ul' ).slideToggle( 200, function()
+            {
+                if ( $elemParent.is( '.open' ) )
+                {
+                    $elemParent.removeClass( 'open' );
+                }
+                else
+                {
+                    $elemParent.addClass( 'open' );
+                }
+                $elem.siblings( 'ul' ).removeAttr( 'style' );
+                $elemParent.removeClass( 'animating' );
+            } );
+        }
+
+        /**
+         * Toggle target content on click.
+         * Bind to checked-/ unchecked-property of radio buttons
+         *
+         * Legacy directive selector: data-plenty-slidetoggle
+         *
+         * @param elem
+         */
+        function initSlideToggle( elem, checked )
+        {
+            var $elem          = $( elem );
+            var $targetElement = $( $elem.attr( 'data-plenty-rel' ) );
+
+            if ( $elem.is( 'input[type="radio"]' ) )
+            {
+                // is radio button
+                var $radioGroupList  = $( 'input[type="radio"][name="' + ( $elem.attr( 'name' ) ) + '"]' );
+                var visibleOnChecked = !checked || checked == 'checked';
+
+                $radioGroupList.change( function()
+                {
+                    var $self = $( this );
+                    $targetElement.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+
+                    if ( $self.is( ':checked' ) && $self[0] === $elem[0] && visibleOnChecked == true )
+                    {
+                        // checked
+                        $targetElement.slideDown( 400, function()
+                        {
+                            fireEqualHeight();
+                        } );
+                    }
+                    else
+                    {
+                        // unchecked (since other radio button has been checked)
+                        $targetElement.slideUp( 400, function()
+                        {
+                            fireEqualHeight();
+                        } );
                     }
                 } );
             }
-        },
-
-        /**
-         * Will be called if a Modal requests to show.
-         * @param {HTMLElement} element The injected modal element
-         */
-        show: function( element )
-        {
-            element.modal( 'show' );
-        },
-
-        /**
-         * Will be called if a Modal requests to hide.
-         * @param {HTMLElement} element The injected modal element
-         */
-        hide: function( element )
-        {
-            element.modal( 'hide' );
-        },
-
-        /**
-         * Detect if a given HTML string contains a modal
-         * @param {HTMLElement} html the element to search a modal in.
-         * @returns {boolean}   true if a modal was found
-         */
-        isModal: function( html )
-        {
-            return $( html ).filter( '.modal' ).length + $( html ).find( '.modal' ).length > 0;
-        },
-
-        /**
-         * Filter a modal from a given HTML string
-         * @param {HTMLElement}     html the element to get a modal from.
-         * @returns {HTMLElement}   the filtered modal element
-         */
-        getModal: function( html )
-        {
-            var modal = $( html );
-            if ( modal.length > 1 )
+            else
             {
-                modal = $( html ).filter( '.modal' ) || $( html ).find( '.modal' );
+                // is not radio button
+                $elem.click( function()
+                {
+                    //$targetElement.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+
+                    $elem.addClass( 'animating' );
+                    $targetElement.slideToggle( 400, function()
+                    {
+                        $elem.removeClass( 'animating' );
+                        $elem.toggleClass( 'active' );
+                        fireEqualHeight();
+                    } );
+                } );
+            }
+        }
+
+        function slideDown( target, duration )
+        {
+            slideAction( $( target ), duration, 'slideDown' );
+        }
+
+        function slideUp( target, duration )
+        {
+            slideAction( $( target ), duration, 'slideUp' );
+        }
+
+        function slideToggle( target, duration )
+        {
+            slideAction( $( target ), duration, 'slideToggle' );
+        }
+
+        function slideAction( $target, duration, callbackString )
+        {
+            duration = duration || 400;
+            $target.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
+            $target[callbackString]( duration, function()
+            {
+                fireEqualHeight();
+            } );
+        }
+
+        /**
+         * TODO check comment
+         * Social Share Activation
+         * Activate and load share-buttons manually by clicking a separate button
+         * Usage / data-attributes:
+         * <div data-plenty-social="twitter">
+         *    <span data-plenty="switch"></span>        Will be used to activate the service set in
+         * data-plenty-social=""
+         *    <span data-plenty="placeholder"></span>   Will be replaced with loaded share button
+         * </div>
+         *
+         * possible values for data-plenty-social:
+         * "facebook-like"            : Load Facebooks "Like"-Button
+         * "facebook-recommend"        : Load Facebooks "Recommend"-Button
+         * "twitter"                : Load Twitter Button
+         * "google-plus"            : Load google "+1"-Button
+         *
+         * Additional Tooltips
+         * You can extend the parent element with a (bootstrap) tooltip by adding data-toggle="tooltip" and
+         * title="TOOLTIP CONTENT" Tooltip will be destroyed after activating a social service
+         * (!) Requires bootstrap.js
+         *
+         * Legacy directive selector: data-plenty-social
+         *
+         * @param elem
+         */
+        function toggleSocialShare( elem, socialShareService )
+        {
+            var $elem   = $( elem );
+            var $toggle = $elem.find( '[data-plenty-rel="social-switch"]' );
+
+            // append container to put / delete service.html
+            $elem.append( '<div class="social-container"></div>' );
+
+            // add "off" class to switch, if neither "off" or "on" is set
+            // replaced hasClass() with is() benchmark: http://jsperf.com/hasclasstest
+            if ( !$toggle.is( 'off, on' ) )
+            {
+                $toggle.addClass( 'off' );
             }
 
-            return modal;
+            // toggle switch
+            $toggle.on( 'click', function()
+            {
+                if ( $toggle.hasClass( 'off' ) )
+                {
+                    // TODO remove bootstrap dependency
+                    if ( $elem.attr( "data-toggle" ) == "tooltip" )
+                    {
+                        $elem.tooltip( 'destroy' )
+                    }
+                    $toggle.removeClass( 'off' ).addClass( 'on' );
+                    // hide dummy button
+                    $elem.find( '[data-plenty-rel="social-placeholder"]' ).hide();
+                    // load HTML defined in 'api'
+                    $elem.find( '.social-container' ).append( SocialShareService.getSocialService( socialShareService ) );
+                }
+                // do not disable social medias after activation
+            } );
         }
 
-    };
+        /**
+         * Toggle Class
+         * toggle style-classes on click
+         * Usage / data-attribute:
+         * <div data-plenty-toggle="{target: 'body', class: 'toggledClass', media: 'xs sm'}"></div>
+         * target    :    jQuery selector to toggle the class at.
+         * class        :  class(es) to toggle at target element
+         * media        :  only toggle class on given media sizes (optional)
+         *
+         * (!) using data-plenty-toggle on <a>-elements will prevent redirecting to href=""
+         *
+         * Legacy directive selector: data-plenty-toggle
+         *
+         * @param cssClass
+         * @param target
+         * @param interval
+         */
+        function toggleClass( cssClass, target, interval )
+        {
+            var $target = $( target );
+            /* FIXME
+             * Callisto 3.1 Design adaption:
+             * NavigationCategoriesList
+             * Line 8
+             * BEFORE:
+             * <li class="cat-$CategoryId{% if $CategoryLevel == 1 && $SubCategoryExists %} dropdown{% endif %}{% if $SubCategoryExists %} hasSublevel{% endif %}{% if $CategoryLevel == 1 && in_array($CategoryId, $_useBigMenu) %} bigmenu{% endif %}{% if $CategoryIsOpen || $CategoryIsCurrent %} active{% endif %}"{% if $CategoryIsOpen || $CategoryIsCurrent %} data-plenty="UI.toggleClass('open', this, 'xs, sm')"{% endif %}>
+             * AFTER:
+             * <li class="cat-$CategoryId{% if $CategoryLevel == 1 && $SubCategoryExists %} dropdown{% endif %}{% if $SubCategoryExists %} hasSublevel{% endif %}{% if $CategoryLevel == 1 && in_array($CategoryId, $_useBigMenu) %} bigmenu{% endif %}{% if $CategoryIsOpen || $CategoryIsCurrent %} active{% endif %}">
+             *
+             * Line 10
+             * BEFORE:
+             * <span class="openCloseToggle" data-plenty="click:MobileDropdown.slideDropdown(this)"></span>
+             * AFTER:
+             * <span class="openCloseToggle" data-plenty="{% if $CategoryIsOpen || $CategoryIsCurrent %}MobileDropdown.slideDropdown(this); {% endif %}click:MobileDropdown.slideDropdown(this)"></span>
+             *
+             * */
+            if ( $target.parents( ".navbar-main" ).length > 0 )
+            {
+                var $elem = $target.children( "span" );
+                pm.directives["MobileDropdown"].slideDropdown( $elem );
+                return true;
+            }
 
+            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
+            {
+                var e = pm.getRecentEvent();
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
+
+                $target.toggleClass( cssClass );
+                return false;
+            }
+        }
+
+        function addClass( cssClass, target, interval )
+        {
+            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
+            {
+                var e = pm.getRecentEvent();
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
+
+                $( target ).addClass( cssClass );
+                return false;
+            }
+        }
+
+        function removeClass( cssClass, target, interval )
+        {
+            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
+            {
+                var e = pm.getRecentEvent();
+                if ( !!e )
+                {
+                    e.preventDefault();
+                }
+
+                $( target ).removeClass( cssClass );
+                return false;
+            }
+        }
+
+        /*
+         ##### PRIVATE FUNCTIONS ######
+         */
+
+        function fireEqualHeight()
+        {
+            for ( var i = equalHeightElementList.length - 1; i >= 0; i-- )
+            {
+                equalHeight( equalHeightElementList[i], '', true );
+            }
+        }
+
+        function doToArrayElements( array, func, params )
+        {
+            for ( var i = array.length - 1; i >= 0; i-- )
+            {
+                array[i][func]( params );
+            }
+        }
+
+    }, ['MediaSizeService', 'SocialShareService'] );
 }( jQuery, PlentyFramework ));
-(function( $ )
-{
-
-    $( document ).on( 'initPartials', function( e, root )
-    {
-
-        $( root ).find( '[data-toggle="tooltip"]' ).tooltip( {
-            container: 'body'
-        } );
-
-    } );
-
-})( jQuery );
 (function( $, pm )
 {
+    pm.directive( 'Validator', function( ValidationService )
+    {
 
-    pm.partials.WaitScreen = {
+        return {
+            validate: validate
+        };
 
-        /**
-         * Will be called if the wait screen should be shown
-         * @param {HTMLElement} element The wait screen element
-         */
-        show: function( element )
+        function validate( form, errorClass )
         {
-            element.addClass( 'in' );
-        },
-
-        /**
-         * Will be called if the wait screen should be hidden
-         * @param {HTMLElement} element The wait screen element
-         */
-        hide: function( element )
-        {
-            element.removeClass( 'in' );
+            return ValidationService.validate( form, errorClass );
         }
 
-    };
-
-})( jQuery, PlentyFramework );
+    }, ['ValidationService'] );
+}( jQuery, PlentyFramework ));
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
@@ -2204,6 +3023,234 @@ PlentyFramework.cssClasses = {
  * @module Factories
  * @main Factories
  */
+Object.equals = function( a, b )
+{
+    if ( a === b )
+    {
+        return true;
+    }
+    if ( !(a instanceof Object) || !(b instanceof Object) )
+    {
+        return false;
+    }
+    if ( a.constructor !== b.constructor )
+    {
+        return false;
+    }
+
+    for ( var key in a )
+    {
+        if ( !a.hasOwnProperty( key ) )
+        {
+            continue;
+        }
+        if ( !b.hasOwnProperty( key ) )
+        {
+            return false;
+        }
+        if ( a[key] === b[key] )
+        {
+            continue;
+        }
+        if ( typeof( a[key] ) !== "object" )
+        {
+            return false;
+        }
+        if ( !Object.equals( a[key], b[key] ) )
+        {
+            return false;
+        }
+    }
+
+    for ( var key in b )
+    {
+        if ( b.hasOwnProperty( key ) && !a.hasOwnProperty( key ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
+
+};
+PlentyFramework.cssClasses = {
+
+    active: "active"
+
+};
+(function( $, pm )
+{
+
+    pm.partials.Error = {
+
+        /**
+         * Will be called, after the error popup was created and injected in DOM.
+         * @param {HTMLElement} popup   The injected element of the popup
+         */
+        init: function( popup )
+        {
+            $( popup ).find( '.close' ).click( function()
+            {
+                pm.partials.Error.hideAll();
+            } );
+        },
+
+        /**
+         * Will be called for each thrown error. Has to be injected in DOM manually.
+         * @param {HTMLElement} popup   The error popup element
+         * @param {HTMLElement} error   The error message element
+         */
+        addError: function( popup, error )
+        {
+            var errorCode = $( error ).attr( 'data-plenty-error-code' );
+
+            if ( $( popup ).find( '[data-plenty-error-code="' + errorCode + '"]' ).length <= 0 )
+            {
+                $( popup ).find( '.plentyErrorBoxInner' ).append( error );
+            }
+        },
+
+        /**
+         * Will be called, after initialization and injection of all errors
+         * @param {HTMLElement} popup The error popup element
+         */
+        show: function( popup )
+        {
+            $( popup ).show();
+        },
+
+        hideAll: function() {
+            $( '#CheckoutErrorPane' ).hide();
+            $( '#CheckoutErrorPane' ).find( '.plentyErrorBoxInner' ).html( '' );
+        }
+
+    }
+
+})( jQuery, PlentyFramework );
+(function( $, pm )
+{
+
+    pm.partials.Modal = {
+
+        /**
+         * Will be called after a new modal was created and injected into DOM
+         * @param {HTMLElement} element The injected modal element
+         * @param {Modal} modal         The instance of the current modal
+         */
+        init: function( element, modal )
+        {
+            element.on( 'hidden.bs.modal', function()
+            {
+                modal.hide();
+                if( !modal.selector )
+                {
+                    //Do not remove static modals
+                    element.remove();
+                }
+            } );
+
+            if ( modal.timeout > 0 )
+            {
+                element.on( 'hide.bs.modal', modal.stopTimeout );
+                element.find( '.modal-content' ).hover( function()
+                {
+                    modal.pauseTimeout();
+                }, function()
+                {
+                    if ( element.is( '.in' ) )
+                    {
+                        modal.continueTimeout();
+                    }
+                } );
+            }
+        },
+
+        /**
+         * Will be called if a Modal requests to show.
+         * @param {HTMLElement} element The injected modal element
+         */
+        show: function( element )
+        {
+            element.modal( 'show' );
+        },
+
+        /**
+         * Will be called if a Modal requests to hide.
+         * @param {HTMLElement} element The injected modal element
+         */
+        hide: function( element )
+        {
+            element.modal( 'hide' );
+        },
+
+        /**
+         * Detect if a given HTML string contains a modal
+         * @param {HTMLElement} html the element to search a modal in.
+         * @returns {boolean}   true if a modal was found
+         */
+        isModal: function( html )
+        {
+            return $( html ).filter( '.modal' ).length + $( html ).find( '.modal' ).length > 0;
+        },
+
+        /**
+         * Filter a modal from a given HTML string
+         * @param {HTMLElement}     html the element to get a modal from.
+         * @returns {HTMLElement}   the filtered modal element
+         */
+        getModal: function( html )
+        {
+            var modal = $( html );
+            if ( modal.length > 1 )
+            {
+                modal = $( html ).filter( '.modal' ) || $( html ).find( '.modal' );
+            }
+
+            return modal;
+        }
+
+    };
+
+}( jQuery, PlentyFramework ));
+(function( $ )
+{
+
+    $( document ).on( 'initPartials', function( e, root )
+    {
+
+        $( root ).find( '[data-toggle="tooltip"]' ).tooltip( {
+            container: 'body'
+        } );
+
+    } );
+
+})( jQuery );
+(function( $, pm )
+{
+
+    pm.partials.WaitScreen = {
+
+        /**
+         * Will be called if the wait screen should be shown
+         * @param {HTMLElement} element The wait screen element
+         */
+        show: function( element )
+        {
+            element.addClass( 'in' );
+        },
+
+        /**
+         * Will be called if the wait screen should be hidden
+         * @param {HTMLElement} element The wait screen element
+         */
+        hide: function( element )
+        {
+            element.removeClass( 'in' );
+        }
+
+    };
+
+})( jQuery, PlentyFramework );
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
@@ -3514,27 +4561,31 @@ PlentyFramework.cssClasses = {
             var invoiceAddress       = form.getFormValues();
             invoiceAddress.LoginType = 1;
 
-            invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
-
-            form.find( "[data-plenty-property-id]" ).each( function( i, propertyInput )
+            if ( invoiceAddress.checkout
+                && invoiceAddress.checkout.customerInvoiceAddress
+                && invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty )
             {
-                invoiceAddress.CustomerPropertiesList.push( {
-                    PropertyID   : $( propertyInput ).attr( 'data-plenty-property-id' ),
-                    PropertyValue: $( propertyInput ).val()
-                } );
-            } );
+                var tmpProperties                     = invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty;
+                invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
+
+                for ( var property in tmpProperties )
+                {
+                    if ( tmpProperties[property] )
+                    {
+                        invoiceAddress.CustomerPropertiesList.push( {
+                            PropertyID   : property,
+                            PropertyValue: tmpProperties[property]
+                        } );
+                    }
+                }
+            }
 
             if ( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) )
             {
                 return API.post( "/rest/checkout/customerinvoiceaddress/", invoiceAddress )
                     .done( function( response )
                     {
-                        //Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
-                        saveShippingAddress().done( function()
-                        {
-                            Checkout.loadCheckout();
-                            //Checkout.getCheckout().CustomerInvoiceAddress = response.data;
-                        } );
+                        saveShippingAddress().done( Checkout.loadCheckout );
                     } );
             }
             else
@@ -5579,1055 +6630,6 @@ PlentyFramework.cssClasses = {
  *      //...
  *      plenty.ServiceName.functionInService/();
  */
-/**
- * Licensed under AGPL v3
- * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
- * =====================================================================================
- * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)
- * @author      Felix Dausch <felix.dausch@plentymarkets.com>
- * =====================================================================================
- */
-
-(function( $, pm )
-{
-    pm.directive( 'Authentication', function( AuthenticationService )
-    {
-        return {
-            login: login
-        };
-
-        function login( elem )
-        {
-            pm.getRecentEvent().preventDefault();
-            AuthenticationService.customerLogin( $( elem ) );
-        }
-    }, ["AuthenticationService"] );
-
-}( jQuery, PlentyFramework ));
-(function( $, pm )
-{
-    pm.directive( 'Basket', function( BasketService )
-    {
-
-        return {
-            addBasketItem     : addBasketItem,
-            changeItemQuantity: changeItemQuantity,
-            setItemQuantity   : setItemQuantity
-        };
-
-        function addBasketItem( elem )
-        {
-            pm.getRecentEvent().preventDefault();
-            //init
-            var basketItemsList = {};
-            var $elem           = $( elem );
-            var parentForm      = $elem.parents( 'form' );
-
-            basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
-            basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
-            basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
-            basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
-
-            //attributes
-            var attributeInputsList = parentForm.find( '[name^="ArticleAttribute"]' );
-            var attributesList      = [];
-
-            $.each( attributeInputsList, function( idx, elem )
-            {
-                var match = elem.name.match( /^ArticleAttribute\[\d+]\[\d+]\[(\d+)]$/ );
-                if ( match && match[1] )
-                {
-                    attributesList.push( {
-                        BasketItemAttributeID     : match[1],
-                        BasketItemAttributeValueID: $( elem ).val()
-                    } );
-                }
-            } );
-
-            if ( attributesList.length != 0 )
-            {
-                basketItemsList.BasketItemAttributesList = attributesList;
-            }
-
-            //add basketItem and refresh previewLists
-            BasketService.addItem( [basketItemsList] );
-
-        }
-
-        function changeItemQuantity( elem, increment )
-        {
-            var $elem          = $( elem );
-            var $quantityInput = $elem.parent().find( 'input' );
-            var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
-            var value          = parseInt( $quantityInput.val() ) + increment;
-
-            var isBasketView = $elem.parents( '[data-basket-item-id]' ).length > 0;
-
-            if ( isBasketView )
-            {
-                if ( (value + '').length <= maxLength && value >= 0 )
-                {
-                    $quantityInput.val( value );
-                }
-
-                var timeout = $elem.data( 'timeout' );
-
-                if ( !!timeout )
-                {
-                    window.clearTimeout( timeout );
-                }
-
-                timeout = window.setTimeout( function()
-                {
-                    $quantityInput.trigger( 'change' );
-                }, 1000 );
-
-                $elem.data( 'timeout', timeout );
-            }
-            else
-            {
-                if ( (value + '').length <= maxLength && value >= 1 )
-                {
-                    $quantityInput.val( value );
-                }
-            }
-        }
-
-        function setItemQuantity( basketItemID, input )
-        {
-            BasketService.setItemQuantity(
-                basketItemID,
-                parseInt( $( input ).val() )
-            ).fail( function()
-            {
-                // reset input's value on cancel
-                var basketItem = BasketService.getItem( basketItemID );
-                $( input ).val( basketItem.BasketItemQuantity );
-            } );
-        }
-
-    }, ['BasketService'] );
-}( jQuery, PlentyFramework ));
-(function( $, pm )
-{
-    pm.directive( 'Checkout', function( CheckoutService )
-    {
-
-        return {
-            setMethodOfPayment: setMethodOfPayment,
-            confirmAtrigaPaymax: confirmAtrigaPaymax
-        };
-
-        function setMethodOfPayment( paymentID )
-        {
-            CheckoutService.setMethodOfPayment( paymentID );
-        }
-
-        function confirmAtrigaPaymax( atrigaPaymaxConfirmed )
-        {
-            CheckoutService.confirmAtrigaPaymax( atrigaPaymaxConfirmed );
-        }
-    }, ['CheckoutService'] );
-})( jQuery, PlentyFramework );
-/**
- * Mobile dropdowns
- * Toggles dropdowns using css class 'open' instead of pseudo class :hover
- * Usage:
- * <li class="dropdown">
- *     <a data-plenty-enable="CONDITION">...</a>
- * </li>
- *
- * possible values for CONDITION
- * "touch"                        : use 'open'-class if device is touch-device AND media size is 'md' or 'lg'
- * "toggle-xs-sm-or-touch" : use 'open'-class if device is "touch" (as above) OR media size is 'xs' or 'sm'
- *
- */
-(function( $, pm )
-{
-    pm.directive( 'MobileDropdown', function( MediaSize )
-    {
-        // store all dropdown elements
-        var dropdownElements = [];
-
-        // store dropdown elements which should be closed by clicking outside the element itself
-        var closableDropdownElements = [];
-
-        return {
-            initDropdowns: initDropdowns,
-            openDropdown : openDropdown,
-            slideDropdown: slideDropdown
-        };
-
-        function initDropdowns()
-        {
-            $( window ).on( 'orientationchange sizeChange', function()
-            {
-                resetDropdowns( dropdownElements );
-                resetDropdowns( closableDropdownElements );
-            } );
-
-            // handle "close menu on click outside"
-            $( 'html' ).on( "click touchstart", function( event )
-            {
-                resetDropdowns( closableDropdownElements, event );
-            } );
-        }
-
-        function resetDropdowns( dropdownList, event )
-        {
-            var $current;
-            for ( var i = 0; i < dropdownList.length; i++ )
-            {
-                $current = $( dropdownList[i] );
-                if ( !!event )
-                {
-                    if ( $current.find( $( event.target ) ).length === 0 )
-                    {
-                        $current.removeClass( 'open' );
-                    }
-                }
-                else
-                {
-                    $current.removeClass( 'open' );
-                }
-            }
-
-        }
-
-        function openDropdown( elem, alwaysClickable )
-        {
-            var $elem   = $( elem );
-            var $parent = $elem.parent();
-
-            // case 1: xs || sm || ( touch && ( md || lg ) ) -> open/close via click on small devices, open/close via
-            // css-hover on desktop, open/close via click on touch-desktop (e.g. top navigation)
-
-            if ( !!alwaysClickable && ( MediaSize.isInterval( 'xs, sm' ) || ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) ) )
-            {
-                if ( !$parent.is( '.open' ) )
-                {
-                    showDropdownHideOthers( $elem, $parent );
-
-                    // if href
-                    if ( !$elem.attr( 'href' ) )
-                    {
-                        avoidRedirectinStopPropagation( $parent.not( $elem ) );
-                    }
-                }
-                else
-                {
-                    if ( !$elem.attr( 'href' ) )
-                    {
-                        // hide dropdown
-                        $parent.removeClass( 'open' );
-                    }
-                }
-            }
-
-            // case 2: touch && ( md || lg ) -> open via 1st click on touch-desktop, return false (e.g. main navigation)
-
-            if ( !alwaysClickable && ( Modernizr.touch && MediaSize.isInterval( 'md, lg' ) ) )
-            {
-                if ( !$parent.is( '.open' ) )
-                {
-                    showDropdownHideOthers( $elem, $parent );
-
-                    avoidRedirectinStopPropagation( $parent );
-                }
-                else
-                {
-                    // redirect to href if dropdown is already open
-                    // do nothing
-                }
-            }
-        }
-
-        function showDropdownHideOthers( elem, parent )
-        {
-            var $parent = $( parent );
-
-            // hide other dropdowns
-            resetDropdowns( closableDropdownElements );
-
-            // remember opened dropdown
-            if ( $.inArray( $parent[0], closableDropdownElements ) < 0 )
-            {
-                closableDropdownElements.push( $parent[0] );
-            }
-
-            // show dropdown
-            $parent.addClass( 'open' );
-        }
-
-        function avoidRedirectinStopPropagation( elem )
-        {
-            var $elem = $( elem );
-
-            // avoid redirecting
-            pm.getRecentEvent().preventDefault();
-
-            // avoid closing popup by clicking itself
-            $elem.off( 'click' );
-            $elem.on( 'click', function( e )
-            {
-                e.stopPropagation();
-            } );
-        }
-
-        function slideDropdown( elem )
-        {
-            var $elem       = $( elem );
-            var $elemParent = $elem.parent();
-
-            // size interval query is required since function is used on document ready to initial open active
-            // navigation (on small devices)
-            if ( MediaSize.isInterval( 'xs, sm' ) )
-            {
-                $elemParent.addClass( 'animating' );
-                $elem.siblings( 'ul' ).slideToggle( 400, function()
-                {
-                    if ( $elemParent.is( '.open' ) )
-                    {
-                        $elemParent.removeClass( 'open' );
-                    }
-                    else
-                    {
-                        $elemParent.addClass( 'open' );
-                        if ( $.inArray( $elemParent[0], dropdownElements ) < 0 )
-                        {
-                            dropdownElements.push( $elemParent[0] );
-                        }
-                    }
-                    $elem.siblings( 'ul' ).removeAttr( 'style' );
-                    $elemParent.removeClass( 'animating' );
-                } );
-            }
-        }
-
-    }, ['MediaSizeService'] );
-}( jQuery, PlentyFramework ));
-(function( $, pm )
-{
-    pm.directive( 'Redirect', function( MediaSizeService, NavigatorService )
-    {
-
-        return {
-            to           : to,
-            toCheckoutTab: toCheckoutTab
-        };
-
-        function to( href )
-        {
-            if ( MediaSizeService.interval() != 'xs' )
-            {
-                if ( typeof href === 'string' && href.indexOf('/') == -1 && $( href ).length > 0 )
-                {
-                    window.location.assign( $( href ).attr( 'href' ) );
-                }
-                else
-                {
-                    window.location.assign( href );
-                }
-            }
-        }
-
-        function toCheckoutTab( tabID )
-        {
-            NavigatorService.goToID( tabID );
-        }
-
-    }, ['MediaSizeService', 'NavigatorService'] );
-}( jQuery, PlentyFramework ));
-(function( $, pm )
-{
-    pm.directive( 'Tab', function( MediaSize )
-    {
-
-        var tabGroups = {};
-
-        return {
-            showTab        : showTab,
-            initRemoteLabel: initRemoteLabel,
-            initRemoteTab  : initRemoteTab,
-            showRemoteTab  : showRemoteTab
-        };
-
-        function showTab( tabSelector )
-        {
-            $( tabSelector ).tab( 'show' );
-        }
-
-        function initRemoteLabel( $elem, tabID, groupID )
-        {
-            if ( !tabGroups[groupID] )
-            {
-                tabGroups[groupID] = new TabGroup();
-            }
-
-            if ( !tabGroups[groupID].getTab( tabID ) )
-            {
-                tabGroups[groupID].addTab( tabID );
-            }
-
-            tabGroups[groupID].getTab( tabID ).addLabel( $elem );
-        }
-
-        function initRemoteTab( $elem, tabID, groupID )
-        {
-            if ( !tabGroups[groupID] )
-            {
-                tabGroups[groupID] = new TabGroup();
-            }
-
-            if ( !tabGroups[groupID].getTab( tabID ) )
-            {
-                tabGroups[groupID].addTab( tabID );
-            }
-
-            tabGroups[groupID].getTab( tabID ).setContent( $elem );
-        }
-
-        function showRemoteTab( tabID, groupID, interval )
-        {
-            if ( MediaSize.isInterval( interval ) )
-            {
-                pm.getRecentEvent().preventDefault();
-
-                if ( !!tabGroups[groupID] && !!tabGroups[groupID].getTab( tabID ) )
-                {
-                    tabGroups[groupID].showTab( tabID );
-                }
-
-            }
-        }
-
-        function TabGroup()
-        {
-            var tabs = {};
-            var activeTab;
-
-            return {
-                addTab   : addTab,
-                showTab  : showTab,
-                getTab   : getTab,
-                resetTabs: resetTabs
-            };
-
-            function addTab( tabID )
-            {
-                tabs[tabID] = new Tab( tabID );
-                return tabs[tabID];
-            }
-
-            function showTab( tabID )
-            {
-                var zIndex = 0;
-                if ( !!activeTab )
-                {
-                    // activeTab is set
-                    zIndex = parseInt( activeTab.getContent().parent().css( 'zIndex' ) );
-                    activeTab.hide();
-                    activeTab.getContent().parent().css( 'zIndex', zIndex - 1 );
-                }
-                else
-                {
-                    // activeTab not set before
-                    for ( var tab in tabs )
-                    {
-                        if ( !!tabs[tab].getContent() )
-                        {
-                            var currentZ = parseInt( tabs[tab].getContent().parent().css( 'zIndex' ) );
-                            if ( zIndex == 0 || currentZ < zIndex )
-                            {
-                                zIndex = currentZ;
-                            }
-                            tabs[tab].hide();
-                        }
-                    }
-
-                    for ( var tab in tabs )
-                    {
-                        if ( !!tabs[tab].getContent() )
-                        {
-                            tabs[tab].getContent().parent().css( 'zIndex', zIndex - 1 );
-                        }
-                    }
-
-                    $( window ).on( 'sizeChange', resetTabs );
-                }
-
-                activeTab = tabs[tabID];
-                activeTab.getContent().parent().css( 'zIndex', zIndex );
-                activeTab.show();
-            }
-
-            function getTab( tabID )
-            {
-                return tabs[tabID];
-            }
-
-            function resetTabs()
-            {
-                for ( var tab in tabs )
-                {
-                    if ( !!tabs[tab].getContent() )
-                    {
-                        tabs[tab].show();
-                    }
-                }
-
-                activeTab = null;
-            }
-        }
-
-        function Tab( id )
-        {
-            var $content;
-            var $labels = [];
-            var tabID   = id;
-
-            return {
-                addLabel  : addLabel,
-                setContent: setContent,
-                getContent: getContent,
-                getID     : getID,
-                show      : show,
-                hide      : hide
-            };
-
-            function getID()
-            {
-                return tabID;
-            }
-
-            function addLabel( label )
-            {
-                $labels.push( label );
-                return this;
-            }
-
-            function setContent( content )
-            {
-                $content = content;
-                return this;
-            }
-
-            function getContent()
-            {
-                return $content;
-            }
-
-            function show()
-            {
-                for ( var i = 0; i < $labels.length; i++ )
-                {
-                    $labels[i].addClass( 'active' );
-                }
-
-                if ( !!$content )
-                {
-                    $content.show().addClass( 'in' );
-                }
-
-            }
-
-            function hide()
-            {
-                for ( var i = 0; i < $labels.length; i++ )
-                {
-                    $labels[i].removeClass( 'active' );
-                }
-
-                if ( !!$content )
-                {
-                    $content.hide().removeClass( 'in' );
-                }
-            }
-        }
-
-    }, ['MediaSizeService'] );
-})( jQuery, PlentyFramework );
-/**
- * Add fancy ui modifications - the visual stuff - here.
- * Respond functionality like 'event':UI.myFunctionality(currentElement)
- *
- * Example:
- *      <button type="button" data-plenty="click:UI.addTooltip(this)">go to top</button>
- *
- */
-(function( $, pm )
-{
-    pm.directive( 'UI', function( MediaSizeService, SocialShareService )
-    {
-        // elements to calculate height.
-        var equalHeightElementList = [];
-        var toTopButtonList        = [];
-
-        return {
-            initUIWindowEvents  : initUIWindowEvents,
-            addContentPageSlider: addContentPageSlider,
-            equalHeight         : equalHeight,
-            initToTop           : initToTop,
-            initLazyload        : initLazyload,
-            initSlideToggle     : initSlideToggle,
-            slideDown           : slideDown,
-            slideUp             : slideUp,
-            slideToggle         : slideToggle,
-            toggleHideShow      : toggleHideShow,
-            toggleSocialShare   : toggleSocialShare,
-            toggleClass         : toggleClass,
-            addClass            : addClass,
-            removeClass         : removeClass
-        };
-
-        function initUIWindowEvents()
-        {
-            // resize elements on window size change.
-            $( window ).on( 'sizeChange contentChanged', function()
-            {
-                fireEqualHeight();
-            } );
-
-            $( window ).on( "scroll resize", function()
-            {
-                if ( toTopButtonList.length > 0 )
-                {
-                    if ( $( document ).scrollTop() > 100 )
-                    {
-                        doToArrayElements( toTopButtonList, "addClass", "visible" );
-                    }
-                    else
-                    {
-                        doToArrayElements( toTopButtonList, "removeClass", "visible" );
-                    }
-                }
-            } );
-        }
-
-        /**
-         * Adds content page slider (owlCarousel)
-         *
-         * usage:
-         * <div class="contentpageSlider" data-plenty="contentpageSlider">
-         *     <div class="slide">
-         *         ...
-         *     </div>
-         *     <div class="slide">
-         *         ...
-         *     </div>
-         *     ...
-         * </div>
-         *
-         * Legacy directive selector: data-plenty="contentpageSlider"
-         *
-         * @param elem
-         */
-        function addContentPageSlider( elem )
-        {
-            $( elem ).owlCarousel( {
-                navigation     : true,
-                navigationText : false,
-                slideSpeed     : 1000,
-                paginationSpeed: 1000,
-                singleItem     : true,
-                autoPlay       : 6000,
-                stopOnHover    : true,
-                afterMove      : function( current )
-                {
-                    $( current ).find( '[data-plenty-rel="lazyload"]' ).trigger( 'appear' );
-                }
-            } );
-        }
-
-        /**
-         * Equal Box height
-         * Calculates equal box height for chosen elements.
-         *
-         * Legacy directive selector: data-plenty-equal
-         *
-         * @param elem
-         * @param elementExists - default false
-         */
-        function equalHeight( elem, mediaSizes, elementExists )
-        {
-            var $elem            = $( elem );
-            var maxHeight        = 0;
-            var $equalTarget     = {};
-            var $equalTargetList = $elem.find( '[data-plenty-rel="equal-target"]' ).length > 0 ? $elem.find( '[data-plenty-rel="equal-target"]' ) : $elem.children();
-
-            // if element wasn't pushed before.
-            if ( elementExists !== true )
-            {
-                equalHeightElementList.push( elem );
-            }
-
-            for ( var i = $equalTargetList.length; i >= 0; i-- )
-            {
-                $equalTarget = $( $equalTargetList[i] );
-                $equalTarget.css( 'height', '' );
-
-                if ( $equalTarget.outerHeight( true ) > maxHeight )
-                {
-                    maxHeight = $equalTarget.outerHeight( true );
-                }
-            }
-
-            if ( !mediaSizes || MediaSizeService.isInterval( mediaSizes ) )
-            {
-                $equalTargetList.height( maxHeight );
-            }
-        }
-
-        /**
-         * Scroll page to top.
-         * Just add without events.
-         *
-         * Legacy directive selector: data-plenty="toTop"
-         *
-         * @param elem
-         */
-        function initToTop( elem )
-        {
-            var $elem = $( elem );
-
-            $elem.click( function()
-            {
-                $( 'html, body' ).animate( {
-                    scrollTop: 0
-                }, 400 );
-                return false;
-            } );
-
-            if ( !!$.inArray( $elem, toTopButtonList ) )
-            {
-                toTopButtonList.push( $elem );
-            }
-        }
-
-        /**
-         * lazy load on ready.
-         *
-         * Legacy directive selector: img[data-plenty-lazyload]
-         *
-         * @param elem
-         */
-        function initLazyload( elem, effect )
-        {
-            var $elem = $( elem );
-
-            $elem.lazyload( {
-                effect: effect
-            } );
-            if( $elem.is('img') )
-            {
-                $elem.on( 'loaded', function()
-                {
-                    $elem.css( 'display', 'inline-block' );
-                } );
-            }
-        }
-
-        /**
-         * Toggle show and hide animation.
-         *
-         * Legacy directive selector: data-plenty="openCloseToggle"
-         *
-         * @param elem
-         */
-        function toggleHideShow( elem )
-        {
-
-            console.log( elem );
-
-            var $elem       = $( elem );
-            var $elemParent = $elem.parent();
-
-            $elemParent.addClass( 'animating' );
-            $elem.siblings( 'ul' ).slideToggle( 200, function()
-            {
-                if ( $elemParent.is( '.open' ) )
-                {
-                    $elemParent.removeClass( 'open' );
-                }
-                else
-                {
-                    $elemParent.addClass( 'open' );
-                }
-                $elem.siblings( 'ul' ).removeAttr( 'style' );
-                $elemParent.removeClass( 'animating' );
-            } );
-        }
-
-        /**
-         * Toggle target content on click.
-         * Bind to checked-/ unchecked-property of radio buttons
-         *
-         * Legacy directive selector: data-plenty-slidetoggle
-         *
-         * @param elem
-         */
-        function initSlideToggle( elem, checked )
-        {
-            var $elem          = $( elem );
-            var $targetElement = $( $elem.attr( 'data-plenty-rel' ) );
-
-            if ( $elem.is( 'input[type="radio"]' ) )
-            {
-                // is radio button
-                var $radioGroupList  = $( 'input[type="radio"][name="' + ( $elem.attr( 'name' ) ) + '"]' );
-                var visibleOnChecked = !checked || checked == 'checked';
-
-                $radioGroupList.change( function()
-                {
-                    var $self = $( this );
-                    $targetElement.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
-
-                    if ( $self.is( ':checked' ) && $self[0] === $elem[0] && visibleOnChecked == true )
-                    {
-                        // checked
-                        $targetElement.slideDown( 400, function()
-                        {
-                            fireEqualHeight();
-                        } );
-                    }
-                    else
-                    {
-                        // unchecked (since other radio button has been checked)
-                        $targetElement.slideUp( 400, function()
-                        {
-                            fireEqualHeight();
-                        } );
-                    }
-                } );
-            }
-            else
-            {
-                // is not radio button
-                $elem.click( function()
-                {
-                    //$targetElement.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
-
-                    $elem.addClass( 'animating' );
-                    $targetElement.slideToggle( 400, function()
-                    {
-                        $elem.removeClass( 'animating' );
-                        $elem.toggleClass( 'active' );
-                        fireEqualHeight();
-                    } );
-                } );
-            }
-        }
-
-        function slideDown( target, duration )
-        {
-            slideAction( $( target ), duration, 'slideDown' );
-        }
-
-        function slideUp( target, duration )
-        {
-            slideAction( $( target ), duration, 'slideUp' );
-        }
-
-        function slideToggle( target, duration )
-        {
-            slideAction( $( target ), duration, 'slideToggle' );
-        }
-
-        function slideAction( $target, duration, callbackString )
-        {
-            duration = duration || 400;
-            $target.parents( '[data-plenty-rel="equal-target"]' ).css( 'height', 'auto' );
-            $target[callbackString]( duration, function()
-            {
-                fireEqualHeight();
-            } );
-        }
-
-        /**
-         * TODO check comment
-         * Social Share Activation
-         * Activate and load share-buttons manually by clicking a separate button
-         * Usage / data-attributes:
-         * <div data-plenty-social="twitter">
-         *    <span data-plenty="switch"></span>        Will be used to activate the service set in
-         * data-plenty-social=""
-         *    <span data-plenty="placeholder"></span>   Will be replaced with loaded share button
-         * </div>
-         *
-         * possible values for data-plenty-social:
-         * "facebook-like"            : Load Facebooks "Like"-Button
-         * "facebook-recommend"        : Load Facebooks "Recommend"-Button
-         * "twitter"                : Load Twitter Button
-         * "google-plus"            : Load google "+1"-Button
-         *
-         * Additional Tooltips
-         * You can extend the parent element with a (bootstrap) tooltip by adding data-toggle="tooltip" and
-         * title="TOOLTIP CONTENT" Tooltip will be destroyed after activating a social service
-         * (!) Requires bootstrap.js
-         *
-         * Legacy directive selector: data-plenty-social
-         *
-         * @param elem
-         */
-        function toggleSocialShare( elem, socialShareService )
-        {
-            var $elem   = $( elem );
-            var $toggle = $elem.find( '[data-plenty-rel="social-switch"]' );
-
-            // append container to put / delete service.html
-            $elem.append( '<div class="social-container"></div>' );
-
-            // add "off" class to switch, if neither "off" or "on" is set
-            // replaced hasClass() with is() benchmark: http://jsperf.com/hasclasstest
-            if ( !$toggle.is( 'off, on' ) )
-            {
-                $toggle.addClass( 'off' );
-            }
-
-            // toggle switch
-            $toggle.on( 'click', function()
-            {
-                if ( $toggle.hasClass( 'off' ) )
-                {
-                    // TODO remove bootstrap dependency
-                    if ( $elem.attr( "data-toggle" ) == "tooltip" )
-                    {
-                        $elem.tooltip( 'destroy' )
-                    }
-                    $toggle.removeClass( 'off' ).addClass( 'on' );
-                    // hide dummy button
-                    $elem.find( '[data-plenty-rel="social-placeholder"]' ).hide();
-                    // load HTML defined in 'api'
-                    $elem.find( '.social-container' ).append( SocialShareService.getSocialService( socialShareService ) );
-                }
-                // do not disable social medias after activation
-            } );
-        }
-
-        /**
-         * Toggle Class
-         * toggle style-classes on click
-         * Usage / data-attribute:
-         * <div data-plenty-toggle="{target: 'body', class: 'toggledClass', media: 'xs sm'}"></div>
-         * target    :    jQuery selector to toggle the class at.
-         * class        :  class(es) to toggle at target element
-         * media        :  only toggle class on given media sizes (optional)
-         *
-         * (!) using data-plenty-toggle on <a>-elements will prevent redirecting to href=""
-         *
-         * Legacy directive selector: data-plenty-toggle
-         *
-         * @param cssClass
-         * @param target
-         * @param interval
-         */
-        function toggleClass( cssClass, target, interval )
-        {
-            var $target = $( target );
-            /* FIXME
-             * Callisto 3.1 Design adaption:
-             * NavigationCategoriesList
-             * Line 8
-             * BEFORE:
-             * <li class="cat-$CategoryId{% if $CategoryLevel == 1 && $SubCategoryExists %} dropdown{% endif %}{% if $SubCategoryExists %} hasSublevel{% endif %}{% if $CategoryLevel == 1 && in_array($CategoryId, $_useBigMenu) %} bigmenu{% endif %}{% if $CategoryIsOpen || $CategoryIsCurrent %} active{% endif %}"{% if $CategoryIsOpen || $CategoryIsCurrent %} data-plenty="UI.toggleClass('open', this, 'xs, sm')"{% endif %}>
-             * AFTER:
-             * <li class="cat-$CategoryId{% if $CategoryLevel == 1 && $SubCategoryExists %} dropdown{% endif %}{% if $SubCategoryExists %} hasSublevel{% endif %}{% if $CategoryLevel == 1 && in_array($CategoryId, $_useBigMenu) %} bigmenu{% endif %}{% if $CategoryIsOpen || $CategoryIsCurrent %} active{% endif %}">
-             *
-             * Line 10
-             * BEFORE:
-             * <span class="openCloseToggle" data-plenty="click:MobileDropdown.slideDropdown(this)"></span>
-             * AFTER:
-             * <span class="openCloseToggle" data-plenty="{% if $CategoryIsOpen || $CategoryIsCurrent %}MobileDropdown.slideDropdown(this); {% endif %}click:MobileDropdown.slideDropdown(this)"></span>
-             *
-             * */
-            if ( $target.parents( ".navbar-main" ).length > 0 )
-            {
-                var $elem = $target.children( "span" );
-                pm.directives["MobileDropdown"].slideDropdown( $elem );
-                return true;
-            }
-
-            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
-            {
-                var e = pm.getRecentEvent();
-                if ( !!e )
-                {
-                    e.preventDefault();
-                }
-
-                $target.toggleClass( cssClass );
-                return false;
-            }
-        }
-
-        function addClass( cssClass, target, interval )
-        {
-            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
-            {
-                var e = pm.getRecentEvent();
-                if ( !!e )
-                {
-                    e.preventDefault();
-                }
-
-                $( target ).addClass( cssClass );
-                return false;
-            }
-        }
-
-        function removeClass( cssClass, target, interval )
-        {
-            if ( !!target && !!cssClass && ( !interval || MediaSizeService.isInterval( interval ) ) )
-            {
-                var e = pm.getRecentEvent();
-                if ( !!e )
-                {
-                    e.preventDefault();
-                }
-
-                $( target ).removeClass( cssClass );
-                return false;
-            }
-        }
-
-        /*
-         ##### PRIVATE FUNCTIONS ######
-         */
-
-        function fireEqualHeight()
-        {
-            for ( var i = equalHeightElementList.length - 1; i >= 0; i-- )
-            {
-                equalHeight( equalHeightElementList[i], '', true );
-            }
-        }
-
-        function doToArrayElements( array, func, params )
-        {
-            for ( var i = array.length - 1; i >= 0; i-- )
-            {
-                array[i][func]( params );
-            }
-        }
-
-    }, ['MediaSizeService', 'SocialShareService'] );
-}( jQuery, PlentyFramework ));
-(function( $, pm )
-{
-    pm.directive( 'Validator', function( ValidationService )
-    {
-
-        return {
-            validate: validate
-        };
-
-        function validate( form, errorClass )
-        {
-            return ValidationService.validate( form, errorClass );
-        }
-
-    }, ['ValidationService'] );
-}( jQuery, PlentyFramework ));
 /**
  * Licensed under AGPL v3
  * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)
