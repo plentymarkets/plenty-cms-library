@@ -206,27 +206,31 @@
             var invoiceAddress       = form.getFormValues();
             invoiceAddress.LoginType = 1;
 
-            invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
-
-            form.find( "[data-plenty-property-id]" ).each( function( i, propertyInput )
+            if ( invoiceAddress.checkout
+                && invoiceAddress.checkout.customerInvoiceAddress
+                && invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty )
             {
-                invoiceAddress.CustomerPropertiesList.push( {
-                    PropertyID   : $( propertyInput ).attr( 'data-plenty-property-id' ),
-                    PropertyValue: $( propertyInput ).val()
-                } );
-            } );
+                var tmpProperties                     = invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty;
+                invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
+
+                for ( var property in tmpProperties )
+                {
+                    if ( tmpProperties[property] )
+                    {
+                        invoiceAddress.CustomerPropertiesList.push( {
+                            PropertyID   : property,
+                            PropertyValue: tmpProperties[property]
+                        } );
+                    }
+                }
+            }
 
             if ( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) )
             {
                 return API.post( "/rest/checkout/customerinvoiceaddress/", invoiceAddress )
                     .done( function( response )
                     {
-                        //Checkout.getCheckout().CheckoutShippingCountryID = response.data.CountryID;
-                        saveShippingAddress().done( function()
-                        {
-                            Checkout.loadCheckout();
-                            //Checkout.getCheckout().CustomerInvoiceAddress = response.data;
-                        } );
+                        saveShippingAddress().done( Checkout.loadCheckout );
                     } );
             }
             else
@@ -324,40 +328,26 @@
                     {
                         var response = $.parseJSON( jqXHR.responseText );
 
-                        var atrigaValidationFailed = false;
-                        // append info link to atriga validation error (code 651)
+                        var errorStack = [];
                         for ( var i = 0; i < response.error.error_stack.length; i++ )
                         {
-                            var currentError = response.error.error_stack[i];
-                            if ( currentError.code == 651 )
+                            if ( response.error.error_stack[i].code == 651 )
                             {
-                                atrigaValidationFailed        = true;
-                                currentError.message += '<br><a href="#">' + pm.translate( 'more information' ) + '</a>';
-                                response.error.error_stack[i] = currentError;
-                                Checkout.reloadContainer( 'MethodsOfPaymentList' ).done( showAtrigaInformationDialog );
-                                break;
+                                // notify atriga validation errors
+                                Checkout.reloadContainer( 'MethodsOfPaymentList' ).done(function() {
+                                    $(document).trigger('plenty.AtrigaValidationFailed');
+                                });
+                            }
+                            else
+                            {
+                                errorStack.push( response.error.error_stack[i] );
                             }
                         }
 
-                        function showAtrigaInformationDialog()
+                        // display remaining errors
+                        if( errorStack.length > 0 )
                         {
-                            UI.printErrors( response.error.error_stack );
-                            if ( atrigaValidationFailed && pm.getGlobal( 'Checkout.AtrigaShowValidationError' ) )
-                            {
-                                // show error and bind modal on additional error link
-                                $( '[data-plenty-error-code="651"] a' ).click( function( e )
-                                {
-                                    e.preventDefault();
-                                    pm.partials.Error.hideAll();
-                                    Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
-                                } );
-                            }
-                            else if ( atrigaValidationFailed && !pm.getGlobal( 'Checkout.AtrigaShowValidationError' ) )
-                            {
-                                // show atriga information modal instead of error
-                                pm.partials.Error.hideAll();
-                                Modal.prepare( '[data-plenty-modal="atrigaPaymaxPaymentInformation"]' ).show();
-                            }
+                            UI.printErrors(errorStack);
                         }
                     }
                     catch ( e )
@@ -379,17 +369,18 @@
         function setMethodOfPayment( paymentID )
         {
             /*
-            var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
-            var methodOfPayment;
-            for( var i = 0; i < methodsOfPaymentList.length; i++ )
-            {
-                if( methodsOfPaymentList[i].MethodOfPaymentID == paymentID )
-                {
-                    methodOfPayment = methodsOfPaymentList[i];
-                    break;
-                }
-            }
-            */
+             var methodsOfPaymentList = Checkout.getCheckout().MethodsOfPaymentList;
+             var methodOfPayment;
+             for( var i = 0; i < methodsOfPaymentList.length; i++ )
+             {
+             if( methodsOfPaymentList[i].MethodOfPaymentID == paymentID )
+             {
+             methodOfPayment = methodsOfPaymentList[i];
+             break;
+             }
+             }
+             */
+
             if( !paymentID )
             {
                 // FIX for older callisto layouts (< 3.3): get payment id from input field
