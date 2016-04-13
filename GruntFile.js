@@ -46,6 +46,7 @@ module.exports = function( grunt )
                 },
                 src    : [
                     'tmp/templates.js',
+                    'libs/mustache.min.js',
                     'tmp/plentyFramework.js',
                     'src/**/*.js',
                     '!src/plentyFramework.js',
@@ -61,8 +62,7 @@ module.exports = function( grunt )
                     'libs/owl.carousel.min.js',
                     'libs/jquery.lazyload.js',
                     'libs/jquery.touchSwipe.min.js',
-                    'libs/jquery.ui.touch-punch.min.js',
-                    'libs/mustache.min.js'
+                    'libs/jquery.ui.touch-punch.min.js'
                 ],
                 dest: 'debug/<%= pkg.name %>-libs-<%= pkg.version %>.js'
             }
@@ -89,7 +89,7 @@ module.exports = function( grunt )
                 options: {
                     sourceMapIncludeSources: true,
                     sourceMapIn            : 'libs/*.js',
-                    banner                 : '/**\n * plentymarketsCMStools libraries are wrapped here.\n * List of files:\n * bootstrap.min.js\n * jquery.lazyload.js\n * jquery.touchSwipe.min.js\n * jquery.ui.touch-punch\n * jquery-ui.min.js\n * modernizr.min.js\n * mustache.min.js\n * owl.carousel.min.js\n*/'
+                    banner                 : '/**\n * plentymarketsCMStools libraries are wrapped here.\n * List of files in this order:\n * modernizr.min.js\n * bootstrap.min.js\n * owl.carousel.min.js\n * jquery.lazyload.js\n * jquery.touchSwipe.min.js\n * jquery.ui.touch-punch.min.js\n*/'
                 },
                 files  : {
                     'dist/<%= pkg.name %>-libs-<%= pkg.version %>.min.js': ['debug/<%= pkg.name %>-libs-<%= pkg.version %>.js']
