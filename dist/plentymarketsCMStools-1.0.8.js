@@ -1380,7 +1380,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
  */
 (function( $, pm )
 {
-    pm.directive( 'UI', function( MediaSizeService, SocialShareService )
+    pm.directive( 'UI', function( MediaSizeService, SocialShareService, UIFactory )
     {
         // elements to calculate height.
         var equalHeightElementList = [];
@@ -1388,6 +1388,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
         return {
             initUIWindowEvents  : initUIWindowEvents,
+            showWaitscreen      : showWaitscreen,
+            hideWaitscreen      : hideWaitscreen,
             addContentPageSlider: addContentPageSlider,
             equalHeight         : equalHeight,
             initToTop           : initToTop,
@@ -1425,6 +1427,24 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     }
                 }
             } );
+        }
+
+        /**
+         * Display waitscreen on page e.g. for requests.
+         * Use with care and don't forget to hide waitscreen, if your calls are done or broke!!
+         */
+        function showWaitscreen()
+        {
+            UIFactory.showWaitscreen();
+        }
+
+        /**
+         * Just hide the waitscreen.
+         * @param forceClose
+         */
+        function hideWaitscreen( forceClose )
+        {
+            UIFactory.hideWaitscreen( forceClose );
         }
 
         /**
@@ -1833,7 +1853,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             }
         }
 
-    }, ['MediaSizeService', 'SocialShareService'] );
+    }, ['MediaSizeService', 'SocialShareService', 'UIFactory'] );
 }( jQuery, PlentyFramework ));
 (function( $, pm )
 {
@@ -4474,10 +4494,6 @@ PlentyFramework.cssClasses = {
             var values            = form.getFormValues();
             var shippingAddressID = $( '[name="shippingAddressID"]:checked' ).val();
 
-            // TODO: move bootstrap specific function
-            $( '#shippingAdressSelect' ).modal( 'hide' );
-            //Modal.prepare( '#shippingAdressSelect' ).hide();
-
             if ( shippingAddressID < 0 )
             {
                 // save separate
@@ -4503,18 +4519,8 @@ PlentyFramework.cssClasses = {
 
                             Checkout.getCheckout().CheckoutCustomerShippingAddressID = response.data.ID;
                             Checkout.getCheckout().CheckoutShippingCountryID         = response.data.CountryID;
-                            delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
-                            delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                            Checkout.setCheckout().done( function()
-                            {
-                                Checkout.reloadContainer( "MethodsOfPaymentList" );
-                                Checkout.reloadContainer( "ShippingProfilesList" );
-                                if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
-                                {
-                                    Checkout.reloadContainer( 'CustomerShippingAddress' );
-                                }
-                            } );
+                            updatePaymentAndShippingDependencies();
                         } );
                 }
                 else
@@ -4530,24 +4536,38 @@ PlentyFramework.cssClasses = {
                 {
                     // change shipping address id
                     Checkout.getCheckout().CheckoutCustomerShippingAddressID = shippingAddressID;
-                    delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
-                    delete Checkout.getCheckout().CheckoutShippingProfileID;
 
-                    return Checkout.setCheckout().done( function()
-                    {
-                        Checkout.reloadContainer( "MethodsOfPaymentList" );
-                        Checkout.reloadContainer( "ShippingProfilesList" );
-                        if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
-                        {
-                            Checkout.reloadContainer( 'CustomerShippingAddress' );
-                        }
-                    } );
+                    updatePaymentAndShippingDependencies();
                 }
                 else
                 {
                     return API.idle();
                 }
             }
+        }
+
+        function updatePaymentAndShippingDependencies()
+        {
+            delete Checkout.getCheckout().CheckoutMethodOfPaymentID;
+            delete Checkout.getCheckout().CheckoutShippingProfileID;
+
+            return Checkout.setCheckout().done( function()
+            {
+                Checkout.reloadContainer( "MethodsOfPaymentList" );
+                Checkout.reloadContainer( "ShippingProfilesList" );
+
+                if ( Checkout.getCheckout().CustomerInvoiceAddress.LoginType == 2 )
+                {
+                    Checkout.reloadContainer( 'CustomerShippingAddress' );
+                }
+                $( '#shippingAdressSelect' ).modal( 'hide' );
+
+                // don't hit me. Ugly hack: this is to force quit/remove everything from modal.
+                if ( $( ".modal-backdrop" ) )
+                {
+                    $( ".modal-backdrop" ).remove();
+                }
+            } );
         }
 
         /**
@@ -4692,9 +4712,10 @@ PlentyFramework.cssClasses = {
                             if ( response.error.error_stack[i].code == 651 )
                             {
                                 // notify atriga validation errors
-                                Checkout.reloadContainer( 'MethodsOfPaymentList' ).done(function() {
-                                    $(document).trigger('plenty.AtrigaValidationFailed');
-                                });
+                                Checkout.reloadContainer( 'MethodsOfPaymentList' ).done( function()
+                                {
+                                    $( document ).trigger( 'plenty.AtrigaValidationFailed' );
+                                } );
                             }
                             else
                             {
@@ -4703,9 +4724,9 @@ PlentyFramework.cssClasses = {
                         }
 
                         // display remaining errors
-                        if( errorStack.length > 0 )
+                        if ( errorStack.length > 0 )
                         {
-                            UI.printErrors(errorStack);
+                            UI.printErrors( errorStack );
                         }
                     }
                     catch ( e )
@@ -4739,10 +4760,10 @@ PlentyFramework.cssClasses = {
              }
              */
 
-            if( !paymentID )
+            if ( !paymentID )
             {
                 // FIX for older callisto layouts (< 3.3): get payment id from input field
-                paymentID = $('input[name="MethodOfPaymentID"]:checked').val();
+                paymentID = $( 'input[name="MethodOfPaymentID"]:checked' ).val();
             }
 
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
@@ -6355,7 +6376,7 @@ PlentyFramework.cssClasses = {
             var hasError      = false;
 
             // check every required input inside form
-            $form.find( '[data-plenty-validate], input.Required' ).each( function( i, elem )
+            $form.find( '[data-plenty-validate], :required' ).each( function( i, elem )
             {
                 attrValidate = $( elem ).attr( 'data-plenty-validate' );
                 formControls = getFormControl( elem )
@@ -6657,4 +6678,3 @@ jQuery( document ).ready( function()
 {
     plenty.bindDirectives();
 } );
-//# sourceMappingURL=plentymarketsCMStools-1.0.8.js.map

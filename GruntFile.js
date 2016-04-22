@@ -42,7 +42,7 @@ module.exports = function( grunt )
         concat: {
             debug: {
                 options: {
-                    sourceMap: true
+                    sourceMap: false
                 },
                 src    : [
                     'tmp/templates.js',
@@ -78,7 +78,6 @@ module.exports = function( grunt )
                 options: {
                     sourceMap              : true,
                     sourceMapIncludeSources: true,
-                    sourceMapIn            : 'debug/<%= pkg.name %>-<%= pkg.version %>.js.map',
                     banner                 : '/**\n * Licensed under AGPL v3\n * (https://github.com/plentymarkets/plenty-cms-library/blob/master/LICENSE)\n * =====================================================================================\n * @copyright   Copyright (c) 2015, plentymarkets GmbH (http://www.plentymarkets.com)\n * @author      Felix Dausch <felix.dausch@plentymarkets.com>\n * =====================================================================================\n*/'
                 },
                 files  : {

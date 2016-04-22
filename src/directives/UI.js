@@ -8,7 +8,7 @@
  */
 (function( $, pm )
 {
-    pm.directive( 'UI', function( MediaSizeService, SocialShareService )
+    pm.directive( 'UI', function( MediaSizeService, SocialShareService, UIFactory )
     {
         // elements to calculate height.
         var equalHeightElementList = [];
@@ -16,6 +16,8 @@
 
         return {
             initUIWindowEvents  : initUIWindowEvents,
+            showWaitscreen      : showWaitscreen,
+            hideWaitscreen      : hideWaitscreen,
             addContentPageSlider: addContentPageSlider,
             equalHeight         : equalHeight,
             initToTop           : initToTop,
@@ -53,6 +55,24 @@
                     }
                 }
             } );
+        }
+
+        /**
+         * Display waitscreen on page e.g. for requests.
+         * Use with care and don't forget to hide waitscreen, if your calls are done or broke!!
+         */
+        function showWaitscreen()
+        {
+            UIFactory.showWaitscreen();
+        }
+
+        /**
+         * Just hide the waitscreen.
+         * @param forceClose
+         */
+        function hideWaitscreen( forceClose )
+        {
+            UIFactory.hideWaitscreen( forceClose );
         }
 
         /**
@@ -461,5 +481,5 @@
             }
         }
 
-    }, ['MediaSizeService', 'SocialShareService'] );
+    }, ['MediaSizeService', 'SocialShareService', 'UIFactory'] );
 }( jQuery, PlentyFramework ));
