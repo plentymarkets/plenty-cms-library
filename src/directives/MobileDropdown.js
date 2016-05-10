@@ -34,12 +34,6 @@
                 resetDropdowns( dropdownElements );
                 resetDropdowns( closableDropdownElements );
             } );
-
-            // handle "close menu on click outside"
-            $( 'html' ).on( "click touchstart", function( event )
-            {
-                resetDropdowns( closableDropdownElements, event );
-            } );
         }
 
         function resetDropdowns( dropdownList, event )
@@ -50,14 +44,25 @@
                 $current = $( dropdownList[i] );
                 if ( !!event )
                 {
-                    if ( $current.find( $( event.target ) ).length === 0 )
+                    if ( $current.find( $( event.target ) ).length === 0
+                        && !$( "#LiveSearchParam" ).is( ":focus" )
+                        && !$( "#checkout-login-email" ).is( ":focus" )
+                        && !$( "#checkout-login-password" ).is( ":focus" ) )
                     {
                         $current.removeClass( 'open' );
+                        $( 'html' ).unbind( "click touchstart", resetEvent );
                     }
                 }
                 else
                 {
-                    $current.removeClass( 'open' );
+                    if ( $current.find( $( event.target ) ).length === 0
+                        && !$( "#LiveSearchParam" ).is( ":focus" )
+                        && !$( "#checkout-login-email" ).is( ":focus" )
+                        && !$( "#checkout-login-password" ).is( ":focus" ) )
+                    {
+                        $current.removeClass( 'open' );
+                        $( 'html' ).unbind( "click touchstart", resetEvent );
+                    }
                 }
             }
 
@@ -109,6 +114,9 @@
                     // do nothing
                 }
             }
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", resetEvent );
         }
 
         function showDropdownHideOthers( elem, parent )
@@ -171,6 +179,14 @@
                     $elemParent.removeClass( 'animating' );
                 } );
             }
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", resetEvent );
+        }
+
+        function resetEvent( event )
+        {
+            resetDropdowns( closableDropdownElements, event );
         }
 
     }, ['MediaSizeService'] );

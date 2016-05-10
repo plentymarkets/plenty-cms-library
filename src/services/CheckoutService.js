@@ -206,6 +206,7 @@
             var invoiceAddress       = form.getFormValues();
             invoiceAddress.LoginType = 1;
 
+            // add custom properties if necessary.
             if ( invoiceAddress.checkout
                 && invoiceAddress.checkout.customerInvoiceAddress
                 && invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty )

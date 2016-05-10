@@ -988,12 +988,6 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 resetDropdowns( dropdownElements );
                 resetDropdowns( closableDropdownElements );
             } );
-
-            // handle "close menu on click outside"
-            $( 'html' ).on( "click touchstart", function( event )
-            {
-                resetDropdowns( closableDropdownElements, event );
-            } );
         }
 
         function resetDropdowns( dropdownList, event )
@@ -1004,14 +998,25 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 $current = $( dropdownList[i] );
                 if ( !!event )
                 {
-                    if ( $current.find( $( event.target ) ).length === 0 )
+                    if ( $current.find( $( event.target ) ).length === 0
+                        && !$( "#LiveSearchParam" ).is( ":focus" )
+                        && !$( "#checkout-login-email" ).is( ":focus" )
+                        && !$( "#checkout-login-password" ).is( ":focus" ) )
                     {
                         $current.removeClass( 'open' );
+                        $( 'html' ).unbind( "click touchstart", resetEvent );
                     }
                 }
                 else
                 {
-                    $current.removeClass( 'open' );
+                    if ( $current.find( $( event.target ) ).length === 0
+                        && !$( "#LiveSearchParam" ).is( ":focus" )
+                        && !$( "#checkout-login-email" ).is( ":focus" )
+                        && !$( "#checkout-login-password" ).is( ":focus" ) )
+                    {
+                        $current.removeClass( 'open' );
+                        $( 'html' ).unbind( "click touchstart", resetEvent );
+                    }
                 }
             }
 
@@ -1063,6 +1068,9 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     // do nothing
                 }
             }
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", resetEvent );
         }
 
         function showDropdownHideOthers( elem, parent )
@@ -1125,6 +1133,14 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     $elemParent.removeClass( 'animating' );
                 } );
             }
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", resetEvent );
+        }
+
+        function resetEvent( event )
+        {
+            resetDropdowns( closableDropdownElements, event );
         }
 
     }, ['MediaSizeService'] );
@@ -4584,6 +4600,7 @@ PlentyFramework.cssClasses = {
             var invoiceAddress       = form.getFormValues();
             invoiceAddress.LoginType = 1;
 
+            // add custom properties if necessary.
             if ( invoiceAddress.checkout
                 && invoiceAddress.checkout.customerInvoiceAddress
                 && invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty )
@@ -6378,8 +6395,8 @@ PlentyFramework.cssClasses = {
             // check every required input inside form
             $form.find( '[data-plenty-validate], :required' ).each( function( i, elem )
             {
-                attrValidate = $( elem ).attr( 'data-plenty-validate' );
-                formControls = getFormControl( elem )
+                attrValidate   = $( elem ).attr( 'data-plenty-validate' );
+                formControls   = getFormControl( elem );  
                 // validate text inputs
                 validationKeys = !!attrValidate ? attrValidate : 'text';
                 validationKeys = validationKeys.split( ',' );

@@ -12,7 +12,6 @@ var ScriptLoader = {
     {
 
         // define config defaults
-        config.layout    = config.layout || 'PageDesignGlobal';
         config.position  = config.position || 'head';
         config.rootPath  = absolutePath( config.rootPath || '/' );
         config.sourceMap = absolutePath( config.sourceMap || config.rootPath + 'scripts.json' ) + addPostfix( config.debug );
@@ -45,8 +44,7 @@ var ScriptLoader = {
         function loadScripts()
         {
             // concat global dependencies and layout specific dependencies
-            var libs = ScriptLoader.scripts.PageDesignGlobal[config.position]
-                .concat( ScriptLoader.scripts[config.layout][config.position] );
+            var libs = ScriptLoader.scripts.PageDesignGlobal[config.position];
 
             for ( var i = 0; i < libs.length; i++ )
             {
