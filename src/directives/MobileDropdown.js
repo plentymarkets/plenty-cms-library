@@ -124,7 +124,7 @@
             var $parent = $( parent );
 
             // hide other dropdowns
-            resetDropdowns( closableDropdownElements );
+            resetDropdowns( closableDropdownElements, elem );
 
             // remember opened dropdown
             if ( $.inArray( $parent[0], closableDropdownElements ) < 0 )
