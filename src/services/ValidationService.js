@@ -214,10 +214,10 @@
             var hasError      = false;
 
             // check every required input inside form
-            $form.find( '[data-plenty-validate], input.Required' ).each( function( i, elem )
+            $form.find( '[data-plenty-validate], :required' ).each( function( i, elem )
             {
-                attrValidate = $( elem ).attr( 'data-plenty-validate' );
-                formControls = getFormControl( elem )
+                attrValidate   = $( elem ).attr( 'data-plenty-validate' );
+                formControls   = getFormControl( elem );  
                 // validate text inputs
                 validationKeys = !!attrValidate ? attrValidate : 'text';
                 validationKeys = validationKeys.split( ',' );

@@ -31,14 +31,11 @@
         {
             $( window ).on( 'orientationchange sizeChange', function()
             {
-                resetDropdowns( dropdownElements );
-                resetDropdowns( closableDropdownElements );
-            } );
-
-            // handle "close menu on click outside"
-            $( 'html' ).on( "click touchstart", function( event )
-            {
-                resetDropdowns( closableDropdownElements, event );
+                if ( !$( "input" ).is( ":focus" ) )
+                {
+                    resetDropdowns( dropdownElements );
+                    resetDropdowns( closableDropdownElements );
+                }
             } );
         }
 
@@ -50,14 +47,20 @@
                 $current = $( dropdownList[i] );
                 if ( !!event )
                 {
-                    if ( $current.find( $( event.target ) ).length === 0 )
+                    if ( $current.find( $( event.target ) ).length === 0
+                        && !$( "input" ).is( ":focus" ) )
                     {
                         $current.removeClass( 'open' );
+                        $( 'html' ).unbind( "click touchstart", resetEvent );
                     }
                 }
                 else
                 {
-                    $current.removeClass( 'open' );
+                    if ( !$( "input" ).is( ":focus" ) )
+                    {
+                        $current.removeClass( 'open' );
+                        $( 'html' ).unbind( "click touchstart", resetEvent );
+                    }
                 }
             }
 
@@ -109,6 +112,9 @@
                     // do nothing
                 }
             }
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", resetEvent );
         }
 
         function showDropdownHideOthers( elem, parent )
@@ -116,7 +122,7 @@
             var $parent = $( parent );
 
             // hide other dropdowns
-            resetDropdowns( closableDropdownElements );
+            resetDropdowns( closableDropdownElements, elem );
 
             // remember opened dropdown
             if ( $.inArray( $parent[0], closableDropdownElements ) < 0 )
@@ -155,9 +161,11 @@
                 $elemParent.addClass( 'animating' );
                 $elem.siblings( 'ul' ).slideToggle( 400, function()
                 {
-                    if ( $elemParent.is( '.open' ) )
+                    if ( $elemParent.is( '.open' ) && !$( "input" ).is( ":focus" ) )
                     {
                         $elemParent.removeClass( 'open' );
+                        $elem.siblings( 'ul' ).removeAttr( 'style' );
+                        $elemParent.removeClass( 'animating' );
                     }
                     else
                     {
@@ -167,10 +175,16 @@
                             dropdownElements.push( $elemParent[0] );
                         }
                     }
-                    $elem.siblings( 'ul' ).removeAttr( 'style' );
-                    $elemParent.removeClass( 'animating' );
                 } );
             }
+
+            // handle "close menu on click outside"
+            $( 'html' ).on( "click touchstart", resetEvent );
+        }
+
+        function resetEvent( event )
+        {
+            resetDropdowns( closableDropdownElements, event );
         }
 
     }, ['MediaSizeService'] );
