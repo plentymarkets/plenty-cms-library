@@ -31,8 +31,11 @@
         {
             $( window ).on( 'orientationchange sizeChange', function()
             {
-                resetDropdowns( dropdownElements );
-                resetDropdowns( closableDropdownElements );
+                if ( !$( "input" ).is( ":focus" ) )
+                {
+                    resetDropdowns( dropdownElements );
+                    resetDropdowns( closableDropdownElements );
+                }
             } );
         }
 
@@ -45,9 +48,7 @@
                 if ( !!event )
                 {
                     if ( $current.find( $( event.target ) ).length === 0
-                        && !$( "#LiveSearchParam" ).is( ":focus" )
-                        && !$( "#checkout-login-email" ).is( ":focus" )
-                        && !$( "#checkout-login-password" ).is( ":focus" ) )
+                        && !$( "input" ).is( ":focus" ) )
                     {
                         $current.removeClass( 'open' );
                         $( 'html' ).unbind( "click touchstart", resetEvent );
@@ -55,10 +56,7 @@
                 }
                 else
                 {
-                    if ( $current.find( $( event.target ) ).length === 0
-                        && !$( "#LiveSearchParam" ).is( ":focus" )
-                        && !$( "#checkout-login-email" ).is( ":focus" )
-                        && !$( "#checkout-login-password" ).is( ":focus" ) )
+                    if ( !$( "input" ).is( ":focus" ) )
                     {
                         $current.removeClass( 'open' );
                         $( 'html' ).unbind( "click touchstart", resetEvent );
@@ -163,9 +161,11 @@
                 $elemParent.addClass( 'animating' );
                 $elem.siblings( 'ul' ).slideToggle( 400, function()
                 {
-                    if ( $elemParent.is( '.open' ) )
+                    if ( $elemParent.is( '.open' ) && !$( "input" ).is( ":focus" ) )
                     {
                         $elemParent.removeClass( 'open' );
+                        $elem.siblings( 'ul' ).removeAttr( 'style' );
+                        $elemParent.removeClass( 'animating' );
                     }
                     else
                     {
@@ -175,8 +175,6 @@
                             dropdownElements.push( $elemParent[0] );
                         }
                     }
-                    $elem.siblings( 'ul' ).removeAttr( 'style' );
-                    $elemParent.removeClass( 'animating' );
                 } );
             }
 

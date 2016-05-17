@@ -985,8 +985,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
         {
             $( window ).on( 'orientationchange sizeChange', function()
             {
-                resetDropdowns( dropdownElements );
-                resetDropdowns( closableDropdownElements );
+                if ( !$( "input" ).is( ":focus" ) )
+                {
+                    resetDropdowns( dropdownElements );
+                    resetDropdowns( closableDropdownElements );
+                }
             } );
         }
 
@@ -999,9 +1002,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 if ( !!event )
                 {
                     if ( $current.find( $( event.target ) ).length === 0
-                        && !$( "#LiveSearchParam" ).is( ":focus" )
-                        && !$( "#checkout-login-email" ).is( ":focus" )
-                        && !$( "#checkout-login-password" ).is( ":focus" ) )
+                        && !$( "input" ).is( ":focus" ) )
                     {
                         $current.removeClass( 'open' );
                         $( 'html' ).unbind( "click touchstart", resetEvent );
@@ -1009,10 +1010,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 }
                 else
                 {
-                    if ( $current.find( $( event.target ) ).length === 0
-                        && !$( "#LiveSearchParam" ).is( ":focus" )
-                        && !$( "#checkout-login-email" ).is( ":focus" )
-                        && !$( "#checkout-login-password" ).is( ":focus" ) )
+                    if ( !$( "input" ).is( ":focus" ) )
                     {
                         $current.removeClass( 'open' );
                         $( 'html' ).unbind( "click touchstart", resetEvent );
@@ -1078,7 +1076,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             var $parent = $( parent );
 
             // hide other dropdowns
-            resetDropdowns( closableDropdownElements );
+            resetDropdowns( closableDropdownElements, elem );
 
             // remember opened dropdown
             if ( $.inArray( $parent[0], closableDropdownElements ) < 0 )
@@ -1117,9 +1115,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 $elemParent.addClass( 'animating' );
                 $elem.siblings( 'ul' ).slideToggle( 400, function()
                 {
-                    if ( $elemParent.is( '.open' ) )
+                    if ( $elemParent.is( '.open' ) && !$( "input" ).is( ":focus" ) )
                     {
                         $elemParent.removeClass( 'open' );
+                        $elem.siblings( 'ul' ).removeAttr( 'style' );
+                        $elemParent.removeClass( 'animating' );
                     }
                     else
                     {
@@ -1129,8 +1129,6 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                             dropdownElements.push( $elemParent[0] );
                         }
                     }
-                    $elem.siblings( 'ul' ).removeAttr( 'style' );
-                    $elemParent.removeClass( 'animating' );
                 } );
             }
 
@@ -3948,9 +3946,21 @@ PlentyFramework.cssClasses = {
                     Checkout.loadCheckout()
                         .done( function()
                         {
+                            var artAttr     = $( "[name^=ArticleAttribute]" );
+                            var requestData = {ArticleID: article[0].BasketItemItemID};
+
+                            if ( artAttr )
+                            {
+                                $( "[name^=ArticleAttribute]" ).each( function( i, v )
+                                {
+                                    requestData[$( v ).attr( "name" )] = $( v ).val();
+                                } );
+                            }
+
                             refreshBasketPreview();
+
                             // Show confirmation popup
-                            CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', {ArticleID: article[0].BasketItemItemID} ).from( 'ItemView' )
+                            CMS.getContainer( 'ItemViewItemToBasketConfirmationOverlay', requestData ).from( 'ItemView' )
                                 .done( function( response )
                                 {
                                     var timeout = pm.getGlobal( 'TimeoutItemToBasketOverlay', 5000 );
@@ -4193,9 +4203,10 @@ PlentyFramework.cssClasses = {
                                         {
                                             $( this ).siblings( ":not('[data-plenty-checkout-template]')" ).remove();
                                             $( this ).remove();
-                                            $basketListContainer.prepend( $( response.data[0] ) ).hide().fadeIn(function() {
+                                            $basketListContainer.prepend( $( response.data[0] ) ).hide().fadeIn( function()
+                                            {
                                                 pm.getInstance().bindDirectives( $basketListContainer );
-                                            });
+                                            } );
                                         } );
                                     } );
                                 }
