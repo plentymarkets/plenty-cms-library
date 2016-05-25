@@ -95,6 +95,9 @@ var textZoomRate, textZoomHint; // added by plenty
 		this.click(function(e){
 			e.preventDefault();
 			var src = $imgObj.attr('src'), ms, zr, cs, opacityObj = {opacity: 0};
+			// Modified by plenty
+			$(".jqzoom").attr('href', e.target.src);
+			// Modification end
 			//if(!first && (src === this.href || src === this.getAttribute('href'))){return;}
 			if(first && !options.initzoomablefade || !options.zoomablefade){opacityObj = {};}
 			first = false;
