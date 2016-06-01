@@ -111,7 +111,7 @@
             }
 
             var values            = form.getFormValues();
-            var shippingAddressID = parseInt( $( '[name="shippingAddressID"]:checked' ).val() );
+            var shippingAddressID = $( '[name="shippingAddressID"]:checked' ).val();
 
             // TODO: move bootstrap specific function
             $( '#shippingAdressSelect' ).modal( 'hide' );
@@ -194,6 +194,26 @@
 
             var invoiceAddress       = form.getFormValues();
             invoiceAddress.LoginType = 1;
+
+            // add custom properties if necessary.
+            if ( invoiceAddress.checkout
+                && invoiceAddress.checkout.customerInvoiceAddress
+                && invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty )
+            {
+                var tmpProperties                     = invoiceAddress.checkout.customerInvoiceAddress.CustomerProperty;
+                invoiceAddress.CustomerPropertiesList = invoiceAddress.CustomerPropertiesList || [];
+
+                for ( var property in tmpProperties )
+                {
+                    if ( tmpProperties[property] )
+                    {
+                        invoiceAddress.CustomerPropertiesList.push( {
+                            PropertyID   : property,
+                            PropertyValue: tmpProperties[property]
+                        } );
+                    }
+                }
+            }
 
             if ( !addressesAreEqual( invoiceAddress, Checkout.getCheckout().CustomerInvoiceAddress ) )
             {
@@ -361,9 +381,9 @@
                                 }
                             } );
                         } ).onConfirm( function()
-                        {
-                            return saveBankDetails();
-                        } )
+                    {
+                        return saveBankDetails();
+                    } )
                         .show();
                 } );
 
@@ -435,9 +455,9 @@
                                 }
                             } );
                         } ).onConfirm( function()
-                        {
-                            return saveCreditCard();
-                        } )
+                    {
+                        return saveCreditCard();
+                    } )
                         .show();
                 } );
         }
