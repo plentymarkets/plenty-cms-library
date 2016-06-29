@@ -22,6 +22,11 @@
             basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
             basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
 
+            if ( parentForm.find( '[name="P_ID"]' ) )
+            {
+                basketItemsList.BasketItemPriceID = parentForm.find( '[name="P_ID"]:checked' ).val();
+            }
+
             //attributes
             var attributeInputsList = parentForm.find( '[name^="ArticleAttribute"]' );
             var attributesList      = [];
