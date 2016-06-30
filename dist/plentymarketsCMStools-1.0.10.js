@@ -4502,15 +4502,21 @@ PlentyFramework.cssClasses = {
                     Checkout.loadCheckout()
                         .done( function()
                         {
-                            var artAttr     = $( "[name^=ArticleAttribute]" );
-                            var requestData = {ArticleID: article[0].BasketItemItemID};
+                            var $artAttr           = $( "[name^=ArticleAttribute]" );
+                            var $unitCombinationId = $( "[name^=P_ID]:checked" );
+                            var requestData        = {ArticleID: article[0].BasketItemItemID};
 
-                            if ( artAttr )
+                            if ( $artAttr.val() > 0 )
                             {
-                                $( "[name^=ArticleAttribute]" ).each( function( i, v )
+                                $artAttr.each( function( i, value )
                                 {
-                                    requestData[$( v ).attr( "name" )] = $( v ).val();
+                                    value                             = $( value );
+                                    requestData[value.attr( "name" )] = value.val();
                                 } );
+                            }
+                            else if ( $unitCombinationId && $unitCombinationId.val() > 0 )
+                            {
+                                requestData["UnitCombinationId"] = $unitCombinationId.val();
                             }
 
                             refreshBasketPreview();
@@ -6963,7 +6969,7 @@ PlentyFramework.cssClasses = {
             $form.find( '[data-plenty-validate], :required' ).each( function( i, elem )
             {
                 attrValidate   = $( elem ).attr( 'data-plenty-validate' );
-                formControls   = getFormControl( elem );
+                formControls   = getFormControl( elem );  
                 // validate text inputs
                 validationKeys = !!attrValidate ? attrValidate : 'text';
                 validationKeys = validationKeys.split( ',' );
