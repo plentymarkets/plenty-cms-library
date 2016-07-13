@@ -150,9 +150,9 @@
             return formControl.toLowerCase() == reference.toLowerCase();
         }
 
-        function isVisibleOrEnabled( formControl )
+        function isNotVisibleOrEnabled( formControl )
         {
-            return formControl.is( ':visible' ) || formControl.is( ':enabled' );
+            return (!formControl.is( ':visible' ) || !formControl.is( ':enabled' ));
         }
 
         /**
@@ -226,7 +226,8 @@
                     $formControl        = $( formControls[i] );
                     formControlAttrType = $formControl.attr( 'type' );
 
-                    if ( !isVisibleOrEnabled( $formControl ) )
+                    // skip validation, if input is invisible or disabled
+                    if ( isNotVisibleOrEnabled( $formControl ) )
                     {
                         return;
                     }
