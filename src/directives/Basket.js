@@ -16,15 +16,18 @@
             var basketItemsList = {};
             var $elem           = $( elem );
             var parentForm      = $elem.parents( 'form' );
+            var $p_id           = parentForm.find( '[name="P_ID"]:checked' );
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
             basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
             basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
 
-            if ( parentForm.find( '[name="P_ID"]' ) )
+            // look for occurrences of unit combination and take price id of combination, if available.
+            if ( $p_id.length > 0
+                && $p_id.val() > 0 )
             {
-                basketItemsList.BasketItemPriceID = parentForm.find( '[name="P_ID"]:checked' ).val();
+                basketItemsList.BasketItemPriceID = $p_id.val();
             }
 
             //attributes

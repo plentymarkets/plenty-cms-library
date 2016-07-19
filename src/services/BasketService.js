@@ -158,7 +158,7 @@
                         .done( function()
                         {
                             var $artAttr           = $( "[name^=ArticleAttribute]" );
-                            var $unitCombinationId = $( "[name^=P_ID]:checked" );
+                            var $unitCombinationId = article[0].BasketItemPriceID;
                             var requestData        = {ArticleID: article[0].BasketItemItemID};
 
                             if ( $artAttr.val() > 0 )
@@ -169,9 +169,9 @@
                                     requestData[value.attr( "name" )] = value.val();
                                 } );
                             }
-                            else if ( $unitCombinationId && $unitCombinationId.val() > 0 )
+                            else if ( $unitCombinationId && $unitCombinationId > 0 )
                             {
-                                requestData["UnitCombinationId"] = $unitCombinationId.val();
+                                requestData["UnitCombinationId"] = $unitCombinationId;
                             }
 
                             refreshBasketPreview();

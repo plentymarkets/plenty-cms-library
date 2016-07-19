@@ -651,7 +651,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.11";
+    var version = "1.0.12";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -1395,15 +1395,18 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             var basketItemsList = {};
             var $elem           = $( elem );
             var parentForm      = $elem.parents( 'form' );
+            var $p_id           = parentForm.find( '[name="P_ID"]:checked' );
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
             basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
             basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
 
-            if ( parentForm.find( '[name="P_ID"]' ) )
+            // look for occurrences of unit combination and take price id of combination, if available.
+            if ( $p_id.length > 0
+                && $p_id.val() > 0 )
             {
-                basketItemsList.BasketItemPriceID = parentForm.find( '[name="P_ID"]:checked' ).val();
+                basketItemsList.BasketItemPriceID = $p_id.val();
             }
 
             //attributes
@@ -4503,7 +4506,7 @@ PlentyFramework.cssClasses = {
                         .done( function()
                         {
                             var $artAttr           = $( "[name^=ArticleAttribute]" );
-                            var $unitCombinationId = $( "[name^=P_ID]:checked" );
+                            var $unitCombinationId = article[0].BasketItemPriceID;
                             var requestData        = {ArticleID: article[0].BasketItemItemID};
 
                             if ( $artAttr.val() > 0 )
@@ -4514,9 +4517,9 @@ PlentyFramework.cssClasses = {
                                     requestData[value.attr( "name" )] = value.val();
                                 } );
                             }
-                            else if ( $unitCombinationId && $unitCombinationId.val() > 0 )
+                            else if ( $unitCombinationId && $unitCombinationId > 0 )
                             {
-                                requestData["UnitCombinationId"] = $unitCombinationId.val();
+                                requestData["UnitCombinationId"] = $unitCombinationId;
                             }
 
                             refreshBasketPreview();
