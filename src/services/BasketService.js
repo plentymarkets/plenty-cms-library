@@ -157,15 +157,21 @@
                     Checkout.loadCheckout()
                         .done( function()
                         {
-                            var artAttr     = $( "[name^=ArticleAttribute]" );
-                            var requestData = {ArticleID: article[0].BasketItemItemID};
+                            var $artAttr           = $( "[name^=ArticleAttribute]" );
+                            var $unitCombinationId = article[0].BasketItemPriceID;
+                            var requestData        = {ArticleID: article[0].BasketItemItemID};
 
-                            if ( artAttr )
+                            if ( $artAttr.val() > 0 )
                             {
-                                $( "[name^=ArticleAttribute]" ).each( function( i, v )
+                                $artAttr.each( function( i, value )
                                 {
-                                    requestData[$( v ).attr( "name" )] = $( v ).val();
+                                    value                             = $( value );
+                                    requestData[value.attr( "name" )] = value.val();
                                 } );
+                            }
+                            else if ( $unitCombinationId && $unitCombinationId > 0 )
+                            {
+                                requestData["UnitCombinationId"] = $unitCombinationId;
                             }
 
                             refreshBasketPreview();

@@ -651,7 +651,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.9";
+    var version = "1.0.12";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -1395,11 +1395,19 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             var basketItemsList = {};
             var $elem           = $( elem );
             var parentForm      = $elem.parents( 'form' );
+            var $p_id           = parentForm.find( '[name="P_ID"]:checked' );
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
             basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
             basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
+
+            // look for occurrences of unit combination and take price id of combination, if available.
+            if ( $p_id.length > 0
+                && $p_id.val() > 0 )
+            {
+                basketItemsList.BasketItemPriceID = $p_id.val();
+            }
 
             //attributes
             var attributeInputsList = parentForm.find( '[name^="ArticleAttribute"]' );
@@ -4497,15 +4505,21 @@ PlentyFramework.cssClasses = {
                     Checkout.loadCheckout()
                         .done( function()
                         {
-                            var artAttr     = $( "[name^=ArticleAttribute]" );
-                            var requestData = {ArticleID: article[0].BasketItemItemID};
+                            var $artAttr           = $( "[name^=ArticleAttribute]" );
+                            var $unitCombinationId = article[0].BasketItemPriceID;
+                            var requestData        = {ArticleID: article[0].BasketItemItemID};
 
-                            if ( artAttr )
+                            if ( $artAttr.val() > 0 )
                             {
-                                $( "[name^=ArticleAttribute]" ).each( function( i, v )
+                                $artAttr.each( function( i, value )
                                 {
-                                    requestData[$( v ).attr( "name" )] = $( v ).val();
+                                    value                             = $( value );
+                                    requestData[value.attr( "name" )] = value.val();
                                 } );
+                            }
+                            else if ( $unitCombinationId && $unitCombinationId > 0 )
+                            {
+                                requestData["UnitCombinationId"] = $unitCombinationId;
                             }
 
                             refreshBasketPreview();
@@ -6837,7 +6851,7 @@ PlentyFramework.cssClasses = {
          */
         function validateMail( formControl )
         {
-            var mailRegExp = /[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+            var mailRegExp = /[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?/;
             if ( validateText( formControl ) )
             {
                 return mailRegExp.test( $.trim( formControl.val() ) );
@@ -6869,32 +6883,31 @@ PlentyFramework.cssClasses = {
 
         /**
          * Check given element's value is equal to a references value
-         * @function validateValue
+         * @function compareValues
          * @private
          * @param {object} formControl the form element to validate
          * @param {string} reference the required value
+         * @param {boolean} caseSensitive direct compare, without convert to lowerCase
          * @return {boolean}
          */
-        function validateValue( formControl, reference )
+        function compareValues( formControl, reference, caseSensitive )
         {
-            if ( $( reference ).length > 0 )
+            formControl = $.trim( formControl.val() );
+            reference   = $.trim(
+                $( reference ).length > 0
+                    ? $( reference ).val()
+                    : reference );
+
+            if ( caseSensitive )
             {
-                return $.trim( formControl.val() ) == $.trim( $( reference ).val() );
+                return formControl == reference;
             }
-            else
-            {
-                return $.trim( formControl.val() ) == reference;
-            }
+            return formControl.toLowerCase() == reference.toLowerCase();
         }
 
-        function visibility( formControl )
+        function isNotVisibleOrEnabled( formControl )
         {
-            return formControl.is( ':visible' );
-        }
-
-        function isEnabled( formControl )
-        {
-            return formControl.is( ':enabled' );
+            return (!formControl.is( ':visible' ) || !formControl.is( ':enabled' ));
         }
 
         /**
@@ -6948,7 +6961,7 @@ PlentyFramework.cssClasses = {
          */
         function validate( form, errorClass )
         {
-            var formControl, formControls, validationKey, currentHasError, group, checked, checkedMin, checkedMax, attrValidate, validationKeys, formControlAttrType;
+            var $formControl, formControls, validationKey, currentHasError, group, checked, checkedMin, checkedMax, attrValidate, validationKeys, formControlAttrType;
             var $form         = $( form );
             errorClass        = errorClass || 'has-error';
             var missingFields = [];
@@ -6965,10 +6978,11 @@ PlentyFramework.cssClasses = {
 
                 for ( var i = 0, length = formControls.length; i < length; i++ )
                 {
-                    formControl         = $( formControls[i] );
-                    formControlAttrType = formControl.attr( 'type' );
+                    $formControl        = $( formControls[i] );
+                    formControlAttrType = $formControl.attr( 'type' );
 
-                    if ( !visibility( formControl ) || !isEnabled( formControl ) )
+                    // skip validation, if input is invisible or disabled
+                    if ( isNotVisibleOrEnabled( $formControl ) )
                     {
                         return;
                     }
@@ -6977,28 +6991,28 @@ PlentyFramework.cssClasses = {
                     currentHasError = false;
 
                     // formControl is textfield (text, mail, password) or textarea
-                    if ( (formControl.is( 'input' )
+                    if ( ($formControl.is( 'input' )
                         && formControlAttrType != 'radio'
                         && formControlAttrType != 'checkbox')
-                        || formControl.is( 'textarea' ) )
+                        || $formControl.is( 'textarea' ) )
                     {
                         switch ( validationKey )
                         {
 
                             case 'text':
-                                currentHasError = !validateText( formControl );
+                                currentHasError = !validateText( $formControl );
                                 break;
 
                             case 'mail':
-                                currentHasError = !validateMail( formControl );
+                                currentHasError = !validateMail( $formControl );
                                 break;
 
                             case 'number':
-                                currentHasError = !validateNumber( formControl );
+                                currentHasError = !validateNumber( $formControl );
                                 break;
 
                             case 'value':
-                                currentHasError = !validateValue( formControl, $( elem ).attr( 'data-plenty-validation-value' ) );
+                                currentHasError = !compareValues( $formControl, $( elem ).attr( 'data-plenty-validation-value' ), ($formControl.context.type === "password") );
                                 break;
 
                             case 'none':
@@ -7010,12 +7024,12 @@ PlentyFramework.cssClasses = {
                                 break;
                         }
                     }
-                    else if ( formControl.is( 'input' )
+                    else if ( $formControl.is( 'input' )
                         && (formControlAttrType == 'radio'
                         || formControlAttrType == 'checkbox') )
                     {
                         // validate radio buttons
-                        group   = formControl.attr( 'name' );
+                        group   = $formControl.attr( 'name' );
                         checked = $form.find( 'input[name="' + group + '"]:checked' ).length;
 
                         if ( formControlAttrType == 'radio' )
@@ -7033,10 +7047,10 @@ PlentyFramework.cssClasses = {
                         currentHasError = ( checked < checkedMin || checked > checkedMax );
 
                     }
-                    else if ( formControl.is( 'select' ) )
+                    else if ( $formControl.is( 'select' ) )
                     {
                         // validate selects
-                        currentHasError = ( formControl.val() == '' || formControl.val() == '-1' );
+                        currentHasError = ( $formControl.val() == '' || $formControl.val() == '-1' );
                     }
                     else
                     {
@@ -7047,12 +7061,12 @@ PlentyFramework.cssClasses = {
                     if ( currentHasError )
                     {
                         hasError = true;
-                        missingFields.push( formControl );
+                        missingFields.push( $formControl );
 
                         if ( formControls.length > 1 )
                         {
-                            formControl.addClass( errorClass );
-                            $form.find( 'label[for="' + formControl.attr( 'id' ) + '"]' ).addClass( errorClass );
+                            $formControl.addClass( errorClass );
+                            $form.find( 'label[for="' + $formControl.attr( 'id' ) + '"]' ).addClass( errorClass );
                         }
                         else
                         {
@@ -7098,8 +7112,8 @@ PlentyFramework.cssClasses = {
                 // remove error class on focus
                 $form.find( '.' + errorClass ).each( function( i, elem )
                 {
-                    formControl = $( getFormControl( elem ) );
-                    formControl.on( 'focus click', function()
+                    $formControl = $( getFormControl( elem ) );
+                    $formControl.on( 'focus click', function()
                     {
                         var $errorElement = $( elem );
                         $errorElement.removeClass( errorClass );

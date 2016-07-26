@@ -6,7 +6,7 @@
      */
     $( document ).ready( function()
     {
-        $( '.mainNavigation' ).on( 'scroll touchmove mousewheel', function( event )
+        $( '.mainNavigation' ).on( 'scroll mousewheel', function( event )
         {
             event.preventDefault();
         } );

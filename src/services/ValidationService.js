@@ -96,7 +96,7 @@
          */
         function validateMail( formControl )
         {
-            var mailRegExp = /[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+            var mailRegExp = /[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?/;
             if ( validateText( formControl ) )
             {
                 return mailRegExp.test( $.trim( formControl.val() ) );
@@ -128,32 +128,31 @@
 
         /**
          * Check given element's value is equal to a references value
-         * @function validateValue
+         * @function compareValues
          * @private
          * @param {object} formControl the form element to validate
          * @param {string} reference the required value
+         * @param {boolean} caseSensitive direct compare, without convert to lowerCase
          * @return {boolean}
          */
-        function validateValue( formControl, reference )
+        function compareValues( formControl, reference, caseSensitive )
         {
-            if ( $( reference ).length > 0 )
+            formControl = $.trim( formControl.val() );
+            reference   = $.trim(
+                $( reference ).length > 0
+                    ? $( reference ).val()
+                    : reference );
+
+            if ( caseSensitive )
             {
-                return $.trim( formControl.val() ) == $.trim( $( reference ).val() );
+                return formControl == reference;
             }
-            else
-            {
-                return $.trim( formControl.val() ) == reference;
-            }
+            return formControl.toLowerCase() == reference.toLowerCase();
         }
 
-        function visibility( formControl )
+        function isNotVisibleOrEnabled( formControl )
         {
-            return formControl.is( ':visible' );
-        }
-
-        function isEnabled( formControl )
-        {
-            return formControl.is( ':enabled' );
+            return (!formControl.is( ':visible' ) || !formControl.is( ':enabled' ));
         }
 
         /**
@@ -207,7 +206,7 @@
          */
         function validate( form, errorClass )
         {
-            var formControl, formControls, validationKey, currentHasError, group, checked, checkedMin, checkedMax, attrValidate, validationKeys, formControlAttrType;
+            var $formControl, formControls, validationKey, currentHasError, group, checked, checkedMin, checkedMax, attrValidate, validationKeys, formControlAttrType;
             var $form         = $( form );
             errorClass        = errorClass || 'has-error';
             var missingFields = [];
@@ -217,17 +216,18 @@
             $form.find( '[data-plenty-validate], :required' ).each( function( i, elem )
             {
                 attrValidate   = $( elem ).attr( 'data-plenty-validate' );
-                formControls   = getFormControl( elem );  
+                formControls   = getFormControl( elem );
                 // validate text inputs
                 validationKeys = !!attrValidate ? attrValidate : 'text';
                 validationKeys = validationKeys.split( ',' );
 
                 for ( var i = 0, length = formControls.length; i < length; i++ )
                 {
-                    formControl         = $( formControls[i] );
-                    formControlAttrType = formControl.attr( 'type' );
+                    $formControl        = $( formControls[i] );
+                    formControlAttrType = $formControl.attr( 'type' );
 
-                    if ( !visibility( formControl ) || !isEnabled( formControl ) )
+                    // skip validation, if input is invisible or disabled
+                    if ( isNotVisibleOrEnabled( $formControl ) )
                     {
                         return;
                     }
@@ -236,28 +236,28 @@
                     currentHasError = false;
 
                     // formControl is textfield (text, mail, password) or textarea
-                    if ( (formControl.is( 'input' )
+                    if ( ($formControl.is( 'input' )
                         && formControlAttrType != 'radio'
                         && formControlAttrType != 'checkbox')
-                        || formControl.is( 'textarea' ) )
+                        || $formControl.is( 'textarea' ) )
                     {
                         switch ( validationKey )
                         {
 
                             case 'text':
-                                currentHasError = !validateText( formControl );
+                                currentHasError = !validateText( $formControl );
                                 break;
 
                             case 'mail':
-                                currentHasError = !validateMail( formControl );
+                                currentHasError = !validateMail( $formControl );
                                 break;
 
                             case 'number':
-                                currentHasError = !validateNumber( formControl );
+                                currentHasError = !validateNumber( $formControl );
                                 break;
 
                             case 'value':
-                                currentHasError = !validateValue( formControl, $( elem ).attr( 'data-plenty-validation-value' ) );
+                                currentHasError = !compareValues( $formControl, $( elem ).attr( 'data-plenty-validation-value' ), ($formControl.context.type === "password") );
                                 break;
 
                             case 'none':
@@ -269,12 +269,12 @@
                                 break;
                         }
                     }
-                    else if ( formControl.is( 'input' )
+                    else if ( $formControl.is( 'input' )
                         && (formControlAttrType == 'radio'
                         || formControlAttrType == 'checkbox') )
                     {
                         // validate radio buttons
-                        group   = formControl.attr( 'name' );
+                        group   = $formControl.attr( 'name' );
                         checked = $form.find( 'input[name="' + group + '"]:checked' ).length;
 
                         if ( formControlAttrType == 'radio' )
@@ -284,7 +284,7 @@
                         }
                         else
                         {
-                            var minMax = (new Function("return " + attrValidate))() || {min: 1, max: 1};
+                            var minMax = (new Function( "return " + attrValidate ))() || {min: 1, max: 1};
                             checkedMin = minMax.min;
                             checkedMax = minMax.max;
                         }
@@ -292,10 +292,10 @@
                         currentHasError = ( checked < checkedMin || checked > checkedMax );
 
                     }
-                    else if ( formControl.is( 'select' ) )
+                    else if ( $formControl.is( 'select' ) )
                     {
                         // validate selects
-                        currentHasError = ( formControl.val() == '' || formControl.val() == '-1' );
+                        currentHasError = ( $formControl.val() == '' || $formControl.val() == '-1' );
                     }
                     else
                     {
@@ -306,12 +306,12 @@
                     if ( currentHasError )
                     {
                         hasError = true;
-                        missingFields.push( formControl );
+                        missingFields.push( $formControl );
 
                         if ( formControls.length > 1 )
                         {
-                            formControl.addClass( errorClass );
-                            $form.find( 'label[for="' + formControl.attr( 'id' ) + '"]' ).addClass( errorClass );
+                            $formControl.addClass( errorClass );
+                            $form.find( 'label[for="' + $formControl.attr( 'id' ) + '"]' ).addClass( errorClass );
                         }
                         else
                         {
@@ -357,8 +357,8 @@
                 // remove error class on focus
                 $form.find( '.' + errorClass ).each( function( i, elem )
                 {
-                    formControl = $( getFormControl( elem ) );
-                    formControl.on( 'focus click', function()
+                    $formControl = $( getFormControl( elem ) );
+                    $formControl.on( 'focus click', function()
                     {
                         var $errorElement = $( elem );
                         $errorElement.removeClass( errorClass );
