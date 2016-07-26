@@ -1399,7 +1399,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
-            basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
+            basketItemsList.BasketItemQuantity = parentForm.find( '[name^="ArticleQuantity"]' ).val();
             basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
 
             // look for occurrences of unit combination and take price id of combination, if available.
@@ -4401,43 +4401,16 @@ PlentyFramework.cssClasses = {
 
             if ( !!article )
             {
-
-                API.get( '/rest/checkout/container_' + 'CheckoutOrderParamsList'.toLowerCase() + '/',
-                    {
-                        itemID  : article[0].BasketItemItemID,
-                        quantity: article[0].BasketItemQuantity
-                    }, false, true ).done( function( resp )
+                // checking for order params!
+                if ( $( "#BasketItemOrderParamsContainer_0" ).find( "input[name^='ItemOrderParams']" ).length > 0 )
                 {
-                    // checking for order params!
-                    if ( resp.data[0].indexOf( "form-group" ) > 0 )
-                    {
-                        Modal.prepare()
-                            .setContent( resp.data[0] )
-                            .setTitle( pm.translate( "Select order parameters" ) )
-                            .setLabelConfirm( pm.translate( "Save" ) )
-                            .onConfirm( function()
-                            {
-                                // validate form
-                                if ( $( '[data-plenty-checkout-form="OrderParamsForm"]' ).validateForm() )
-                                {
-                                    // save order params
-                                    addArticle( saveOrderParams( article ) );
-
-                                    // close modal after saving order params
-                                    return true;
-                                }
-                                else
-                                {
-                                    return false;
-                                }
-                            } )
-                            .show();
-                    }
-                    else
-                    {
-                        addArticle( article );
-                    }
-                } );
+                    // save order params
+                    addArticle( saveOrderParams( article ) );
+                }
+                else
+                {
+                    addArticle( article );
+                }
             }
         }
 
@@ -4466,7 +4439,18 @@ PlentyFramework.cssClasses = {
             //Values
             orderParamsForm.find( '[name^="ParamValue"]' ).each( function()
             {
-                $self    = $( this );
+                getValues( "ParamValue", this );
+            } );
+
+            //Values
+            $( '[id^="BasketItemOrderParamsContainer"]' ).find( '[name^="ItemOrderParams"]' ).each( function()
+            {
+                getValues( "ItemOrderParams", this );
+            } );
+
+            function getValues( type, el )
+            {
+                $self    = $( el );
                 attrType = $self.attr( 'type' );
 
                 if ( ((attrType == 'checkbox' && $self.is( ':checked' )) ||
@@ -4474,7 +4458,14 @@ PlentyFramework.cssClasses = {
                     (attrType != 'radio' && attrType != 'checkbox')) && attrType != 'file' && attrType != 'hidden' )
                 {
 
-                    var match         = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
+                    if ( type === "ParamValue" )
+                    {
+                        var match = $self[0].name.match( /^ParamValue\[(\d+)]\[(\d+)]$/ );
+                    }
+                    if ( type === "ItemOrderParams" )
+                    {
+                        var match = $self[0].name.match( /^ItemOrderParams\[(\d+)]\[(\d+)]$/ );
+                    }
                     articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], $self.val() );
 
                 }
@@ -4486,12 +4477,21 @@ PlentyFramework.cssClasses = {
                     }
                     else
                     {
-                        var match         = $self[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
-                        var paramValue    = $( 'input[type="hidden"][name="ParamValue[' + match[1] + '][' + match[2] + ']"]' ).val();
+                        if ( type === "ParamValue" )
+                        {
+                            var match      = $self[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
+                            var paramValue = $( 'input[type="hidden"][name="ParamValue[' + match[1] + '][' + match[2] + ']"]' ).val();
+                        }
+                        if ( type === "ItemOrderParams" )
+                        {
+                            var match      = $self[0].name.match( /^ItemOrderParamsFile\[(\d+)]\[(\d+)]$/ );
+                            var paramValue = $( 'input[type="hidden"][name="ItemOrderParamsFile[' + match[1] + '][' + match[2] + ']"]' ).val();
+                        }
+
                         articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], paramValue );
                     }
                 }
-            } );
+            }
 
             return articleWithParams;
         }
@@ -4598,6 +4598,10 @@ PlentyFramework.cssClasses = {
             }
 
             var match = $input[0].name.match( /^ParamValueFile\[(\d+)]\[(\d+)]$/ );
+            if ( !match )
+            {
+                match = $input[0].name.match( /^ItemOrderParamsFile\[(\d+)]\[(\d+)]$/ );
+            }
 
             return addOrderParamValue( articleWithParams, match[1], match[2], orderParamUploadFiles[key][0]['name'] );
         }
