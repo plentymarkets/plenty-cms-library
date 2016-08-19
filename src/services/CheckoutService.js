@@ -391,6 +391,17 @@
 
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
 
+            // checking trusted shop
+            if ( $( "#PlentyWebPaymentMethodTsBuyerProtection" ).length > 0 )
+            {
+                var $ts                                        = $( "#PlentyWebPaymentMethodTsBuyerProtection" );
+                Checkout
+                    .getCheckout()
+                    .TrustedShopsBuyerProtectionItem
+                    .TrustedShopsBuyerProtectionItemIsSelected = $ts.is( ":checked" );
+            }
+
+            // checking for atriga
             if ( !pm.getGlobal( 'Checkout.AtrigaRequireUserConfirmation' ) )
             {
                 Checkout.getCheckout().CheckoutAtrigapaymaxChecked = true;
@@ -441,9 +452,9 @@
                                 }
                             } );
                         } ).onConfirm( function()
-                        {
-                            return saveBankDetails();
-                        } )
+                    {
+                        return saveBankDetails();
+                    } )
                         .show();
                 } );
 
@@ -515,9 +526,9 @@
                                 }
                             } );
                         } ).onConfirm( function()
-                        {
-                            return saveCreditCard();
-                        } )
+                    {
+                        return saveCreditCard();
+                    } )
                         .show();
                 } );
         }
@@ -632,17 +643,31 @@
                         }
                         else if ( response.data.MethodOfPaymentAdditionalContent != '' )
                         {
+                            /*  This is a PayOne fallback. PayOne has its own confirm button.
+                             To prevent a modal with multiple buttons and different functionality,
+                             we have to check of following MethodOfPaymentIDs and set Our confirm button
+                             only if necessary.
+                             */
+                            var confirmLabel       = pm.translate( "Confirm" );
+                            var paymentIdsToHandle = [3010, 3020, 3080];
+                            if ( paymentIdsToHandle.indexOf( response.data.MethodOfPaymentID ) >= 0 )
+                            {
+                                confirmLabel = '';
+                            }
 
                             Modal.prepare()
                                 .setContent( response.data.MethodOfPaymentAdditionalContent )
                                 .setLabelDismiss( '' )
+                                .setLabelConfirm( confirmLabel )
                                 .onDismiss( function()
                                 {
                                     window.location.assign( form.attr( 'action' ) );
-                                } ).onConfirm( function()
-                            {
-                                window.location.assign( form.attr( 'action' ) );
-                            } ).show();
+                                } )
+                                .onConfirm( function()
+                                {
+                                    window.location.assign( form.attr( 'action' ) );
+                                } )
+                                .show();
 
                         }
                         else

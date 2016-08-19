@@ -20,7 +20,7 @@
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
-            basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
+            basketItemsList.BasketItemQuantity = parentForm.find( '[name^="ArticleQuantity"]' ).val();
             basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
 
             // look for occurrences of unit combination and take price id of combination, if available.
@@ -91,6 +91,7 @@
                 if ( (value + '').length <= maxLength && value >= 1 )
                 {
                     $quantityInput.val( value );
+                    $elem.parents( 'form' ).find( '[name^="ArticleQuantity"]' ).val( value );
                 }
             }
         }
