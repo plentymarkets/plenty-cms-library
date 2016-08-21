@@ -659,6 +659,7 @@
                                 .setContent( response.data.MethodOfPaymentAdditionalContent )
                                 .setLabelDismiss( '' )
                                 .setLabelConfirm( confirmLabel )
+                                .setStatic( confirmLabel === '' )
                                 .onDismiss( function()
                                 {
                                     window.location.assign( form.attr( 'action' ) );
