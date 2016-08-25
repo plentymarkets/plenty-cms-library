@@ -204,6 +204,7 @@
             var form = $( '[data-plenty-checkout-form="guestRegistration"]' );
 
             var invoiceAddress       = form.getFormValues();
+            var customProp           = $( form ).find( "[id^='plentyCustomerProperty']" );
             invoiceAddress.LoginType = 1;
 
             // add custom properties if necessary.
@@ -223,6 +224,19 @@
                             PropertyValue: tmpProperties[property]
                         } );
                     }
+                }
+            }
+            else if ( customProp.length > 0 )
+            {
+                invoiceAddress.CustomerPropertiesList = [];
+                for ( var i = customProp.length - 1; i >= 0; i-- )
+                {
+                    var $tmpEl = $( customProp[i] );
+                    invoiceAddress.CustomerPropertiesList.push(
+                        {
+                            PropertyID   : $tmpEl.attr( "data-plenty-property-id" ),
+                            PropertyValue: $tmpEl.val()
+                        } );
                 }
             }
 

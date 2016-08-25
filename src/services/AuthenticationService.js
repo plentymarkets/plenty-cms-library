@@ -133,6 +133,7 @@
             if ( form.validateForm() && pm.getInstance().AddressDoctorService.validateAddress() )
             {
                 var values       = form.getFormValues();
+                var customProp   = $( form ).find( "[id^='plentyCustomerProperty']" );
                 values.LoginType = 2;
 
                 if ( values.checkout
@@ -151,6 +152,19 @@
                                 PropertyValue: tmpProperties[property]
                             } );
                         }
+                    }
+                }
+                else if ( customProp.length > 0 )
+                {
+                    values.CustomerPropertiesList = [];
+                    for ( var i = customProp.length - 1; i >= 0; i-- )
+                    {
+                        var $tmpEl = $( customProp[i] );
+                        values.CustomerPropertiesList.push(
+                            {
+                                PropertyID   : $tmpEl.attr( "data-plenty-property-id" ),
+                                PropertyValue: $tmpEl.val()
+                            } );
                     }
                 }
 
