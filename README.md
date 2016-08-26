@@ -36,7 +36,7 @@ but can be easily adapted to other templates by using the provided JavaScript AP
 Upload `/dist/plentymarketsCMStools-X.X.X.min.js` to your store's webspace and include it in your templates:
 
 ```html
-<script type="text/javascript src="/YOUR_LAYOUT_FOLDER/plentymarketsCMStools-X.X.X.min.js"></script>
+<script type="text/javascript" src="/YOUR_LAYOUT_FOLDER/plentymarketsCMStools-X.X.X.min.js"></script>
 ```
 
 ### Custom builds
