@@ -76,9 +76,11 @@ TemplateCache["modal/modal.html"] = "<div class=\"modal fade {{cssClass}}\">\n" 
     "                </button>\n" +
     "                {{/labelDismiss}}\n" +
     "\n" +
+    "                {{#labelConfirm}}\n" +
     "                <button type=\"button\" class=\"btn btn-primary\" data-plenty-modal=\"confirm\">\n" +
     "                    <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span>{{labelConfirm}}\n" +
     "                </button>\n" +
+    "                {{/labelConfirm}}\n" +
     "            </div>\n" +
     "        </div>\n" +
     "    </div>\n" +
@@ -651,7 +653,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.12";
+    var version = "1.0.13";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -1470,6 +1472,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 if ( (value + '').length <= maxLength && value >= 1 )
                 {
                     $quantityInput.val( value );
+                    $elem.parents( 'form' ).find( '[name^="ArticleQuantity"]' ).val( value );
                 }
             }
         }
@@ -3221,7 +3224,8 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                 onDismiss      : onDismiss,
                 setTimeout     : setTimeout,
                 show           : show,
-                hide           : hide
+                hide           : hide,
+                setStatic      : setStatic
             };
 
             /**
@@ -3239,6 +3243,22 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             function setClass( cssClass )
             {
                 modal.cssClass = cssClass;
+                return this;
+            }
+
+            /**
+             * Fire this function to make the modal a modal. ;)
+             * Modal only
+             *
+             * @returns {setStatic}
+             */
+            function setStatic( isStatic )
+            {
+                if ( isStatic )
+                {
+                    modal.backdrop = 'static';
+                    modal.keyboard = false;
+                }
                 return this;
             }
 
@@ -3350,6 +3370,10 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     else
                     {
                         bsModal = $( PlentyFramework.compileTemplate( 'modal/modal.html', modal ) );
+                        if ( bsModal.modal )
+                        {
+                            bsModal.modal( modal );
+                        }
                     }
 
                     $( modal.container ).append( bsModal );
@@ -4315,6 +4339,7 @@ PlentyFramework.cssClasses = {
             if ( form.validateForm() && pm.getInstance().AddressDoctorService.validateAddress() )
             {
                 var values       = form.getFormValues();
+                var customProp   = $( form ).find( "[id^='plentyCustomerProperty']" );
                 values.LoginType = 2;
 
                 if ( values.checkout
@@ -4333,6 +4358,19 @@ PlentyFramework.cssClasses = {
                                 PropertyValue: tmpProperties[property]
                             } );
                         }
+                    }
+                }
+                else if ( customProp.length > 0 )
+                {
+                    values.CustomerPropertiesList = [];
+                    for ( var i = customProp.length - 1; i >= 0; i-- )
+                    {
+                        var $tmpEl = $( customProp[i] );
+                        values.CustomerPropertiesList.push(
+                            {
+                                PropertyID   : $tmpEl.attr( "data-plenty-property-id" ),
+                                PropertyValue: $tmpEl.val()
+                            } );
                     }
                 }
 
@@ -5178,6 +5216,7 @@ PlentyFramework.cssClasses = {
             var form = $( '[data-plenty-checkout-form="guestRegistration"]' );
 
             var invoiceAddress       = form.getFormValues();
+            var customProp           = $( form ).find( "[id^='plentyCustomerProperty']" );
             invoiceAddress.LoginType = 1;
 
             // add custom properties if necessary.
@@ -5197,6 +5236,19 @@ PlentyFramework.cssClasses = {
                             PropertyValue: tmpProperties[property]
                         } );
                     }
+                }
+            }
+            else if ( customProp.length > 0 )
+            {
+                invoiceAddress.CustomerPropertiesList = [];
+                for ( var i = customProp.length - 1; i >= 0; i-- )
+                {
+                    var $tmpEl = $( customProp[i] );
+                    invoiceAddress.CustomerPropertiesList.push(
+                        {
+                            PropertyID   : $tmpEl.attr( "data-plenty-property-id" ),
+                            PropertyValue: $tmpEl.val()
+                        } );
                 }
             }
 
@@ -5365,6 +5417,17 @@ PlentyFramework.cssClasses = {
 
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
 
+            // checking trusted shop
+            if ( $( "#PlentyWebPaymentMethodTsBuyerProtection" ).length > 0 )
+            {
+                var $ts                                        = $( "#PlentyWebPaymentMethodTsBuyerProtection" );
+                Checkout
+                    .getCheckout()
+                    .TrustedShopsBuyerProtectionItem
+                    .TrustedShopsBuyerProtectionItemIsSelected = $ts.is( ":checked" );
+            }
+
+            // checking for atriga
             if ( !pm.getGlobal( 'Checkout.AtrigaRequireUserConfirmation' ) )
             {
                 Checkout.getCheckout().CheckoutAtrigapaymaxChecked = true;
@@ -5606,17 +5669,32 @@ PlentyFramework.cssClasses = {
                         }
                         else if ( response.data.MethodOfPaymentAdditionalContent != '' )
                         {
+                            /*  This is a PayOne fallback. PayOne has its own confirm button.
+                             To prevent a modal with multiple buttons and different functionality,
+                             we have to check of following MethodOfPaymentIDs and set Our confirm button
+                             only if necessary.
+                             */
+                            var confirmLabel       = pm.translate( "Confirm" );
+                            var paymentIdsToHandle = [3010, 3020, 3080];
+                            if ( paymentIdsToHandle.indexOf( response.data.MethodOfPaymentID ) >= 0 )
+                            {
+                                confirmLabel = '';
+                            }
 
                             Modal.prepare()
                                 .setContent( response.data.MethodOfPaymentAdditionalContent )
                                 .setLabelDismiss( '' )
+                                .setLabelConfirm( confirmLabel )
+                                .setStatic( confirmLabel === '' )
                                 .onDismiss( function()
                                 {
                                     window.location.assign( form.attr( 'action' ) );
-                                } ).onConfirm( function()
-                            {
-                                window.location.assign( form.attr( 'action' ) );
-                            } ).show();
+                                } )
+                                .onConfirm( function()
+                                {
+                                    window.location.assign( form.attr( 'action' ) );
+                                } )
+                                .show();
 
                         }
                         else

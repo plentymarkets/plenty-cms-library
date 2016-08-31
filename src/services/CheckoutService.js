@@ -204,6 +204,7 @@
             var form = $( '[data-plenty-checkout-form="guestRegistration"]' );
 
             var invoiceAddress       = form.getFormValues();
+            var customProp           = $( form ).find( "[id^='plentyCustomerProperty']" );
             invoiceAddress.LoginType = 1;
 
             // add custom properties if necessary.
@@ -223,6 +224,19 @@
                             PropertyValue: tmpProperties[property]
                         } );
                     }
+                }
+            }
+            else if ( customProp.length > 0 )
+            {
+                invoiceAddress.CustomerPropertiesList = [];
+                for ( var i = customProp.length - 1; i >= 0; i-- )
+                {
+                    var $tmpEl = $( customProp[i] );
+                    invoiceAddress.CustomerPropertiesList.push(
+                        {
+                            PropertyID   : $tmpEl.attr( "data-plenty-property-id" ),
+                            PropertyValue: $tmpEl.val()
+                        } );
                 }
             }
 
@@ -391,6 +405,17 @@
 
             Checkout.getCheckout().CheckoutMethodOfPaymentID = paymentID;
 
+            // checking trusted shop
+            if ( $( "#PlentyWebPaymentMethodTsBuyerProtection" ).length > 0 )
+            {
+                var $ts                                        = $( "#PlentyWebPaymentMethodTsBuyerProtection" );
+                Checkout
+                    .getCheckout()
+                    .TrustedShopsBuyerProtectionItem
+                    .TrustedShopsBuyerProtectionItemIsSelected = $ts.is( ":checked" );
+            }
+
+            // checking for atriga
             if ( !pm.getGlobal( 'Checkout.AtrigaRequireUserConfirmation' ) )
             {
                 Checkout.getCheckout().CheckoutAtrigapaymaxChecked = true;
@@ -441,9 +466,9 @@
                                 }
                             } );
                         } ).onConfirm( function()
-                        {
-                            return saveBankDetails();
-                        } )
+                    {
+                        return saveBankDetails();
+                    } )
                         .show();
                 } );
 
@@ -515,9 +540,9 @@
                                 }
                             } );
                         } ).onConfirm( function()
-                        {
-                            return saveCreditCard();
-                        } )
+                    {
+                        return saveCreditCard();
+                    } )
                         .show();
                 } );
         }
@@ -632,17 +657,32 @@
                         }
                         else if ( response.data.MethodOfPaymentAdditionalContent != '' )
                         {
+                            /*  This is a PayOne fallback. PayOne has its own confirm button.
+                             To prevent a modal with multiple buttons and different functionality,
+                             we have to check of following MethodOfPaymentIDs and set Our confirm button
+                             only if necessary.
+                             */
+                            var confirmLabel       = pm.translate( "Confirm" );
+                            var paymentIdsToHandle = [3010, 3020, 3080];
+                            if ( paymentIdsToHandle.indexOf( response.data.MethodOfPaymentID ) >= 0 )
+                            {
+                                confirmLabel = '';
+                            }
 
                             Modal.prepare()
                                 .setContent( response.data.MethodOfPaymentAdditionalContent )
                                 .setLabelDismiss( '' )
+                                .setLabelConfirm( confirmLabel )
+                                .setStatic( confirmLabel === '' )
                                 .onDismiss( function()
                                 {
                                     window.location.assign( form.attr( 'action' ) );
-                                } ).onConfirm( function()
-                            {
-                                window.location.assign( form.attr( 'action' ) );
-                            } ).show();
+                                } )
+                                .onConfirm( function()
+                                {
+                                    window.location.assign( form.attr( 'action' ) );
+                                } )
+                                .show();
 
                         }
                         else

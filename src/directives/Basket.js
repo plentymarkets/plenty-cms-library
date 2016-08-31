@@ -91,6 +91,7 @@
                 if ( (value + '').length <= maxLength && value >= 1 )
                 {
                     $quantityInput.val( value );
+                    $elem.parents( 'form' ).find( '[name^="ArticleQuantity"]' ).val( value );
                 }
             }
         }
