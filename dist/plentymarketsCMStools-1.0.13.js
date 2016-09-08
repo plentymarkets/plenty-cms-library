@@ -4440,7 +4440,7 @@ PlentyFramework.cssClasses = {
             if ( !!article )
             {
                 // checking for order params!
-                if ( $( "#BasketItemOrderParamsContainer_0" ).find( "input[name^='ItemOrderParams']" ).length > 0 )
+                if ( $( "#BasketItemOrderParamsContainer_0" ).find( "[name^='ItemOrderParams']" ).length > 0 )
                 {
                     // save order params
                     addArticle( saveOrderParams( article ) );
@@ -4502,7 +4502,7 @@ PlentyFramework.cssClasses = {
                     }
                     if ( type === "ItemOrderParams" )
                     {
-                        var match = $self[0].name.match( /^ItemOrderParams\[(\d+)]\[(\d+)]$/ );
+                        var match = $self[0].name.match( /^ItemOrderParams\[(\d+)]\[(\w\d+)]$/ );
                     }
                     articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], $self.val() );
 
