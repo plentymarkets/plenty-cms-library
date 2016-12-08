@@ -503,7 +503,7 @@
             {
                 params[basketItemIndex].BasketItemQuantity = parseInt( BasketItemQuantity );
 
-                API.post( "/rest/checkout/basketitemslist/", params )
+                return API.post( "/rest/checkout/basketitemslist/", params )
                     .done( function()
                     {
                         Checkout.setCheckout().done( function()
@@ -512,6 +512,11 @@
                             refreshBasketPreview();
                             deferred.resolve();
                         } );
+                    } ).fail( function(response)
+                    {
+                      Checkout.reloadCatContent( pm.getGlobal( 'basketCatID' ) );
+                      refreshBasketPreview();
+                      deferred.resolve();
                     } );
             }
 
