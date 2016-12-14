@@ -72,7 +72,7 @@
             var $elem = $( elem );
             var $quantityInput = $elem;
             var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
-            var value          = parseInt( $quantityInput.val() );
+            var value          = convertToFloat( $quantityInput.val() );
 
             setItemQuantityToNewValue($elem, $quantityInput, maxLength, value);
         }
@@ -123,6 +123,16 @@
                     element.parents( 'form' ).find( '[name^="ArticleQuantity"]' ).val( value );
                 }
             }
+        }
+
+
+        function convertToFloat(n) {
+            n = n.replace(',', '.');
+            if(!isNaN(parseFloat(n)) && isFinite(n))
+            {
+              return parseFloat(n);
+            }
+            return 1;
         }
 
     }, ['BasketService'] );
