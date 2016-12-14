@@ -106,7 +106,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.14";
+    var version = "1.0.15";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -903,7 +903,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             var $elem = $( elem );
             var $quantityInput = $elem;
             var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
-            var value          = parseInt( $quantityInput.val() );
+            var value          = convertToFloat( $quantityInput.val() );
 
             setItemQuantityToNewValue($elem, $quantityInput, maxLength, value);
         }
@@ -954,6 +954,16 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     element.parents( 'form' ).find( '[name^="ArticleQuantity"]' ).val( value );
                 }
             }
+        }
+
+
+        function convertToFloat(n) {
+            n = n.replace(',', '.');
+            if(!isNaN(parseFloat(n)) && isFinite(n))
+            {
+              return parseFloat(n);
+            }
+            return 1;
         }
 
     }, ['BasketService'] );
