@@ -6,7 +6,8 @@
         return {
             addBasketItem     : addBasketItem,
             changeItemQuantity: changeItemQuantity,
-            setItemQuantity   : setItemQuantity
+            setItemQuantity   : setItemQuantity,
+            updateItemQuantity : updateItemQuantity
         };
 
         function addBasketItem( elem )
@@ -20,7 +21,7 @@
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
-            basketItemsList.BasketItemQuantity = parentForm.find( '[name="ArticleQuantity"]' ).val();
+            basketItemsList.BasketItemQuantity = parentForm.find( '[name^="ArticleQuantity"]' ).val();
             basketItemsList.BasketItemBranchID = parentForm.find( '[name="source_category"]' ).val();
 
             // look for occurrences of unit combination and take price id of combination, if available.
@@ -63,36 +64,17 @@
             var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
             var value          = parseInt( $quantityInput.val() ) + increment;
 
-            var isBasketView = $elem.parents( '[data-basket-item-id]' ).length > 0;
+            setItemQuantityToNewValue( $elem, $quantityInput, maxLength, value)
+        }
 
-            if ( isBasketView )
-            {
-                if ( (value + '').length <= maxLength && value >= 0 )
-                {
-                    $quantityInput.val( value );
-                }
+        function updateItemQuantity( elem )
+        {
+            var $elem = $( elem );
+            var $quantityInput = $elem;
+            var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
+            var value          = convertToFloat( $quantityInput.val() );
 
-                var timeout = $elem.data( 'timeout' );
-
-                if ( !!timeout )
-                {
-                    window.clearTimeout( timeout );
-                }
-
-                timeout = window.setTimeout( function()
-                {
-                    $quantityInput.trigger( 'change' );
-                }, 1000 );
-
-                $elem.data( 'timeout', timeout );
-            }
-            else
-            {
-                if ( (value + '').length <= maxLength && value >= 1 )
-                {
-                    $quantityInput.val( value );
-                }
-            }
+            setItemQuantityToNewValue($elem, $quantityInput, maxLength, value);
         }
 
         function setItemQuantity( basketItemID, input )
@@ -106,6 +88,51 @@
                 var basketItem = BasketService.getItem( basketItemID );
                 $( input ).val( basketItem.BasketItemQuantity );
             } );
+        }
+
+        function setItemQuantityToNewValue(element, quantityInput, maxLength, value)
+        {
+            var isBasketView = element.parents( '[data-basket-item-id]' ).length > 0;
+
+            if ( isBasketView )
+            {
+                if ( (value + '').length <= maxLength && value >= 0 )
+                {
+                    quantityInput.val( value );
+                }
+
+                var timeout = element.data( 'timeout' );
+
+                if ( !!timeout )
+                {
+                    window.clearTimeout( timeout );
+                }
+
+                timeout = window.setTimeout( function()
+                {
+                    quantityInput.trigger( 'change' );
+                }, 1000 );
+
+                element.data( 'timeout', timeout );
+            }
+            else
+            {
+                if ( (value + '').length <= maxLength && value >= 1 )
+                {
+                    quantityInput.val( value );
+                    element.parents( 'form' ).find( '[name^="ArticleQuantity"]' ).val( value );
+                }
+            }
+        }
+
+
+        function convertToFloat(n) {
+            n = n.replace(',', '.');
+            if(!isNaN(parseFloat(n)) && isFinite(n))
+            {
+              return parseFloat(n);
+            }
+            return 1;
         }
 
     }, ['BasketService'] );

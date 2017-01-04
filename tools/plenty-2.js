@@ -6,7 +6,14 @@
      */
     $( document ).ready( function()
     {
-        $( '.mainNavigation' ).on( 'scroll mousewheel', function( event )
+        var mainNav   = $( '.mainNavigation' );
+        var openedLis = mainNav.find( "li.open" );
+        $( openedLis ).each( function( i, element )
+        {
+            $( element ).removeClass( "open" );
+        } );
+
+        mainNav.on( 'scroll mousewheel', function( event )
         {
             event.preventDefault();
         } );
@@ -88,6 +95,7 @@
             rewindNav        : false,
             pagination       : true,
             mouseDrag        : true,
+            lazyLoad         : true,
             afterMove        : function( current )
             {
                 $( current ).find( 'img[data-plenty-lazyload]' ).trigger( 'appear' );

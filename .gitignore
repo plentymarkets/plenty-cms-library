@@ -6,3 +6,4 @@ tmp
 doc
 *.xml
 test/coverage/*
+.DS_STORE

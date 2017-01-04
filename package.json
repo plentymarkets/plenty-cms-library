@@ -1,7 +1,7 @@
 {
   "name": "plentymarketsCMStools",
   "license": "AGPL-3.0",
-  "version": "1.0.12",
+  "version": "1.0.15",
   "repository": "https://github.com/plentymarkets/plenty-cms-library.git",
   "devDependencies": {
     "grunt": "^0.4.5",
