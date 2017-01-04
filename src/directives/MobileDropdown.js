@@ -132,6 +132,9 @@
 
             // show dropdown
             $parent.addClass( 'open' );
+
+            // also show parents of current menu
+            $parent.parents( '.hasSublevel' ).addClass( 'open' );
         }
 
         function avoidRedirectinStopPropagation( elem )
