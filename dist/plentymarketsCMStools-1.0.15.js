@@ -4416,11 +4416,26 @@ PlentyFramework.cssClasses = {
             var itemQuantityTotal = 0;
             $.each( Checkout.getCheckout().BasketItemsList, function( i, basketItem )
             {
-                itemQuantityTotal += basketItem.BasketItemQuantity;
+                itemQuantityTotal += convertToFloat( basketItem.BasketItemQuantity );
             } );
 
+            $( '[data-plenty-basket-preview="basketItemCount"]').text( Checkout.getCheckout().BasketItemsList.length );
             $( '[data-plenty-basket-preview="itemQuantityTotal"]' ).text( itemQuantityTotal );
             $( '[data-plenty-basket-preview="totalsItemSum"]' ).text( Checkout.getCheckout().Totals.TotalsItemSum );
+        }
+
+        function convertToFloat(n) {
+
+            if ( typeof n === "number" )
+            {
+                return n;
+            }
+            n = n.replace(',', '.');
+            if(!isNaN(parseFloat(n)) && isFinite(n))
+            {
+                return parseFloat(n);
+            }
+            return 0;
         }
 
         /**
