@@ -1328,7 +1328,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                         }
                     }
 
-                    $( window ).on( 'sizeChange', resetTabs );
+                    //$( window ).on( 'sizeChange', resetTabs );
                 }
 
                 activeTab = tabs[tabID];

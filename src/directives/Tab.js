@@ -113,7 +113,7 @@
                         }
                     }
 
-                    $( window ).on( 'sizeChange', resetTabs );
+                    //$( window ).on( 'sizeChange', resetTabs );
                 }
 
                 activeTab = tabs[tabID];
