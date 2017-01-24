@@ -106,7 +106,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.16";
+    var version = "1.0.17";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -4013,7 +4013,7 @@ PlentyFramework.cssClasses = {
                     }
                     if ( type === "ItemOrderParams" )
                     {
-                        var match = $self[0].name.match( /^ItemOrderParams\[(\d+)]\[(\d+)]$/ );
+                        var match = $self[0].name.match( /^ItemOrderParams\[(\d+)]\[(\w+)]$/ );
                     }
                     articleWithParams = addOrderParamValue( articleWithParams, match[1], match[2], $self.val() );
 
