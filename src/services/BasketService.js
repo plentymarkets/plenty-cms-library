@@ -37,7 +37,8 @@
             editItemAttributes: editItemAttributes,
             editOrderParams   : editOrderParams,
             addCoupon         : addCoupon,
-            removeCoupon      : removeCoupon
+            removeCoupon      : removeCoupon,
+            setScheduler      : setScheduler
         };
 
         /**
@@ -674,6 +675,22 @@
             {
                 Checkout.reloadContainer( 'Totals' );
             }
+        }
+
+        /**
+         * Set scheduler in checkout.
+         * @function setScheduler
+         * @param   {Array}     scheduler         Array containing the scheduler data
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
+         */
+        function setScheduler(scheduler)
+        {
+            API.put("/rest/checkout/scheduler", scheduler)
+                .done( function()
+                {
+                    updateContainer();
+                } );
         }
 
     }, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
