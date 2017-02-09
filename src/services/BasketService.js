@@ -686,7 +686,7 @@
          */
         function setScheduler(scheduler)
         {
-            API.put("/rest/checkout/scheduler", scheduler)
+            return API.put("/rest/checkout/scheduler", scheduler)
                 .done( function()
                 {
                     updateContainer();
