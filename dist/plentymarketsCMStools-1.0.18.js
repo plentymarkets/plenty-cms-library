@@ -106,7 +106,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.17";
+    var version = "1.0.18";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -846,9 +846,14 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             pm.getRecentEvent().preventDefault();
             //init
             var basketItemsList = {};
+            var scheduler       = {};
             var $elem           = $( elem );
             var parentForm      = $elem.parents( 'form' );
             var $p_id           = parentForm.find( '[name="P_ID"]:checked' );
+
+            scheduler.SchedulerInterval = parentForm.find( '[name="scheduler_interval"]' ).val();
+            scheduler.SchedulerRepeating = parentForm.find( '[name="scheduler_repeating"]' ).val();
+            scheduler.SchedulerDate = parentForm.find( '[name="scheduler_dateselector"]' ).val();
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
@@ -881,6 +886,12 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
             if ( attributesList.length != 0 )
             {
                 basketItemsList.BasketItemAttributesList = attributesList;
+            }
+
+            if(typeof scheduler.SchedulerInterval !== "undefined"
+                && scheduler.SchedulerInterval > 0)
+            {
+                BasketService.setScheduler( scheduler );
             }
 
             //add basketItem and refresh previewLists
@@ -3899,7 +3910,8 @@ PlentyFramework.cssClasses = {
             editItemAttributes: editItemAttributes,
             editOrderParams   : editOrderParams,
             addCoupon         : addCoupon,
-            removeCoupon      : removeCoupon
+            removeCoupon      : removeCoupon,
+            setScheduler      : setScheduler
         };
 
         /**
@@ -4536,6 +4548,22 @@ PlentyFramework.cssClasses = {
             {
                 Checkout.reloadContainer( 'Totals' );
             }
+        }
+
+        /**
+         * Set scheduler in checkout.
+         * @function setScheduler
+         * @param   {Array}     scheduler         Array containing the scheduler data
+         * @return {object} <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery deferred
+         *     Object</a>
+         */
+        function setScheduler(scheduler)
+        {
+            return API.put("/rest/checkout/scheduler", scheduler)
+                .done( function()
+                {
+                    updateContainer();
+                } );
         }
 
     }, ['APIFactory', 'UIFactory', 'CMSFactory', 'CheckoutFactory', 'ModalFactory'] );
