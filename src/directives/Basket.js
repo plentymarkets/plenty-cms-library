@@ -15,9 +15,14 @@
             pm.getRecentEvent().preventDefault();
             //init
             var basketItemsList = {};
+            var scheduler       = {};
             var $elem           = $( elem );
             var parentForm      = $elem.parents( 'form' );
             var $p_id           = parentForm.find( '[name="P_ID"]:checked' );
+
+            scheduler.SchedulerInterval = parentForm.find( '[name="scheduler_interval"]' ).val();
+            scheduler.SchedulerRepeating = parentForm.find( '[name="scheduler_repeating"]' ).val();
+            scheduler.SchedulerDate = parentForm.find( '[name="scheduler_dateselector"]' ).val();
 
             basketItemsList.BasketItemItemID   = parentForm.find( '[name="ArticleID"]' ).val();
             basketItemsList.BasketItemPriceID  = parentForm.find( '[name="SYS_P_ID"]' ).val();
@@ -50,6 +55,12 @@
             if ( attributesList.length != 0 )
             {
                 basketItemsList.BasketItemAttributesList = attributesList;
+            }
+
+            if(typeof scheduler.SchedulerInterval !== "undefined"
+                && scheduler.SchedulerInterval > 0)
+            {
+                BasketService.setScheduler( scheduler );
             }
 
             //add basketItem and refresh previewLists
