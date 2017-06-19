@@ -106,7 +106,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.18";
+    var version = "1.0.19";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -4996,7 +4996,7 @@ PlentyFramework.cssClasses = {
             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
             return Checkout.setCheckout()
-                .done( function()
+                .always( function()
                 {
                     Checkout.reloadContainer( 'ShippingProfilesList' );
                 } );

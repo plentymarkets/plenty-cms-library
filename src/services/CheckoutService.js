@@ -425,7 +425,7 @@
             delete Checkout.getCheckout().CheckoutShippingProfileID;
 
             return Checkout.setCheckout()
-                .done( function()
+                .always( function()
                 {
                     Checkout.reloadContainer( 'ShippingProfilesList' );
                 } );
