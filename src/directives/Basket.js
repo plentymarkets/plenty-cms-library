@@ -73,7 +73,7 @@
             var $elem          = $( elem );
             var $quantityInput = $elem.parent().find( 'input' );
             var maxLength      = parseInt( $quantityInput.attr( 'maxlength' ) ) || 5;
-            var value          = parseInt( $quantityInput.val() ) + increment;
+            var value          = convertToFloat( $quantityInput.val() ) + increment;
 
             setItemQuantityToNewValue( $elem, $quantityInput, maxLength, value)
         }
@@ -92,7 +92,7 @@
         {
             BasketService.setItemQuantity(
                 basketItemID,
-                parseInt( $( input ).val() )
+                convertToFloat( $( input ).val() )
             ).fail( function()
             {
                 // reset input's value on cancel

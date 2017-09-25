@@ -541,7 +541,7 @@
 
             if ( !!basketItem && basketItem.BasketItemQuantity != BasketItemQuantity )
             {
-                params[basketItemIndex].BasketItemQuantity = parseInt( BasketItemQuantity );
+                params[basketItemIndex].BasketItemQuantity = parseFloat( BasketItemQuantity );
 
                 return API.post( "/rest/checkout/basketitemslist/", params )
                     .done( function()
