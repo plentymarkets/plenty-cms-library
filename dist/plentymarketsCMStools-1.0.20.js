@@ -106,7 +106,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.19";
+    var version = "1.0.20";
 
     /**
      * Collection of uncompiled registered factories & services.
