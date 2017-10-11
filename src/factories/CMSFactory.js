@@ -98,7 +98,7 @@
          */
         function getCategoryContent( categoryID )
         {
-            return API.get( '/rest/categoryview/categorycontentbody/?categoryID=' + categoryID );
+            return API.get( '/rest/categoryview/categorycontentbody/?categoryID=' + categoryID, null, false, false, false, true );
         }
 
     }, ['APIFactory'] );

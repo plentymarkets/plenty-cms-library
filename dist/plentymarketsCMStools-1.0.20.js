@@ -2046,10 +2046,11 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          *     internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
          * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
+         * @param   {boolean}   [disableCache=false]    disable browser caching
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery
          *     deferred Object</a>
          */
-        function _get( url, params, ignoreErrors, runInBackground, sync )
+        function _get( url, params, ignoreErrors, runInBackground, sync, disableCache )
         {
 
             if ( !runInBackground )
@@ -2064,6 +2065,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
                     data    : params,
                     dataType: 'json',
                     async   : !sync,
+                    cache   : !disableCache,
                     error   : function( jqXHR )
                     {
                         if ( !ignoreErrors )
@@ -2347,7 +2349,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
          */
         function getCategoryContent( categoryID )
         {
-            return API.get( '/rest/categoryview/categorycontentbody/?categoryID=' + categoryID );
+            return API.get( '/rest/categoryview/categorycontentbody/?categoryID=' + categoryID, null, false, false, false, true );
         }
 
     }, ['APIFactory'] );

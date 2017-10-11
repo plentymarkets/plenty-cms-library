@@ -110,10 +110,11 @@
          *     internally
          * @param   {boolean}   [ignoreErrors=false]    disable/ enable defaults error handling
          * @param   {boolean}   [runInBackground=false] show wait screen while request is in progress.
+         * @param   {boolean}   [disableCache=false]    disable browser caching
          * @return  {object}    <a href="http://api.jquery.com/category/deferred-object/" target="_blank">jQuery
          *     deferred Object</a>
          */
-        function _get( url, params, ignoreErrors, runInBackground, sync )
+        function _get( url, params, ignoreErrors, runInBackground, sync, disableCache )
         {
 
             if ( !runInBackground )
@@ -128,6 +129,7 @@
                     data    : params,
                     dataType: 'json',
                     async   : !sync,
+                    cache   : !disableCache,
                     error   : function( jqXHR )
                     {
                         if ( !ignoreErrors )
