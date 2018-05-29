@@ -106,7 +106,7 @@ TemplateCache["waitscreen/waitscreen.html"] = "<div id=\"PlentyWaitScreen\" clas
 (function( $ )
 {
     // will be overridden by grunt
-    var version = "1.0.20";
+    var version = "1.0.21";
 
     /**
      * Collection of uncompiled registered factories & services.
@@ -5207,6 +5207,18 @@ PlentyFramework.cssClasses = {
 
                 var values = form.getFormValues();
 
+                var shippingPrivacyHintAccepted = -1;
+                if(typeof values.shippingPrivacyHintAccepted === 'undefined')
+                {
+                    shippingPrivacyHintAccepted        = -1;
+                }else if(values.shippingPrivacyHintAccepted.length > 0)
+                {
+                    shippingPrivacyHintAccepted        = 1;
+                }else
+                {
+                    shippingPrivacyHintAccepted        = 0;
+                }
+
                 // if not shown in layout set default 1 for mandatory fields
                 var params = {
                     TermsAndConditionsCheck      : values.termsAndConditionsCheck || 0,
@@ -5216,7 +5228,8 @@ PlentyFramework.cssClasses = {
                     NewsletterCheck              : values.newsletterCheck || 0,
                     KlarnaTermsAndConditionsCheck: values.klarnaTermsAndConditionsCheck || 0,
                     PayoneDirectDebitMandateCheck: values.payoneDirectDebitMandateCheck || 0,
-                    PayoneInvoiceCheck           : values.payoneInvoiceCheck || 0
+                    PayoneInvoiceCheck           : values.payoneInvoiceCheck || 0,
+                    ShippingPrivacyHintAccepted  : shippingPrivacyHintAccepted
                 };
 
                 return API.post( "/rest/checkout/placeorder/", params )
