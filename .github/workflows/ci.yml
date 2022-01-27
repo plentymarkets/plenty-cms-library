@@ -10,4 +10,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: test123
-        run: ls -la
+        run: ps x -w
